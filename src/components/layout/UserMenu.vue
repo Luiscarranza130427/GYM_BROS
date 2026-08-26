@@ -2,9 +2,9 @@
 import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
-import avatarUrl from '@/assets/images/brand/login-athlete.webp'
 import { SECCIONES_DE_USUARIO } from '@/router/navegacion'
 import { useAuthStore } from '@/stores/auth.store'
+import { inicialesDe } from '@/utils/iniciales'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -15,6 +15,17 @@ const contenedor = useTemplateRef('contenedor')
 const disparador = useTemplateRef('disparador')
 
 const rol = computed(() => auth.usuario?.rol || 'Administrador')
+
+/*
+ * Iniciales en lugar de fotografía. Antes se usaba `login-athlete.webp` —el
+ * mismo archivo de 1,8 MB que ilustra la pantalla de acceso— para pintar un
+ * círculo de 32 px en cada carga del panel. Además no era la foto de quien
+ * había iniciado sesión, sino una imagen de catálogo.
+ *
+ * Cuando Laravel sirva avatares reales, aquí entra la URL del usuario y las
+ * iniciales quedan como alternativa (el patrón que ya usa UsuarioAvatar).
+ */
+const iniciales = computed(() => inicialesDe(auth.usuario?.nombre))
 
 function alClicarFuera(evento) {
   if (!contenedor.value?.contains(evento.target)) cerrar()
@@ -67,7 +78,7 @@ async function cerrarSesion() {
       aria-controls="menu-usuario"
       @click="alternar"
     >
-      <img class="menu__avatar" :src="avatarUrl" alt="" />
+      <span class="menu__avatar" aria-hidden="true">{{ iniciales }}</span>
       <span class="menu__resumen">
         <span>{{ auth.usuario?.nombre }}</span>
         <small>{{ rol }}</small>
@@ -132,12 +143,19 @@ async function cerrarSesion() {
 }
 
 .menu__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
   width: 2rem;
   height: 2rem;
-  object-fit: cover;
-  object-position: 50% 22%;
+  background-color: var(--gb-surface-high);
   border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-lg);
+  color: var(--gb-red-text);
+  font-family: var(--gb-fuente-titulo);
+  font-size: var(--gb-tipo-xxs);
+  font-weight: 800;
+  line-height: 1;
 }
 
 .menu__resumen {

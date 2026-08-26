@@ -37,6 +37,15 @@ No introducir Nuxt, Tailwind, jQuery, Vuex ni Options API.
   `iniciarSesion`); las APIs del framework mantienen su nombre original.
 - `<style scoped>` en los componentes. Los colores, radios y medidas salen de los
   tokens `--gb-*` de `src/assets/styles/_variables.css`; no escribir colores sueltos.
+- **De Bootstrap sólo se compilan los parciales que se usan** (ver
+  `src/assets/styles/bootstrap.scss`). Para usar una clase de un componente que
+  no esté ya en esa lista —`badge`, `modal`, `table`, utilidades como `py-2`…—
+  hay que añadir antes su `@import`, o la clase existirá en el HTML pero no
+  tendrá estilo. Si algo aparece sin formato, mirar ahí primero.
+- Las fuentes van autoalojadas en WOFF2 subconjuntado; no enlazar Google Fonts
+  ni ningún CDN de tipografías.
+- Antes de añadir una imagen a `src/assets/`, comprobar su peso frente al tamaño
+  al que se muestra. No servir un original de cámara para un avatar de 32 px.
 - HTML semántico, `<label for>` en todos los campos, botones reales (nunca
   `<div @click>`), iconos decorativos con `aria-hidden="true"`.
 
