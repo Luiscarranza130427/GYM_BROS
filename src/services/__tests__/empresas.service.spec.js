@@ -21,10 +21,22 @@ async function cargarServicioMock() {
   }))
   vi.useFakeTimers()
   vi.spyOn(Math, 'random').mockReturnValue(0)
-  return import('@/services/empresas.service')
+  const servicio = await import('@/services/empresas.service')
+  // El servicio carga sus mocks con import() dinámico para que no entren en el
+  // bundle de producción. Se precarga el módulo aquí para dejarlo en el registro:
+  // así la promesa del import se resuelve en un microtask y los temporizadores
+  // simulados siguen siendo deterministas.
+  await import('@/mocks/empresas.mock')
+  return servicio
+}
+
+/** Resuelve el import() del mock (ya cacheado) antes de tocar los temporizadores. */
+async function asentarImportDinamico() {
+  await vi.advanceTimersByTimeAsync(0)
 }
 
 async function completarPeticion(peticion, latencia = 250) {
+  await asentarImportDinamico()
   await vi.advanceTimersByTimeAsync(latencia)
   return peticion
 }
@@ -45,6 +57,10 @@ describe('empresas.service en modo mock', () => {
     const temporizador = vi.spyOn(globalThis, 'setTimeout')
 
     const peticion = servicio.obtenerEmpresas({ pagina: 2, porPagina: 5 })
+    // El mock ya no registra su temporizador de forma síncrona: lo hace tras
+    // resolverse el import() dinámico que mantiene los datos simulados fuera
+    // del bundle de producción.
+    await asentarImportDinamico()
 
     expect(temporizador).toHaveBeenCalledWith(expect.any(Function), 600)
     const resultado = await completarPeticion(peticion, 600)

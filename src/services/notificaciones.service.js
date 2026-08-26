@@ -1,6 +1,8 @@
 import { USE_MOCKS } from '@/config/env'
 import api from '@/services/api'
-import { contarNoLeidasMock } from '@/mocks/notificaciones.mock'
+
+/** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
+const cargarMock = () => import('@/mocks/notificaciones.mock')
 
 /**
  * CONTRATO PROVISIONAL — pendiente de acordar con Natan:
@@ -11,6 +13,7 @@ import { contarNoLeidasMock } from '@/mocks/notificaciones.mock'
  */
 export async function contarNoLeidas() {
   if (USE_MOCKS) {
+    const { contarNoLeidasMock } = await cargarMock()
     return contarNoLeidasMock()
   }
 

@@ -46,9 +46,15 @@ describe('dashboard.service', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const temporizador = vi.spyOn(globalThis, 'setTimeout')
     const { obtenerDashboard } = await import('@/services/dashboard.service')
+    // El servicio carga sus mocks con import() dinámico para que no entren en el
+    // bundle de producción. Se precarga el módulo para dejarlo en el registro y
+    // que su promesa se resuelva en un microtask.
+    await import('@/mocks/dashboard.mock')
 
     const peticion = obtenerDashboard()
 
+    // El mock registra su temporizador tras resolverse ese import().
+    await vi.advanceTimersByTimeAsync(0)
     expect(temporizador).toHaveBeenCalledWith(expect.any(Function), 450)
     await vi.advanceTimersByTimeAsync(450)
 
@@ -66,12 +72,16 @@ describe('dashboard.service', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { obtenerDashboard } = await import('@/services/dashboard.service')
 
+    await import('@/mocks/dashboard.mock')
+
     const primeraPeticion = obtenerDashboard()
+    await vi.advanceTimersByTimeAsync(0)
     await vi.advanceTimersByTimeAsync(300)
     const primeraCarga = await primeraPeticion
     primeraCarga.metricas[0].valor = -1
 
     const segundaPeticion = obtenerDashboard()
+    await vi.advanceTimersByTimeAsync(0)
     await vi.advanceTimersByTimeAsync(300)
     const segundaCarga = await segundaPeticion
 

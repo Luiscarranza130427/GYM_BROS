@@ -1,16 +1,10 @@
 import { USE_MOCKS } from '@/config/env'
-import {
-  actualizarUsuarioMock,
-  crearUsuarioMock,
-  desactivarUsuarioMock,
-  obtenerHistorialUsuarioMock,
-  obtenerUsuarioMock,
-  obtenerUsuariosMock,
-  simularSiguienteErrorUsuariosMock,
-} from '@/mocks/usuarios.mock'
 import api from '@/services/api'
 import { obtenerEmpresas } from '@/services/empresas.service'
 import { HttpError } from '@/services/http-error'
+
+/** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
+const cargarMock = () => import('@/mocks/usuarios.mock')
 
 const CAMPOS_ERROR = {
   first_name: 'nombre',
@@ -238,7 +232,7 @@ async function ejecutarPeticion(peticion) {
 
 /** CONTRATO PROVISIONAL: GET /usuarios. */
 export async function obtenerUsuarios(params = {}) {
-  if (USE_MOCKS) return obtenerUsuariosMock(params)
+  if (USE_MOCKS) return (await cargarMock()).obtenerUsuariosMock(params)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.get('/usuarios', { params: prepararParametros(params) })
@@ -248,7 +242,7 @@ export async function obtenerUsuarios(params = {}) {
 
 /** CONTRATO PROVISIONAL: GET /usuarios/:id. */
 export async function obtenerUsuario(id) {
-  if (USE_MOCKS) return obtenerUsuarioMock(id)
+  if (USE_MOCKS) return (await cargarMock()).obtenerUsuarioMock(id)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.get(`/usuarios/${id}`)
@@ -259,7 +253,7 @@ export async function obtenerUsuario(id) {
 /** CONTRATO PROVISIONAL: POST /usuarios. */
 export async function crearUsuario(payload) {
   const datosEditables = seleccionarCamposEditables(payload)
-  if (USE_MOCKS) return crearUsuarioMock(datosEditables)
+  if (USE_MOCKS) return (await cargarMock()).crearUsuarioMock(datosEditables)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.post('/usuarios', prepararPayload(datosEditables))
@@ -270,7 +264,7 @@ export async function crearUsuario(payload) {
 /** CONTRATO PROVISIONAL: PUT /usuarios/:id. */
 export async function actualizarUsuario(id, payload) {
   const datosEditables = seleccionarCamposEditables(payload)
-  if (USE_MOCKS) return actualizarUsuarioMock(id, datosEditables)
+  if (USE_MOCKS) return (await cargarMock()).actualizarUsuarioMock(id, datosEditables)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.put(`/usuarios/${id}`, prepararPayload(datosEditables))
@@ -280,7 +274,7 @@ export async function actualizarUsuario(id, payload) {
 
 /** CONTRATO PROVISIONAL: DELETE /usuarios/:id (desactivación lógica). */
 export async function desactivarUsuario(id) {
-  if (USE_MOCKS) return desactivarUsuarioMock(id)
+  if (USE_MOCKS) return (await cargarMock()).desactivarUsuarioMock(id)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.delete(`/usuarios/${id}`)
@@ -293,7 +287,7 @@ export async function desactivarUsuario(id) {
 
 /** CONTRATO PROVISIONAL: GET /usuarios/:id/historial. */
 export async function obtenerHistorialUsuario(id) {
-  if (USE_MOCKS) return obtenerHistorialUsuarioMock(id)
+  if (USE_MOCKS) return (await cargarMock()).obtenerHistorialUsuarioMock(id)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.get(`/usuarios/${id}/historial`)
@@ -306,12 +300,4 @@ export async function obtenerHistorialUsuario(id) {
 export async function obtenerOpcionesEmpresas() {
   const { items } = await obtenerEmpresas({ pagina: 1, porPagina: 100 })
   return items.map(({ id, nombre, estado }) => ({ id, nombre, estado }))
-}
-
-/** Control explícito de fallos para QA local; nunca hace peticiones ni existe en modo API. */
-export function simularSiguienteErrorUsuarios(status = 500) {
-  if (!USE_MOCKS) {
-    throw new Error('La simulación de errores de Usuarios solo está disponible con mocks.')
-  }
-  simularSiguienteErrorUsuariosMock(status)
 }
