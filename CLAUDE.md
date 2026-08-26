@@ -95,5 +95,10 @@ npm run lint && npm run test && npm run build
 Los tres tienen que pasar. Si algo falla, corregir la causa: no desactivar reglas
 de ESLint ni silenciar avisos para que desaparezcan.
 
+Lo mismo lo ejecuta CI en cada pull request (`.github/workflows/ci.yml`), junto
+con `format:check`, la cobertura y una comprobación de que no se filtren datos
+simulados al bundle. Ejecutarlo en local antes de subir sigue siendo más rápido
+que esperar al workflow.
+
 > Nota de entorno: en este equipo los scripts npm fallan desde Git Bash
 > (`""node"" no se reconoce`). Ejecutarlos desde PowerShell o CMD.

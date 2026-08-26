@@ -30,17 +30,32 @@ Sólo funcionan contra el mock local; no son credenciales reales.
 
 ## Scripts
 
-| Script            | Qué hace                            |
-| ----------------- | ----------------------------------- |
-| `npm run dev`     | Servidor de desarrollo              |
-| `npm run build`   | Build de producción en `dist/`      |
-| `npm run preview` | Sirve el build generado             |
-| `npm run lint`    | ESLint (falla ante cualquier aviso) |
-| `npm run format`  | Formatea con Prettier               |
-| `npm run test`    | Pruebas unitarias con Vitest        |
+| Script                  | Qué hace                            |
+| ----------------------- | ----------------------------------- |
+| `npm run dev`           | Servidor de desarrollo              |
+| `npm run build`         | Build de producción en `dist/`      |
+| `npm run preview`       | Sirve el build generado             |
+| `npm run lint`          | ESLint (falla ante cualquier aviso) |
+| `npm run format`        | Formatea con Prettier               |
+| `npm run test`          | Pruebas unitarias con Vitest        |
+| `npm run test:coverage` | Pruebas con informe de cobertura    |
 
 > En Windows, ejecutar los scripts desde PowerShell o CMD. Desde Git Bash el
 > lanzador de npm de este equipo falla con `""node"" no se reconoce`.
+
+## Verificación automática
+
+Cada push a `main` y cada pull request ejecutan
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint, formato, pruebas
+con cobertura y build de producción.
+
+El workflow incluye además un guardián propio: comprueba que en `dist/` no
+aparezca ningún dato simulado ni las credenciales de demostración. Si alguien
+vuelve a importar `@/mocks` de forma estática, la fuga se detecta en CI y no en
+producción, donde la aplicación seguiría funcionando sin dar ninguna señal.
+
+Los umbrales de cobertura están fijados justo por debajo del nivel actual
+(~64%). No son un objetivo, son un trinquete contra el retroceso.
 
 ## Recursos estáticos
 
