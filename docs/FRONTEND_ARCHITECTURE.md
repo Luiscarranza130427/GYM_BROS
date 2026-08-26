@@ -1,21 +1,22 @@
 # Arquitectura del frontend — Gym Bros
 
-Documento práctico de la Fase 1. Explica cómo está montado el proyecto y cómo
-crecer sobre él sin romperlo.
+Documento práctico del estado actual (fases 1 a 5 completadas). Explica cómo
+está montado el proyecto y cómo crecer sobre él sin romperlo.
 
 ## 1. Stack
 
-| Pieza         | Elección                        | Motivo                                     |
-| ------------- | ------------------------------- | ------------------------------------------ |
-| Framework     | Vue 3 (`<script setup>`)        | Requisito del proyecto                     |
-| Bundler       | Vite 8                          | Arranque y build rápidos, alias sencillos  |
-| Rutas         | Vue Router 5                    | Router oficial; guards y lazy loading      |
-| Estado global | Pinia 4                         | Store oficial de Vue 3                     |
-| HTTP          | Axios 1                         | Interceptores para token y errores         |
-| UI            | Bootstrap 5.3 + Bootstrap Icons | Rejilla, formularios e iconos ya resueltos |
-| Gráficos      | Chart.js 4                      | Visualización encapsulada del Dashboard    |
-| Calidad       | ESLint 10 + Prettier 3          | Lint y formato                             |
-| Pruebas       | Vitest 4 + Vue Test Utils       | Comparte la config de Vite                 |
+| Pieza         | Elección                                    | Motivo                                         |
+| ------------- | ------------------------------------------- | ---------------------------------------------- |
+| Framework     | Vue 3 (`<script setup>`)                    | Requisito del proyecto                         |
+| Bundler       | Vite 8                                      | Arranque y build rápidos, alias sencillos      |
+| Rutas         | Vue Router 5                                | Router oficial; guards y lazy loading          |
+| Estado global | Pinia 4                                     | Store oficial de Vue 3                         |
+| HTTP          | Axios 1                                     | Interceptores para token y errores             |
+| UI            | Bootstrap 5.3 (parciales) + Bootstrap Icons | Formularios, botones y alertas ya resueltos    |
+| Gráficos      | Chart.js 4                                  | Visualización encapsulada del Dashboard        |
+| Calidad       | ESLint 10 + Prettier 3                      | Lint y formato                                 |
+| Estilos       | Sass (sólo build)                           | Compila la selección de parciales de Bootstrap |
+| Pruebas       | Vitest 4 + Vue Test Utils                   | Comparte la config de Vite                     |
 
 Sin TypeScript, sin Nuxt, sin Tailwind, sin Vuex.
 
@@ -23,22 +24,31 @@ Sin TypeScript, sin Nuxt, sin Tailwind, sin Vuex.
 
 ```text
 src/
-├── assets/styles/      _variables.css (tokens) · base.css · main.css
-├── components/layout/  AppHeader.vue · AppSidebar.vue
+├── assets/
+│   ├── fonts/          Inter y Montserrat en WOFF2 subconjuntado
+│   ├── images/         marca · ilustraciones
+│   └── styles/         _variables.css (tokens) · base.css · main.css · bootstrap.scss
+├── components/
+│   ├── base/           ConfirmDialog.vue · PageHeader.vue · IconoMancuerna.vue
+│   └── layout/         AppHeader.vue · AppSidebar.vue · UserMenu.vue · …
+├── composables/        useListadoFiltrable.js  (listados con filtros en la URL)
 ├── config/             env.js  (único lector de import.meta.env)
+├── constants/          regionesPeru.js
 ├── layouts/            AuthLayout.vue · DashboardLayout.vue
-├── mocks/              auth.mock.js · dashboard.mock.js · empresas.mock.js
-├── modules/            auth/views · dashboard/{components,views} · empresas/{components,views}
-├── router/             index.js · guards.js
-├── services/           api.js · auth.service.js · dashboard.service.js · empresas.service.js · session.storage.js
+├── mocks/              auth · dashboard · empresas · usuarios · notificaciones
+├── modules/            auth · dashboard · empresas · usuarios
+├── router/             index.js · guards.js · navegacion.js
+├── services/           api.js · http-error.js · normalizacion.js · *.service.js
 ├── stores/             auth.store.js · ui.store.js
-├── views/              NotFoundView.vue  (vistas sin módulo propio)
+├── utils/              formato.js · iniciales.js
+├── views/              NotFoundView.vue · EnConstruccionView.vue
 ├── App.vue
 └── main.js
 ```
 
-Las carpetas se crean únicamente al aparecer una responsabilidad real. El Dashboard
-añade componentes enfocados y utilidades de formato; no necesita store ni composable.
+Las carpetas se crean únicamente al aparecer una responsabilidad real:
+`composables/` apareció cuando dos listados demostraron necesitar la misma
+lógica, no antes.
 
 ## 3. Flujo de datos
 
@@ -59,7 +69,12 @@ Axios directamente.
 
 ## 4. Modo mock
 
-`VITE_USE_MOCKS=true` hace que los servicios de autenticación, Dashboard y Empresas respondan desde `src/mocks/`.
+`VITE_USE_MOCKS=true` hace que los servicios respondan desde `src/mocks/`.
+
+Los mocks se cargan con `import()` **dinámico** dentro de la rama `if (USE_MOCKS)`.
+No es un detalle de estilo: con un import estático, Rollup no podía separarlos y
+los datos simulados —incluidas las credenciales de demostración— acababan en el
+bundle de producción. Ver `src/config/env.js` y el plugin de `vite.config.js`.
 El interruptor está **sólo** en la capa de servicios; el store, el router y las
 vistas no saben si hay backend o no.
 
@@ -134,25 +149,40 @@ npm run dev
 
 ## 9. Cómo añadir un módulo nuevo
 
-Ejemplo con `usuarios`:
+Ejemplo con `ejercicios`, que hoy usa la pantalla «En construcción».
 
-1. `src/modules/usuarios/views/UsuariosView.vue` — sólo presentación y estado local.
-2. `src/services/usuarios.service.js` — llamadas a `api.js`
-   (`GET /usuarios`, `POST /usuarios`, …). Si aún no hay backend, un mock en
-   `src/mocks/usuarios.mock.js` detrás del mismo interruptor `USE_MOCKS`.
-3. Ruta hija de la que monta `DashboardLayout`, con lazy loading:
+1. **Servicio** — `src/services/ejercicios.service.js`. Se apoya en
+   `services/normalizacion.js` para la paginación de Laravel, los campos
+   editables y la traducción de los 422; escribe su propio `normalizarEjercicio`,
+   que es su contrato. El interruptor `USE_MOCKS` vive aquí y en ningún otro
+   sitio, con `import()` dinámico del mock.
+
+2. **Listado** — `src/modules/ejercicios/views/EjerciciosView.vue`, sobre
+   `useListadoFiltrable`. No se copia `EmpresasView`: filtros en la URL, rebote
+   de búsqueda, paginación y descarte de respuestas obsoletas ya están resueltos.
 
    ```js
-   {
-     path: 'usuarios',
-     name: 'usuarios',
-     component: () => import('@/modules/usuarios/views/UsuariosView.vue'),
-     meta: { requiresAuth: true, title: 'Usuarios' },
-   }
+   const { estadoVista, items, paginacion, busqueda, filtros, cambiarFiltro } = useListadoFiltrable(
+     {
+       nombreRuta: 'ejercicios-listado',
+       cargar: obtenerEjercicios,
+       filtros: { status: { permitidos: ['all', 'active', 'inactive'] } },
+       mapearParametros: ({ status }) => ({ estado: status }),
+       mensajeDeError: 'No pudimos cargar los ejercicios.',
+     },
+   )
    ```
 
-4. Entrada en el array `enlaces` de `AppSidebar.vue`.
-5. Store en `src/stores/` **sólo** si el estado lo necesita más de una vista.
+3. **Navegación** — la sección ya existe en `SECCIONES` de
+   `src/router/navegacion.js`. Basta con darle su `vista`, o declarar su árbol
+   CRUD en `router/index.js` como hacen Empresas y Usuarios, conservando el
+   nombre del padre para que el enlace del menú siga activo.
+
+4. **Componentes** — se extrae un subcomponente cuando hay reutilización real o
+   la vista se vuelve difícil de leer, no por norma.
+
+5. **Store** — en `src/stores/` **sólo** si el estado lo necesita más de una
+   vista. Un listado no lo necesita: su estado vive en la URL.
 
 ## 10. Pendiente para la integración con Laravel
 
@@ -199,16 +229,30 @@ Implementado en Fase 2:
 
 ## 13. Deuda técnica conocida
 
-- Se carga el CSS completo de Bootstrap (~46 KB gzip). Si pesa, compilar sólo los
-  componentes usados con Sass.
-- Se carga la fuente completa de Bootstrap Icons (~134 KB woff2). Si pesa,
-  sustituir por SVG sueltos de los iconos realmente usados.
-- No se importa el JavaScript de Bootstrap: no hace falta todavía. Cuando se
-  necesiten modales o dropdowns, añadir `bootstrap/dist/js/bootstrap.bundle.min.js`.
-- Las credenciales de demostración aparecen como cadenas en el bundle de
-  producción aunque no se muestren: `pistaDeCredenciales()` se resuelve en tiempo
-  de ejecución y Rollup no puede eliminarlas. No es un riesgo (sólo sirven contra
-  el mock, que en producción está apagado), pero conviene saberlo.
+- **Iconos.** Se carga la fuente completa de Bootstrap Icons (~131 KB woff2) y
+  sus ~2000 reglas CSS (~95 KB) para los 45 iconos que se usan. Recortarlo exige
+  generar un subconjunto, con el riesgo de que un icono añadido más tarde deje de
+  renderizarse en silencio; la alternativa es pasar a SVG en línea. Sin decidir.
+- **Formularios.** `EmpresaForm` y `UsuarioForm` comparten aproximadamente el 70%
+  del código: validación de correo y teléfono idéntica, gestión de errores por
+  campo, foco en el primer error y el ciclo de vista previa de archivo. Pendiente
+  de extraer, como se hizo con los listados.
+- **Subida de imágenes.** El selector de logo y el de foto de perfil muestran
+  vista previa pero no envían el archivo: falta acordar con Natan si va en
+  `multipart/form-data` dentro del propio POST/PUT o en un endpoint previo que
+  devuelva la URL. El campo lo advierte de forma explícita en vez de aparentar
+  que guarda.
+- **JavaScript de Bootstrap.** No se importa: no hace falta. Si algún día se
+  necesitan modales o dropdowns suyos, hay que añadir el bundle **y** el parcial
+  correspondiente en `bootstrap.scss`.
+
+Resuelto desde la revisión de código:
+
+- El CSS de Bootstrap ya no viaja entero (310 KB → 37 KB): sólo se compilan los
+  parciales en uso.
+- Las fuentes ya no se cargaban dos veces ni en TTF (1489 KB → 184 KB).
+- Los mocks y las credenciales de demostración ya no entran en el bundle de
+  producción.
 
 ## 14. Empresas — Fase 4
 
@@ -242,3 +286,39 @@ Decisiones provisionales que deben confirmarse con backend:
 - RUC es opcional y admite de 8 a 11 dígitos;
 - la subida de logo todavía conserva únicamente una vista previa local;
 - nombres definitivos de paginación y errores 422.
+
+## 15. Usuarios — Fase 5
+
+Mismo patrón de rutas anidadas que Empresas, para que el enlace del sidebar siga
+activo en todo el árbol:
+
+```text
+/usuarios → listado
+/usuarios/nuevo → alta
+/usuarios/:id → detalle (perfil + historial)
+/usuarios/:id/editar → edición
+```
+
+```text
+Vistas de Usuarios → usuarios.service.js → usuarios.mock.js / API Laravel
+```
+
+El listado se apoya en `useListadoFiltrable` con cuatro filtros —empresa, estado,
+suscripción y rol— más búsqueda. La empresa es el único que no lleva lista de
+valores permitidos: su valor es un id, no una lista cerrada.
+
+El desplegable de empresas se pide a `obtenerOpcionesEmpresas()`, que cruza al
+servicio de Empresas. Es acoplamiento consciente entre módulos y tiene un límite
+conocido: pide 100 empresas y **descarta en silencio a partir de ahí**. Con más
+de 100, ese filtro necesitará su propio endpoint o paginación.
+
+Decisiones provisionales que deben confirmarse con backend:
+
+- endpoints `GET/POST /usuarios`, `GET/PUT /usuarios/:id`, `DELETE /usuarios/:id`
+  y `GET /usuarios/:id/historial`;
+- `tipo_usuario` con valores `admin` / `manager` / `trainer` / `member`;
+- forma de la suscripción anidada (`estado`, fechas, días restantes, plan);
+- el historial se entrega como `{ id, fecha, accion, descripcion, autor }`; las
+  vistas confían en esa forma y no aceptan variantes;
+- `DELETE` es desactivación lógica, igual que en Empresas;
+- la foto de perfil conserva únicamente vista previa local.

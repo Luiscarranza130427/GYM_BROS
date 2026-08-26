@@ -26,6 +26,18 @@ No introducir Nuxt, Tailwind, jQuery, Vuex ni Options API.
   vista necesita algo que depende del modo mock, se lo pide al servicio (ver
   `pistaDeCredenciales()` en `auth.service.js`).
 - Un módulo funcional = una carpeta en `src/modules/<modulo>/views/`.
+- **Un listado administrativo nuevo usa `useListadoFiltrable`**
+  (`src/composables/`), no una copia de `EmpresasView`. Filtros en la URL,
+  búsqueda con rebote, paginación y descarte de respuestas obsoletas ya están
+  resueltos ahí; el módulo aporta su servicio, el mapeo de filtros a parámetros
+  y sus textos.
+- **Un servicio de recurso nuevo se apoya en `src/services/normalizacion.js`**
+  para la paginación de Laravel, los campos editables y la traducción de los 422.
+  Lo que sí escribe cada servicio es su propio `normalizarXxx`, que es su contrato.
+- **Normalizar es trabajo del servicio, no del componente.** Una vista consume la
+  forma que el servicio garantiza y no vuelve a aceptar variantes por su cuenta:
+  esos `?? datos.otro_nombre` en un componente no son defensas, enmascaran un
+  cambio de contrato que debería fallar a la vista.
 - Componentes enfocados: se extrae un subcomponente cuando hay reutilización real
   o la vista se vuelve difícil de leer, no por norma.
 - No añadir dependencias sin necesidad real. Cada una debe justificarse.
@@ -64,10 +76,11 @@ trabajo de la fase siguiente**, aunque parezca trivial.
 - Fase 2 — Layout administrativo (sidebar y header completos). **Completada.**
 - Fase 3 — Dashboard administrativo (service, mocks, KPIs, gráfico y estados). **Completada.**
 - Fase 4 — Módulo de empresas (CRUD, filtros, paginación y estados). **Completada.**
+- Fase 5 — Módulo de usuarios (CRUD, filtros, historial y estados). **Completada.**
 
-Los módulos CRUD restantes (usuarios, ejercicios, alimentación, notificaciones,
-planes, pagos, perfil) pertenecen a fases posteriores y no deben implementarse
-hasta que se pidan.
+Los módulos CRUD restantes (ejercicios, alimentación, notificaciones, planes,
+pagos, perfil) pertenecen a fases posteriores y no deben implementarse hasta que
+se pidan. Hoy usan la pantalla compartida «En construcción».
 
 ## Antes de dar una tarea por terminada
 
