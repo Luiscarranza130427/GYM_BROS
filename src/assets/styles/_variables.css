@@ -1,9 +1,8 @@
 /**
  * Tokens de diseño de Gym Bros — sistema "Iron Core Admin".
  *
- * Extraídos del proyecto de Stitch (ver docs/DESIGN_SYSTEM.md). Punto único de
- * verdad del aspecto visual: para cambiar la identidad se toca este archivo, no
- * los componentes.
+ * Extraídos del proyecto de Stitch. Este archivo ES el punto único de verdad del
+ * aspecto visual: para cambiar la identidad se toca aquí, no los componentes.
  *
  * La interfaz es dark mode a propósito: es un panel de uso prolongado. El relieve
  * NO se hace con sombras difusas, sino con capas tonales y bordes de 1px.

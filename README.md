@@ -42,13 +42,42 @@ Sólo funcionan contra el mock local; no son credenciales reales.
 > En Windows, ejecutar los scripts desde PowerShell o CMD. Desde Git Bash el
 > lanzador de npm de este equipo falla con `""node"" no se reconoce`.
 
+## Recursos estáticos
+
+Las fuentes van **autoalojadas en WOFF2 subconjuntado** al rango latino
+(`src/assets/fonts/`). No se enlaza ningún CDN de tipografías. Regenerarlas desde
+un `.ttf` no hace falta para compilar; si alguna vez se necesita, requiere
+`fonttools` y `brotli` de Python y el comando está documentado en
+`src/assets/styles/base.css`.
+
+De Bootstrap **sólo se compilan los parciales que se usan**
+(`src/assets/styles/bootstrap.scss`). Para emplear una clase de un componente
+que no esté en esa lista hay que añadir antes su `@import`, o la clase existirá
+en el HTML sin ningún estilo.
+
+Antes de añadir una imagen, comprobar su peso frente al tamaño al que se muestra.
+
 ## Rutas
 
-| Ruta         | Acceso          |
-| ------------ | --------------- |
-| `/login`     | Sólo sin sesión |
-| `/dashboard` | Requiere sesión |
-| `/404`       | Pública         |
+Todo lo que cuelga de `/` requiere sesión: `requiresAuth` va en el registro
+padre y Vue Router lo hereda, de modo que una ruta nueva no puede quedarse
+pública por olvido.
+
+| Ruta                                                                   | Acceso                            |
+| ---------------------------------------------------------------------- | --------------------------------- |
+| `/login`                                                               | Sólo sin sesión                   |
+| `/dashboard`                                                           | Requiere sesión                   |
+| `/empresas`                                                            | Requiere sesión                   |
+| `/empresas/nueva`                                                      | Requiere sesión                   |
+| `/empresas/:id`                                                        | Requiere sesión                   |
+| `/empresas/:id/editar`                                                 | Requiere sesión                   |
+| `/usuarios`                                                            | Requiere sesión                   |
+| `/usuarios/nuevo`                                                      | Requiere sesión                   |
+| `/usuarios/:id`                                                        | Requiere sesión                   |
+| `/usuarios/:id/editar`                                                 | Requiere sesión                   |
+| `/perfil`                                                              | Requiere sesión · en construcción |
+| `/ejercicios`, `/alimentacion`, `/notificaciones`, `/planes`, `/pagos` | Requiere sesión · en construcción |
+| `/404` y cualquier otra                                                | Pública                           |
 
 ## Documentación
 
@@ -58,6 +87,17 @@ Sólo funcionan contra el mock local; no son credenciales reales.
 
 ## Estado
 
-**Fase 1 (fundación) completada.** Los módulos funcionales —empresas, usuarios,
-ejercicios, alimentación, notificaciones, planes, pagos y perfil— pertenecen a
-fases posteriores y todavía no están implementados.
+| Fase | Alcance                                        | Estado     |
+| ---- | ---------------------------------------------- | ---------- |
+| 1    | Fundación del frontend                         | Completada |
+| 2    | Layout administrativo (sidebar y header)       | Completada |
+| 3    | Dashboard (KPIs, gráfico y estados)            | Completada |
+| 4    | Módulo de Empresas (CRUD, filtros, paginación) | Completada |
+| 5    | Módulo de Usuarios (CRUD, filtros, historial)  | Completada |
+
+Los módulos restantes —ejercicios, alimentación, notificaciones, planes, pagos y
+perfil— usan la pantalla compartida «En construcción» y pertenecen a fases
+posteriores.
+
+Nada de esto habla todavía con Laravel: el backend está en desarrollo y la
+aplicación funciona íntegramente contra `src/mocks/`.
