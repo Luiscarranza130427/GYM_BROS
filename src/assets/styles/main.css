@@ -49,6 +49,27 @@
   box-shadow: var(--gb-relieve-fuerte);
 }
 
+/* Acción destructiva (desactivar, eliminar). Comparte el rojo del sistema en
+   lugar del `--bs-danger` de Bootstrap: era el único rojo del panel que no
+   salía de los tokens, y en un diálogo de confirmación el color es
+   precisamente la señal. Se distingue del principal por la forma, no por el
+   tono: sin mayúsculas forzadas ni relieve. */
+.btn-danger {
+  --bs-btn-bg: var(--gb-red);
+  --bs-btn-border-color: var(--gb-red);
+  --bs-btn-hover-bg: var(--gb-red-hover);
+  --bs-btn-hover-border-color: var(--gb-red-hover);
+  --bs-btn-active-bg: var(--gb-red-hover);
+  --bs-btn-active-border-color: var(--gb-red-hover);
+  --bs-btn-disabled-bg: var(--gb-red);
+  --bs-btn-disabled-border-color: var(--gb-red);
+  --bs-btn-color: var(--gb-on-red);
+  --bs-btn-hover-color: var(--gb-on-red);
+  --bs-btn-active-color: var(--gb-on-red);
+  --bs-btn-disabled-color: var(--gb-on-red);
+  --bs-btn-border-radius: var(--gb-radius-pill);
+}
+
 /* Botón "fantasma": sin relleno, borde plateado. Controles secundarios. */
 .btn-ghost {
   --bs-btn-color: var(--gb-text-muted);

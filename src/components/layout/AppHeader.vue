@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 import NotificationButton from '@/components/layout/NotificationButton.vue'
@@ -9,9 +9,17 @@ import { useUiStore } from '@/stores/ui.store'
 const ui = useUiStore()
 const route = useRoute()
 
-const busqueda = ref('')
 const titulo = computed(() => route.meta.title ?? '')
-const mostrarBusqueda = computed(() => route.name === 'dashboard')
+
+/*
+ * Aquí había una caja de búsqueda que no buscaba: tenía `v-model` y su valor no
+ * se usaba en ningún sitio. Se retira en lugar de dejarla decorativa; un control
+ * que no hace nada es peor que su ausencia, porque el usuario teclea, pulsa
+ * Intro y concluye que la aplicación está rota.
+ *
+ * La búsqueda global es una decisión de producto pendiente y necesita backend.
+ * Cada listado ya tiene la suya, que sí funciona y vive en la URL.
+ */
 </script>
 
 <template>
@@ -31,16 +39,6 @@ const mostrarBusqueda = computed(() => route.name === 'dashboard')
       </button>
 
       <p class="header__titulo">{{ titulo }}</p>
-
-      <label v-if="mostrarBusqueda" class="header__busqueda">
-        <span class="visually-hidden">Buscar en el dashboard</span>
-        <i class="bi bi-search" aria-hidden="true"></i>
-        <input
-          v-model="busqueda"
-          type="search"
-          placeholder="Buscar sistemas, usuarios o métricas…"
-        />
-      </label>
     </div>
 
     <div class="header__acciones">
@@ -89,55 +87,12 @@ const mostrarBusqueda = computed(() => route.name === 'dashboard')
   text-transform: uppercase;
 }
 
-.header__busqueda {
-  position: relative;
-  display: block;
-  width: min(100%, 28rem);
-  margin-left: 0.25rem;
-}
-
-.header__busqueda i {
-  position: absolute;
-  top: 50%;
-  left: 0.875rem;
-  color: var(--gb-text-muted);
-  transform: translateY(-50%);
-}
-
-.header__busqueda input {
-  width: 100%;
-  height: 2.5rem;
-  padding: 0 0.875rem 0 2.625rem;
-  background-color: var(--gb-surface);
-  border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius);
-  color: var(--gb-text);
-  font-size: var(--gb-tipo-base);
-  line-height: 1.25;
-  outline: none;
-}
-
-.header__busqueda input:focus {
-  border-color: var(--gb-red);
-  box-shadow: 0 0 0 0.2rem rgba(var(--gb-red-rgb), 0.18);
-}
-
-.header__busqueda input::placeholder {
-  color: var(--gb-text-muted);
-}
-
 .header__acciones {
   flex: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   height: 100%;
-}
-
-@media (max-width: 72rem) {
-  .header__busqueda {
-    display: none;
-  }
 }
 
 @media (max-width: 64rem) {

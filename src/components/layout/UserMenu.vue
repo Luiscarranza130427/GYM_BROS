@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { SECCIONES_DE_USUARIO } from '@/router/navegacion'
@@ -13,6 +13,7 @@ const abierto = ref(false)
 const cerrando = ref(false)
 const contenedor = useTemplateRef('contenedor')
 const disparador = useTemplateRef('disparador')
+const listaOpciones = useTemplateRef('listaOpciones')
 
 const rol = computed(() => auth.usuario?.rol || 'Administrador')
 
@@ -36,14 +37,73 @@ function cerrar() {
   document.removeEventListener('click', alClicarFuera, true)
 }
 
+function abrir() {
+  if (abierto.value) return
+  abierto.value = true
+  document.addEventListener('click', alClicarFuera, true)
+}
+
 function alternar() {
   if (abierto.value) {
     cerrar()
     return
   }
+  abrir()
+}
 
-  abierto.value = true
-  document.addEventListener('click', alClicarFuera, true)
+/*
+ * Navegación con teclado del patrón `menu` de WAI-ARIA.
+ *
+ * Antes se declaraban `role="menu"` y `role="menuitem"` sin nada de esto: un
+ * lector de pantalla anunciaba «menú» y el usuario pulsaba las flechas
+ * esperando moverse entre opciones, sin que ocurriera nada. Prometer un patrón
+ * y no implementarlo es peor que no declararlo.
+ *
+ * Los elementos llevan `tabindex="-1"` y el foco se mueve por código («roving
+ * focus»): dentro de un menú, el tabulador sale, no recorre las opciones.
+ */
+function opciones() {
+  if (!listaOpciones.value) return []
+  return [...listaOpciones.value.querySelectorAll('[role="menuitem"]')].filter(
+    (el) => !el.hasAttribute('disabled'),
+  )
+}
+
+/** @param {number} indice Negativo cuenta desde el final (-1 es la última). */
+function enfocarOpcion(indice) {
+  const lista = opciones()
+  if (lista.length === 0) return
+  const posicion = ((indice % lista.length) + lista.length) % lista.length
+  lista[posicion].focus()
+}
+
+async function abrirYEnfocar(indice) {
+  abrir()
+  await nextTick()
+  enfocarOpcion(indice)
+}
+
+function navegar(evento) {
+  const lista = opciones()
+  if (lista.length === 0) return
+
+  const actual = lista.indexOf(document.activeElement)
+
+  const acciones = {
+    ArrowDown: () => enfocarOpcion(actual + 1),
+    ArrowUp: () => enfocarOpcion(actual - 1),
+    Home: () => enfocarOpcion(0),
+    End: () => enfocarOpcion(-1),
+    Tab: () => {
+      // El tabulador cierra el menú y sigue el flujo normal del documento.
+      cerrar()
+      return false
+    },
+  }
+
+  const accion = acciones[evento.key]
+  if (!accion) return
+  if (accion() !== false) evento.preventDefault()
 }
 
 function cerrarConEscape() {
@@ -76,7 +136,10 @@ async function cerrarSesion() {
       :aria-expanded="abierto"
       aria-haspopup="menu"
       aria-controls="menu-usuario"
+      aria-label="Menú de usuario"
       @click="alternar"
+      @keydown.down.prevent="abrirYEnfocar(0)"
+      @keydown.up.prevent="abrirYEnfocar(-1)"
     >
       <span class="menu__avatar" aria-hidden="true">{{ iniciales }}</span>
       <span class="menu__resumen">
@@ -84,37 +147,42 @@ async function cerrarSesion() {
         <small>{{ rol }}</small>
       </span>
       <i class="bi bi-chevron-down menu__flecha" aria-hidden="true"></i>
-      <span class="visually-hidden">Abrir menú de usuario</span>
     </button>
 
-    <div v-show="abierto" id="menu-usuario" class="menu__panel" role="menu">
+    <div v-show="abierto" id="menu-usuario" class="menu__panel">
+      <!-- La cabecera queda FUERA del role="menu": un menú accesible sólo puede
+           contener elementos de menú, y esto es texto informativo. -->
       <p class="menu__cabecera">
         <span class="menu__nombre">{{ auth.usuario?.nombre }}</span>
         <span class="menu__correo">{{ auth.usuario?.correo }}</span>
       </p>
 
-      <RouterLink
-        v-for="seccion in SECCIONES_DE_USUARIO"
-        :key="seccion.name"
-        class="menu__opcion"
-        :to="{ name: seccion.name }"
-        role="menuitem"
-        @click="cerrar"
-      >
-        <i class="bi" :class="seccion.icono" aria-hidden="true"></i>
-        {{ seccion.title }}
-      </RouterLink>
+      <div ref="listaOpciones" role="menu" aria-label="Opciones de usuario" @keydown="navegar">
+        <RouterLink
+          v-for="seccion in SECCIONES_DE_USUARIO"
+          :key="seccion.name"
+          class="menu__opcion"
+          :to="{ name: seccion.name }"
+          role="menuitem"
+          tabindex="-1"
+          @click="cerrar"
+        >
+          <i class="bi" :class="seccion.icono" aria-hidden="true"></i>
+          {{ seccion.title }}
+        </RouterLink>
 
-      <button
-        type="button"
-        class="menu__opcion menu__opcion--salir"
-        role="menuitem"
-        :disabled="cerrando"
-        @click="cerrarSesion"
-      >
-        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-        {{ cerrando ? 'Cerrando…' : 'Cerrar sesión' }}
-      </button>
+        <button
+          type="button"
+          class="menu__opcion menu__opcion--salir"
+          role="menuitem"
+          tabindex="-1"
+          :disabled="cerrando"
+          @click="cerrarSesion"
+        >
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          {{ cerrando ? 'Cerrando…' : 'Cerrar sesión' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
