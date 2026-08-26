@@ -90,6 +90,42 @@ describe('UsuariosView', () => {
     expect(replace).toHaveBeenCalledWith({ name: 'usuarios-listado' })
   })
 
+  it('conserva la búsqueda a medio escribir al cambiar un filtro', async () => {
+    // La URL va por detrás de la caja: refleja un rebote anterior ('car'),
+    // mientras el usuario ya ha escrito 'carlos'.
+    vi.useFakeTimers()
+    route.query = { search: 'car' }
+    obtenerUsuarios.mockResolvedValue(RESPUESTA)
+    // Se imita al router de verdad: una navegación cambia la ruta y eso vuelve
+    // a disparar la carga. Sin esto el fallo no se reproduce.
+    replace.mockImplementation(({ query = {} }) => {
+      route.query = query
+    })
+
+    const wrapper = montar()
+    await flushPromises()
+
+    await wrapper.get('#buscar-usuario').setValue('carlos')
+    await wrapper.get('#filtro-estado').setValue('active')
+    await flushPromises()
+
+    // La caja conserva lo tecleado en lugar de revertir al 'car' de la URL...
+    expect(wrapper.get('#buscar-usuario').element.value).toBe('carlos')
+    // ...y se navega una sola vez, llevando búsqueda y filtro juntos.
+    expect(replace).toHaveBeenCalledTimes(1)
+    expect(replace).toHaveBeenCalledWith({
+      name: 'usuarios-listado',
+      query: { search: 'carlos', status: 'active' },
+    })
+
+    // El rebote pendiente quedó cancelado: no hay una segunda navegación tardía.
+    vi.advanceTimersByTime(1000)
+    await flushPromises()
+    expect(replace).toHaveBeenCalledTimes(1)
+
+    vi.useRealTimers()
+  })
+
   it('muestra un error recuperable y permite reintentar', async () => {
     obtenerUsuarios.mockRejectedValueOnce(new Error('Servicio no disponible.')).mockResolvedValueOnce(RESPUESTA)
     const wrapper = montar()

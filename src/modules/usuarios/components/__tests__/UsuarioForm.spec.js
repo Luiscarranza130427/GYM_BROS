@@ -68,6 +68,28 @@ describe('UsuarioForm', () => {
     expect(wrapper.text()).toContain('El documento ya está registrado.')
   })
 
+  it('aplica a cada tipo de documento su propia regla, y sólo la suya', async () => {
+    // Fija el contrato que el `!== 'DNI'` en mayúsculas dejaba ambiguo: al DNI
+    // le toca la regla de 8 dígitos exactos y NO la genérica de 5–20 caracteres.
+    const wrapper = mount(UsuarioForm, { props: { empresas: EMPRESAS } })
+    await completarFormulario(wrapper)
+
+    // Un DNI de 9 dígitos entra en el rango genérico 5–20, pero es inválido.
+    await wrapper.get('#usuario-documento').setValue('123456789')
+    await wrapper.get('form').trigger('submit')
+    expect(wrapper.emitted('submit')).toBeUndefined()
+    expect(wrapper.text()).toContain('exactamente 8 dígitos')
+
+    // El pasaporte usa la regla genérica: acepta letras y otra longitud.
+    await wrapper.get('#usuario-tipo-documento').setValue('passport')
+    await wrapper.get('#usuario-documento').setValue('AB123456')
+    await wrapper.get('form').trigger('submit')
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+    expect(wrapper.emitted('submit')[0][0]).toEqual(
+      expect.objectContaining({ tipoDocumento: 'passport', numeroDocumento: 'AB123456' }),
+    )
+  })
+
   it('rechaza un DNI y una fecha futura inválidos', async () => {
     const wrapper = mount(UsuarioForm, { props: { empresas: EMPRESAS } })
     await completarFormulario(wrapper)

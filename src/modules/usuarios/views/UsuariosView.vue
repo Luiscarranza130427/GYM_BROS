@@ -62,6 +62,17 @@ function paginaValida(valor) {
   return Number.isFinite(numero) && numero > 0 ? numero : 1
 }
 
+/**
+ * Cancela el rebote de la búsqueda y deja constancia de que ya no hay ninguno
+ * pendiente. `clearTimeout` por sí solo no borra la variable, y el resto de la
+ * vista se apoya en que `temporizadorBusqueda === null` signifique "el usuario
+ * no está escribiendo ahora mismo".
+ */
+function cancelarBusquedaPendiente() {
+  window.clearTimeout(temporizadorBusqueda)
+  temporizadorBusqueda = null
+}
+
 function construirQuery(cambios = {}) {
   const filtros = {
     search: busqueda.value,
@@ -101,7 +112,13 @@ async function cargarUsuarios() {
   const idSolicitud = ++solicitudActual
   estadoVista.value = 'loading'
   mensajeError.value = ''
-  busqueda.value = String(route.query.search ?? '')
+  // El input sólo se resincroniza desde la URL cuando el usuario NO está
+  // escribiendo. Si hay un rebote pendiente, esta carga la provocó otra cosa
+  // (un filtro, el botón atrás) y copiar aquí el `search` viejo de la URL
+  // borraría de la caja lo que se está tecleando.
+  if (temporizadorBusqueda === null) {
+    busqueda.value = String(route.query.search ?? '')
+  }
   empresa.value = valorValido(route.query.company, [], 'all')
   estado.value = valorValido(route.query.status, ESTADOS)
   suscripcion.value = valorValido(route.query.subscription, SUSCRIPCIONES)
@@ -143,8 +160,11 @@ async function cargarEmpresas() {
 
 function cambiarBusqueda(valor) {
   busqueda.value = valor
-  window.clearTimeout(temporizadorBusqueda)
-  temporizadorBusqueda = window.setTimeout(() => actualizarQuery({ search: valor, page: 1 }), 350)
+  cancelarBusquedaPendiente()
+  temporizadorBusqueda = window.setTimeout(() => {
+    temporizadorBusqueda = null
+    actualizarQuery({ search: valor, page: 1 })
+  }, 350)
 }
 
 function cambiarFiltro(campo, valor) {
@@ -152,11 +172,17 @@ function cambiarFiltro(campo, valor) {
   if (campo === 'status') estado.value = valor
   if (campo === 'subscription') suscripcion.value = valor
   if (campo === 'role') rol.value = valor
-  actualizarQuery({ [campo]: valor, page: 1 })
+
+  // Se navega ya, así que el rebote pendiente sobra: si se dejara vivo, dispararía
+  // una segunda navegación 350 ms después. Y se arrastra lo tecleado hasta ahora
+  // (`busqueda.value`, no el `search` de la URL, que va por detrás) para que el
+  // cambio de filtro no descarte la búsqueda a medio escribir.
+  cancelarBusquedaPendiente()
+  actualizarQuery({ [campo]: valor, search: busqueda.value, page: 1 })
 }
 
 function limpiarFiltros() {
-  window.clearTimeout(temporizadorBusqueda)
+  cancelarBusquedaPendiente()
   busqueda.value = ''
   empresa.value = 'all'
   estado.value = 'all'
@@ -219,7 +245,7 @@ cargarEmpresas()
 
 onBeforeUnmount(() => {
   solicitudActual += 1
-  window.clearTimeout(temporizadorBusqueda)
+  cancelarBusquedaPendiente()
 })
 </script>
 

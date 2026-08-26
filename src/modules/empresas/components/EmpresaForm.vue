@@ -68,6 +68,9 @@ function cargarValores(valores) {
   Object.keys(erroresLocales).forEach((campo) => delete erroresLocales[campo])
   erroresRemotos.value = {}
   errorLogo.value = ''
+  // Se libera antes de reemplazar la vista previa: si había un archivo elegido,
+  // su objectURL quedaría reservado en memoria durante toda la sesión.
+  liberarVistaPrevia()
   vistaPreviaLogo.value = valores.logoUrl || ''
 }
 
@@ -406,7 +409,7 @@ onBeforeUnmount(liberarVistaPrevia)
           <span aria-hidden="true"><i class="bi bi-palette"></i></span>
           <div>
             <h2 id="titulo-identidad">Identidad visual</h2>
-            <p>Vista previa local; la subida final dependerá del backend.</p>
+            <p>Los colores sí se guardan. El logo, todavía no: falta el endpoint de subida.</p>
           </div>
         </header>
 
@@ -431,7 +434,10 @@ onBeforeUnmount(liberarVistaPrevia)
               :aria-describedby="errorLogo || errorDe('logoUrl') ? 'error-logo' : 'ayuda-logo'"
               @change="seleccionarLogo"
             />
-            <p id="ayuda-logo" class="campo__ayuda">PNG, JPG o WebP. Máximo 2 MB.</p>
+            <p id="ayuda-logo" class="campo__ayuda">
+              PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
+              <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
+            </p>
             <p v-if="errorLogo || errorDe('logoUrl')" id="error-logo" class="campo__error">
               {{ errorLogo || errorDe('logoUrl') }}
             </p>
