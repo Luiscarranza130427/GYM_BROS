@@ -11,9 +11,6 @@ import {
 /** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
 const cargarMock = () => import('@/mocks/empresas.mock')
 
-/** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
-const cargarMock = () => import('@/mocks/empresas.mock')
-
 const CAMPOS_ERROR = {
   name: 'nombre',
   manager_name: 'gerente',

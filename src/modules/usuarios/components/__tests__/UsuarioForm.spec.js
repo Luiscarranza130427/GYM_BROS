@@ -61,9 +61,7 @@ describe('UsuarioForm', () => {
     })
 
     expect(wrapper.get('#usuario-correo').attributes('aria-describedby')).toBe('error-correo')
-    expect(wrapper.get('#usuario-documento').attributes('aria-describedby')).toBe(
-      'error-documento',
-    )
+    expect(wrapper.get('#usuario-documento').attributes('aria-describedby')).toBe('error-documento')
     expect(wrapper.text()).toContain('El correo ya se encuentra registrado.')
     expect(wrapper.text()).toContain('El documento ya está registrado.')
   })

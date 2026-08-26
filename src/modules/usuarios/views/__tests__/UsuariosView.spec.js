@@ -127,7 +127,9 @@ describe('UsuariosView', () => {
   })
 
   it('muestra un error recuperable y permite reintentar', async () => {
-    obtenerUsuarios.mockRejectedValueOnce(new Error('Servicio no disponible.')).mockResolvedValueOnce(RESPUESTA)
+    obtenerUsuarios
+      .mockRejectedValueOnce(new Error('Servicio no disponible.'))
+      .mockResolvedValueOnce(RESPUESTA)
     const wrapper = montar()
     await flushPromises()
     expect(wrapper.get('[role="alert"]').text()).toContain('Servicio no disponible.')
