@@ -3,7 +3,9 @@ import { createPinia } from 'pinia'
 
 // Bootstrap primero y los estilos propios después, para que los tokens de
 // Gym Bros puedan sobrescribir a los de Bootstrap por orden de cascada.
-import 'bootstrap/dist/css/bootstrap.min.css'
+// No se importa el CSS distribuido completo, sino la selección de parciales que
+// el panel usa de verdad: ver `@/assets/styles/bootstrap.scss`.
+import '@/assets/styles/bootstrap.scss'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import '@/assets/styles/main.css'
 

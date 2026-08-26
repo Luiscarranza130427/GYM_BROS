@@ -71,6 +71,20 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        /*
+         * Bootstrap 5.3 sigue escrito con `@import` y la función `if()` de Sass,
+         * ambos marcados como obsoletos en Dart Sass. Son avisos de código de
+         * terceros que no podemos corregir y que en cada build tapaban la salida
+         * útil. Se silencian sólo estas dos categorías: cualquier otro aviso de
+         * Sass, incluidos los de nuestro propio SCSS, sigue viéndose.
+         */
+        silenceDeprecations: ['import', 'if-function', 'global-builtin', 'color-functions'],
+      },
+    },
+  },
   server: {
     port: 5173,
   },
