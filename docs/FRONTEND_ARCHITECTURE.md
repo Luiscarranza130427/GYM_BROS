@@ -31,7 +31,7 @@ src/
 ├── components/
 │   ├── base/           ConfirmDialog.vue · PageHeader.vue · IconoMancuerna.vue
 │   └── layout/         AppHeader.vue · AppSidebar.vue · UserMenu.vue · …
-├── composables/        useListadoFiltrable.js  (listados con filtros en la URL)
+├── composables/        useListadoFiltrable.js · useFormulario.js · useVistaPreviaArchivo.js
 ├── config/             env.js  (único lector de import.meta.env)
 ├── constants/          regionesPeru.js
 ├── layouts/            AuthLayout.vue · DashboardLayout.vue
@@ -40,7 +40,7 @@ src/
 ├── router/             index.js · guards.js · navegacion.js
 ├── services/           api.js · http-error.js · normalizacion.js · *.service.js
 ├── stores/             auth.store.js · ui.store.js
-├── utils/              formato.js · iniciales.js
+├── utils/              formato.js · iniciales.js · validaciones.js
 ├── views/              NotFoundView.vue · EnConstruccionView.vue
 ├── App.vue
 └── main.js
@@ -178,10 +178,16 @@ Ejemplo con `ejercicios`, que hoy usa la pantalla «En construcción».
    CRUD en `router/index.js` como hacen Empresas y Usuarios, conservando el
    nombre del padre para que el enlace del menú siga activo.
 
-4. **Componentes** — se extrae un subcomponente cuando hay reutilización real o
+4. **Formulario** — sobre `useFormulario`, que ya resuelve carga de valores
+   iniciales, errores 422 por campo, limpieza al escribir y foco en el primer
+   error. Las reglas de forma (correo, teléfono, color, URL, fecha) salen de
+   `utils/validaciones.js`; el módulo escribe sólo las suyas. Si hay imagen,
+   `useVistaPreviaArchivo`.
+
+5. **Componentes** — se extrae un subcomponente cuando hay reutilización real o
    la vista se vuelve difícil de leer, no por norma.
 
-5. **Store** — en `src/stores/` **sólo** si el estado lo necesita más de una
+6. **Store** — en `src/stores/` **sólo** si el estado lo necesita más de una
    vista. Un listado no lo necesita: su estado vive en la URL.
 
 ## 10. Pendiente para la integración con Laravel
@@ -233,10 +239,6 @@ Implementado en Fase 2:
   sus ~2000 reglas CSS (~95 KB) para los 45 iconos que se usan. Recortarlo exige
   generar un subconjunto, con el riesgo de que un icono añadido más tarde deje de
   renderizarse en silencio; la alternativa es pasar a SVG en línea. Sin decidir.
-- **Formularios.** `EmpresaForm` y `UsuarioForm` comparten aproximadamente el 70%
-  del código: validación de correo y teléfono idéntica, gestión de errores por
-  campo, foco en el primer error y el ciclo de vista previa de archivo. Pendiente
-  de extraer, como se hizo con los listados.
 - **Subida de imágenes.** El selector de logo y el de foto de perfil muestran
   vista previa pero no envían el archivo: falta acordar con Natan si va en
   `multipart/form-data` dentro del propio POST/PUT o en un endpoint previo que
@@ -253,6 +255,8 @@ Resuelto desde la revisión de código:
 - Las fuentes ya no se cargaban dos veces ni en TTF (1489 KB → 184 KB).
 - Los mocks y las credenciales de demostración ya no entran en el bundle de
   producción.
+- Los formularios ya no duplican su mitad no visual: `useFormulario`,
+  `useVistaPreviaArchivo` y `utils/validaciones.js`.
 
 ## 14. Empresas — Fase 4
 
