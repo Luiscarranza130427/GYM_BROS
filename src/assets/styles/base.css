@@ -1,6 +1,18 @@
+/*
+ * Fuentes autoalojadas en WOFF2, subconjuntadas al rango latino (el mismo que
+ * sirve Google Fonts: cubre todo el español, comillas, guiones largos y €).
+ *
+ * Se sirven desde el propio dominio a propósito: antes se cargaban DOS veces,
+ * una desde fonts.googleapis.com y otra desde aquí en TTF. Eso costaba una
+ * petición a un tercero (con lo que implica de privacidad en un panel
+ * administrativo) y 1,5 MB de TTF que ganaban la cascada. Ahora son 184 KB.
+ *
+ * Para regenerarlas desde un .ttf hace falta fonttools + brotli:
+ *   pyftsubset FUENTE.ttf --unicodes=U+0000-00FF,U+0100-024F,...  *     --layout-features=kern,liga,clig,calt,tnum --flavor=woff2
+ */
 @font-face {
   font-family: 'Inter';
-  src: url('@/assets/fonts/inter-400.ttf') format('truetype');
+  src: url('@/assets/fonts/inter-400.woff2') format('woff2');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -8,7 +20,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('@/assets/fonts/inter-600.ttf') format('truetype');
+  src: url('@/assets/fonts/inter-600.woff2') format('woff2');
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -16,7 +28,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('@/assets/fonts/inter-700.ttf') format('truetype');
+  src: url('@/assets/fonts/inter-700.woff2') format('woff2');
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -24,7 +36,7 @@
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('@/assets/fonts/montserrat-700.ttf') format('truetype');
+  src: url('@/assets/fonts/montserrat-700.woff2') format('woff2');
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -32,7 +44,7 @@
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('@/assets/fonts/montserrat-800.ttf') format('truetype');
+  src: url('@/assets/fonts/montserrat-800.woff2') format('woff2');
   font-style: normal;
   font-weight: 800;
   font-display: swap;
@@ -40,7 +52,7 @@
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('@/assets/fonts/montserrat-900.ttf') format('truetype');
+  src: url('@/assets/fonts/montserrat-900.woff2') format('woff2');
   font-style: normal;
   font-weight: 900;
   font-display: swap;

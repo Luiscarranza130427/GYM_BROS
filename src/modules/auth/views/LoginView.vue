@@ -61,7 +61,7 @@ async function enviar() {
       <span>Introduce tus credenciales para entrar al centro de mando.</span>
     </header>
 
-    <p v-if="mensajeError" id="error-login" class="alert alert-danger py-2" role="alert">
+    <p v-if="mensajeError" id="error-login" class="alert alert-danger login__error" role="alert">
       {{ mensajeError }}
     </p>
 
@@ -168,6 +168,12 @@ async function enviar() {
   margin-top: 0.5rem;
   color: var(--gb-text-muted);
   font-size: 0.9375rem;
+}
+
+/* Sustituye a la utilidad `py-2` de Bootstrap: era la única en todo el proyecto
+   y arrastrar por ella la API de utilidades costaba cientos de clases. */
+.login__error {
+  padding-block: 0.5rem;
 }
 
 .login__campo + .login__campo {
