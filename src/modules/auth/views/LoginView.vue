@@ -15,11 +15,15 @@ const mensajeError = ref('')
 const mostrarContrasena = ref(false)
 const campoCorreo = useTemplateRef('campoCorreo')
 
-const pistaDemo = pistaDeCredenciales()
+// La pista de demo llega de forma asíncrona: el servicio carga los datos
+// simulados con `import()` para que no entren en el bundle de producción. La
+// vista sigue sin saber si hay backend o no; sólo espera la respuesta.
+const pistaDemo = ref(null)
 const hayError = computed(() => Boolean(mensajeError.value))
 
-onMounted(() => {
+onMounted(async () => {
   campoCorreo.value?.focus()
+  pistaDemo.value = await pistaDeCredenciales()
 })
 
 function destinoSeguro(redirect) {

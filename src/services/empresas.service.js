@@ -1,13 +1,9 @@
 import { USE_MOCKS } from '@/config/env'
-import {
-  actualizarEmpresaMock,
-  crearEmpresaMock,
-  desactivarEmpresaMock,
-  obtenerEmpresaMock,
-  obtenerEmpresasMock,
-} from '@/mocks/empresas.mock'
 import api from '@/services/api'
 import { HttpError } from '@/services/http-error'
+
+/** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
+const cargarMock = () => import('@/mocks/empresas.mock')
 
 const CAMPOS_ERROR = {
   name: 'nombre',
@@ -150,7 +146,7 @@ async function ejecutarPeticion(peticion) {
 
 /** CONTRATO PROVISIONAL: GET /empresas. */
 export async function obtenerEmpresas(params = {}) {
-  if (USE_MOCKS) return obtenerEmpresasMock(params)
+  if (USE_MOCKS) return (await cargarMock()).obtenerEmpresasMock(params)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.get('/empresas', { params: prepararParametros(params) })
@@ -160,7 +156,7 @@ export async function obtenerEmpresas(params = {}) {
 
 /** CONTRATO PROVISIONAL: GET /empresas/:id. */
 export async function obtenerEmpresa(id) {
-  if (USE_MOCKS) return obtenerEmpresaMock(id)
+  if (USE_MOCKS) return (await cargarMock()).obtenerEmpresaMock(id)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.get(`/empresas/${id}`)
@@ -171,7 +167,7 @@ export async function obtenerEmpresa(id) {
 /** CONTRATO PROVISIONAL: POST /empresas. */
 export async function crearEmpresa(payload) {
   const datosEditables = seleccionarCamposEditables(payload)
-  if (USE_MOCKS) return crearEmpresaMock(datosEditables)
+  if (USE_MOCKS) return (await cargarMock()).crearEmpresaMock(datosEditables)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.post('/empresas', prepararPayload(datosEditables))
@@ -182,7 +178,7 @@ export async function crearEmpresa(payload) {
 /** CONTRATO PROVISIONAL: PUT /empresas/:id. */
 export async function actualizarEmpresa(id, payload) {
   const datosEditables = seleccionarCamposEditables(payload)
-  if (USE_MOCKS) return actualizarEmpresaMock(id, datosEditables)
+  if (USE_MOCKS) return (await cargarMock()).actualizarEmpresaMock(id, datosEditables)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.put(`/empresas/${id}`, prepararPayload(datosEditables))
@@ -192,7 +188,7 @@ export async function actualizarEmpresa(id, payload) {
 
 /** CONTRATO PROVISIONAL: DELETE /empresas/:id (desactivación lógica). */
 export async function desactivarEmpresa(id) {
-  if (USE_MOCKS) return desactivarEmpresaMock(id)
+  if (USE_MOCKS) return (await cargarMock()).desactivarEmpresaMock(id)
 
   return ejecutarPeticion(async () => {
     const { data } = await api.delete(`/empresas/${id}`)

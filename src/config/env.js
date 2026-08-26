@@ -33,5 +33,19 @@ export const API_BASE_URL = baseIndicada || 'http://localhost:8000/api/v1'
  * En un build de producción el valor por defecto es `false` a propósito: si
  * alguien despliega sin definir VITE_USE_MOCKS, el panel NO puede quedarse
  * autenticando contra datos simulados con credenciales públicas.
+ *
+ * La forma de esta expresión importa tanto como su resultado. Vite sustituye
+ * `import.meta.env.DEV` y `import.meta.env.VITE_USE_MOCKS` por literales al
+ * compilar, así que en un build de producción todo esto se pliega a una
+ * constante. Eso permite a Rollup eliminar como código muerto cada rama
+ * `if (USE_MOCKS)` de los servicios y, con ellas, los `import()` de `@/mocks`:
+ * los datos simulados y las credenciales de demostración no llegan siquiera a
+ * generarse como archivo. Si se envuelve en una función auxiliar, el plegado
+ * deja de ocurrir y los mocks vuelven a aparecer en `dist/`.
+ *
+ * En producción la comparación es estricta contra 'true' a propósito: cualquier
+ * otro valor deja los mocks apagados, que es el fallo seguro.
  */
-export const USE_MOCKS = leerBooleano(import.meta.env.VITE_USE_MOCKS, import.meta.env.DEV)
+export const USE_MOCKS = import.meta.env.DEV
+  ? leerBooleano(import.meta.env.VITE_USE_MOCKS, true)
+  : import.meta.env.VITE_USE_MOCKS === 'true'
