@@ -1,0 +1,161 @@
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import UserMenu from '@/components/layout/UserMenu.vue'
+import { useAuthStore } from '@/stores/auth.store'
+
+enableAutoUnmount(afterEach)
+
+vi.mock('vue-router', async (importOriginal) => {
+  const original = await importOriginal()
+  return { ...original, useRouter: () => ({ replace: vi.fn() }) }
+})
+
+const RouterLinkStub = {
+  props: ['to'],
+  template: '<a href="#" role="menuitem" tabindex="-1"><slot /></a>',
+}
+
+function montar() {
+  return mount(UserMenu, {
+    attachTo: document.body,
+    global: { stubs: { RouterLink: RouterLinkStub } },
+  })
+}
+
+const disparador = () => document.querySelector('.menu__disparador')
+const menu = () => document.querySelector('[role="menu"]')
+const opciones = () => [...document.querySelectorAll('[role="menuitem"]')]
+
+function teclaEn(elemento, key, opts = {}) {
+  elemento.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...opts }))
+}
+
+describe('UserMenu', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+    const auth = useAuthStore()
+    auth.usuario = {
+      id: 1,
+      nombre: 'Administrador Demo',
+      correo: 'admin@gymbros.test',
+      rol: 'admin',
+    }
+    auth.token = 'token-de-prueba'
+  })
+
+  it('da al disparador un nombre accesible propio', () => {
+    montar()
+    // Antes el botón contenía nombre, rol y un texto oculto: un lector de
+    // pantalla anunciaba «Administrador Demo admin Abrir menú de usuario».
+    expect(disparador().getAttribute('aria-label')).toBe('Menú de usuario')
+    expect(disparador().getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('muestra las iniciales en lugar de descargar una fotografía', () => {
+    montar()
+    expect(document.querySelector('.menu__avatar').textContent.trim()).toBe('AD')
+    expect(document.querySelector('.menu__avatar').tagName).not.toBe('IMG')
+  })
+
+  it('deja la cabecera de identidad FUERA del contenedor con role="menu"', async () => {
+    montar()
+    await disparador().click()
+    await flushPromises()
+
+    // Un menú accesible sólo puede contener elementos de menú; el bloque con
+    // nombre y correo es texto informativo.
+    expect(document.querySelector('.menu__cabecera')).not.toBeNull()
+    expect(menu().querySelector('.menu__cabecera')).toBeNull()
+  })
+
+  describe('navegación con teclado', () => {
+    it('ArrowDown sobre el disparador abre el menú y enfoca la primera opción', async () => {
+      montar()
+      disparador().focus()
+      teclaEn(disparador(), 'ArrowDown')
+      await flushPromises()
+
+      expect(disparador().getAttribute('aria-expanded')).toBe('true')
+      expect(document.activeElement).toBe(opciones()[0])
+    })
+
+    it('ArrowUp sobre el disparador abre el menú y enfoca la última', async () => {
+      montar()
+      disparador().focus()
+      teclaEn(disparador(), 'ArrowUp')
+      await flushPromises()
+
+      const lista = opciones()
+      expect(document.activeElement).toBe(lista[lista.length - 1])
+    })
+
+    it('recorre las opciones de forma circular', async () => {
+      montar()
+      disparador().focus()
+      teclaEn(disparador(), 'ArrowDown')
+      await flushPromises()
+
+      const lista = opciones()
+      expect(lista.length).toBeGreaterThan(1)
+
+      // Bajar hasta el final y una vez más: vuelve al principio.
+      for (let i = 0; i < lista.length; i += 1) teclaEn(menu(), 'ArrowDown')
+      expect(document.activeElement).toBe(lista[0])
+
+      // Y hacia arriba desde la primera se va a la última.
+      teclaEn(menu(), 'ArrowUp')
+      expect(document.activeElement).toBe(lista[lista.length - 1])
+    })
+
+    it('Home y End saltan a los extremos', async () => {
+      montar()
+      disparador().focus()
+      teclaEn(disparador(), 'ArrowDown')
+      await flushPromises()
+
+      const lista = opciones()
+      teclaEn(menu(), 'End')
+      expect(document.activeElement).toBe(lista[lista.length - 1])
+
+      teclaEn(menu(), 'Home')
+      expect(document.activeElement).toBe(lista[0])
+    })
+
+    it('las opciones quedan fuera del orden de tabulación', async () => {
+      montar()
+      await disparador().click()
+      await flushPromises()
+
+      // Dentro de un menú el tabulador sale; el recorrido es con flechas.
+      expect(opciones().every((o) => o.getAttribute('tabindex') === '-1')).toBe(true)
+    })
+
+    it('Tab cierra el menú y devuelve el flujo al documento', async () => {
+      montar()
+      disparador().focus()
+      teclaEn(disparador(), 'ArrowDown')
+      await flushPromises()
+      expect(disparador().getAttribute('aria-expanded')).toBe('true')
+
+      teclaEn(menu(), 'Tab')
+      await flushPromises()
+      expect(disparador().getAttribute('aria-expanded')).toBe('false')
+    })
+  })
+
+  it('Escape cierra el menú y devuelve el foco al disparador', async () => {
+    montar()
+    await disparador().click()
+    await flushPromises()
+    expect(disparador().getAttribute('aria-expanded')).toBe('true')
+
+    teclaEn(document.querySelector('.menu'), 'Escape')
+    await flushPromises()
+
+    expect(disparador().getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(disparador())
+  })
+})

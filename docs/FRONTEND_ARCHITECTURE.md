@@ -257,6 +257,9 @@ Resuelto desde la revisión de código:
   producción.
 - Los formularios ya no duplican su mitad no visual: `useFormulario`,
   `useVistaPreviaArchivo` y `utils/validaciones.js`.
+- Hay verificación automática en CI y medición de cobertura.
+- `ConfirmDialog` bloquea el scroll de fondo y atrapa el foco de verdad;
+  `UserMenu` implementa el patrón `menu` con flechas, Home y End.
 
 ## 14. Empresas — Fase 4
 

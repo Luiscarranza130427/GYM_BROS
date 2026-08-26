@@ -16,6 +16,36 @@ import { useAuthStore } from '@/stores/auth.store'
 
 const app = createApp(App)
 
+/*
+ * Red de seguridad. Sin esto, un error en el `setup` de cualquier componente
+ * deja la pantalla en blanco sin traza: Vue lo captura y no lo propaga a la
+ * consola, así que ni el usuario ve nada ni el desarrollador se entera.
+ *
+ * No se intenta recuperar la aplicación, sólo dejar constancia: adivinar cómo
+ * seguir tras un error desconocido produce estados peores que el fallo.
+ *
+ * Cuando haya un servicio de monitorización (Sentry o similar), este es el
+ * punto donde se le envía.
+ */
+app.config.errorHandler = (error, _instancia, informacion) => {
+  console.error(`[Gym Bros] Error no capturado en ${informacion}:`, error)
+}
+
+// Los avisos de Vue en desarrollo también pasan por aquí; en producción Vue no
+// los emite, así que no hay coste en el bundle público.
+app.config.warnHandler = (aviso, _instancia, traza) => {
+  console.warn(`[Gym Bros] ${aviso}${traza}`)
+}
+
+/*
+ * Una navegación que falla por un error de carga —un chunk que no se descarga
+ * porque se ha desplegado una versión nueva, por ejemplo— deja al usuario
+ * parado sin explicación. Al menos queda registrado.
+ */
+router.onError((error, to) => {
+  console.error(`[Gym Bros] La navegación a "${to.fullPath}" falló:`, error)
+})
+
 // Pinia antes que el router: los guards consultan el store de autenticación en
 // la primera navegación, que se dispara al instalar el router.
 app.use(createPinia())
@@ -33,7 +63,12 @@ registrarManejadorNoAutorizado(() => {
 
   const rutaActual = router.currentRoute.value
   if (rutaActual.name !== 'login') {
-    router.push({ name: 'login', query: { redirect: rutaActual.fullPath } })
+    // El `.catch()` no sobra: si el 401 llega mientras hay una navegación en
+    // curso, vue-router rechaza esta promesa con un NavigationFailure y quedaría
+    // como rechazo sin capturar en la consola. Que la redirección se pierda es
+    // aceptable —el guard mandará al login igualmente—; ensuciar la consola con
+    // un error que no lo es, no.
+    router.push({ name: 'login', query: { redirect: rutaActual.fullPath } }).catch(() => {})
   }
 })
 
