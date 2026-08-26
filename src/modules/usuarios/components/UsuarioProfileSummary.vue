@@ -11,28 +11,26 @@ const props = defineProps({
   usuario: { type: Object, required: true },
 })
 
-const nombre = computed(() => props.usuario.nombre ?? props.usuario.firstName ?? '')
-const apellido = computed(() => props.usuario.apellido ?? props.usuario.lastName ?? '')
+/*
+ * Este componente confía en la forma que garantiza `usuarios.service`. Antes
+ * aceptaba además un vocabulario inglés en camelCase —firstName, lastName,
+ * email, phone, address, profilePhoto, avatarUrl, company, status, role,
+ * subscription, activity, startedAt, daysRemaining…— que el servicio no produce
+ * en ningún caso, ni con mocks ni con API.
+ *
+ * Eran ramas muertas, y además peligrosas: si el normalizador cambiase un
+ * nombre de campo, el perfil no fallaría, se limitaría a mostrar «No
+ * especificado» sin que nadie se enterase. La anticorrupción vive en el
+ * servicio; duplicarla aquí sólo servía para enmascarar sus fallos.
+ */
 const nombreCompleto = computed(
-  () => [nombre.value, apellido.value].filter(Boolean).join(' ').trim() || 'Usuario sin nombre',
+  () =>
+    [props.usuario.nombre, props.usuario.apellido].filter(Boolean).join(' ').trim() ||
+    'Usuario sin nombre',
 )
-const correo = computed(() => props.usuario.correo ?? props.usuario.email ?? '')
-const telefono = computed(() => props.usuario.telefono ?? props.usuario.phone ?? '')
-const direccion = computed(() => props.usuario.direccion ?? props.usuario.address ?? '')
-const fotoPerfil = computed(
-  () => props.usuario.fotoPerfil ?? props.usuario.profilePhoto ?? props.usuario.avatarUrl ?? '',
-)
-const empresa = computed(() => props.usuario.empresa ?? props.usuario.company ?? null)
-const empresaId = computed(() => empresa.value?.id ?? props.usuario.empresaId ?? null)
-const empresaNombre = computed(
-  () => empresa.value?.nombre ?? empresa.value?.name ?? props.usuario.empresaNombre ?? '',
-)
-const estado = computed(() => props.usuario.estado ?? props.usuario.status ?? 'inactive')
-const rol = computed(() => props.usuario.rol ?? props.usuario.role ?? '')
-const suscripcion = computed(() => props.usuario.suscripcion ?? props.usuario.subscription ?? null)
-const metricas = computed(
-  () => props.usuario.actividad ?? props.usuario.metricas ?? props.usuario.activity ?? {},
-)
+const empresa = computed(() => props.usuario.empresa ?? null)
+const suscripcion = computed(() => props.usuario.suscripcion ?? null)
+const metricas = computed(() => props.usuario.actividad ?? {})
 
 const etiquetasRol = {
   admin: 'Administrador',
@@ -49,44 +47,23 @@ const etiquetasRol = {
 }
 const etiquetasDocumento = { dni: 'DNI', passport: 'Pasaporte', other: 'Otro' }
 
-const rolLegible = computed(() => etiquetasRol[rol.value] ?? rol.value ?? 'No especificado')
+const rolLegible = computed(
+  () => etiquetasRol[props.usuario.rol] ?? props.usuario.rol ?? 'No especificado',
+)
 const documento = computed(() => {
-  const tipo = props.usuario.tipoDocumento ?? props.usuario.documentType ?? ''
-  const numero = props.usuario.numeroDocumento ?? props.usuario.documentNumber ?? ''
-  return [etiquetasDocumento[tipo] ?? tipo, numero].filter(Boolean).join(' ') || 'No especificado'
+  const { tipoDocumento = '', numeroDocumento = '' } = props.usuario
+  return (
+    [etiquetasDocumento[tipoDocumento] ?? tipoDocumento, numeroDocumento]
+      .filter(Boolean)
+      .join(' ') || 'No especificado'
+  )
 })
 
-const suscripcionEstado = computed(
-  () => suscripcion.value?.estado ?? suscripcion.value?.status ?? 'none',
-)
-const suscripcionPlan = computed(
-  () =>
-    suscripcion.value?.nombrePlan ??
-    suscripcion.value?.plan ??
-    suscripcion.value?.planName ??
-    'Sin plan asignado',
-)
-const suscripcionInicio = computed(
-  () => suscripcion.value?.fechaInicio ?? suscripcion.value?.startedAt ?? '',
-)
-const suscripcionVencimiento = computed(
-  () => suscripcion.value?.fechaVencimiento ?? suscripcion.value?.endsAt ?? '',
-)
+const suscripcionPlan = computed(() => suscripcion.value?.nombrePlan || 'Sin plan asignado')
 const diasRestantes = computed(() => {
-  const valor = Number(suscripcion.value?.diasRestantes ?? suscripcion.value?.daysRemaining)
+  const valor = Number(suscripcion.value?.diasRestantes)
   return Number.isFinite(valor) ? Math.max(0, valor) : null
 })
-
-const fechaNacimiento = computed(
-  () => props.usuario.fechaNacimiento ?? props.usuario.birthDate ?? '',
-)
-const fechaRegistro = computed(
-  () => props.usuario.fechaRegistro ?? props.usuario.registeredAt ?? '',
-)
-const ultimaActividad = computed(
-  () =>
-    metricas.value.ultimaActividad ?? metricas.value.lastActivity ?? props.usuario.ultimaActividad,
-)
 
 function fechaLegible(fecha) {
   return fecha ? formatearFecha(fecha) : 'No especificada'
@@ -100,13 +77,18 @@ function metrica(valor) {
 <template>
   <div class="perfil">
     <section class="perfil__cabecera gb-tarjeta" aria-labelledby="usuario-nombre">
-      <UsuarioAvatar :nombre="nombre" :apellido="apellido" :url="fotoPerfil" grande />
+      <UsuarioAvatar
+        :nombre="usuario.nombre"
+        :apellido="usuario.apellido"
+        :url="usuario.fotoPerfil"
+        grande
+      />
 
       <div class="perfil__identidad">
         <p>Perfil administrativo</p>
         <h2 id="usuario-nombre">{{ nombreCompleto }}</h2>
         <div class="perfil__metadatos">
-          <UsuarioStatusBadge :estado="estado" />
+          <UsuarioStatusBadge :estado="usuario.estado" />
           <span class="perfil__rol"
             ><i class="bi bi-shield-check" aria-hidden="true"></i>{{ rolLegible }}</span
           >
@@ -116,13 +98,13 @@ function metrica(valor) {
       <div class="perfil__empresa">
         <span>Empresa</span>
         <RouterLink
-          v-if="empresaId && empresaNombre"
-          :to="{ name: 'empresa-detalle', params: { id: empresaId } }"
+          v-if="empresa?.id && empresa?.nombre"
+          :to="{ name: 'empresa-detalle', params: { id: empresa.id } }"
         >
-          {{ empresaNombre }}
+          {{ empresa.nombre }}
           <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
         </RouterLink>
-        <strong v-else>{{ empresaNombre || 'No asignada' }}</strong>
+        <strong v-else>{{ empresa?.nombre || 'No asignada' }}</strong>
       </div>
     </section>
 
@@ -140,14 +122,16 @@ function metrica(valor) {
           <div>
             <dt>Correo</dt>
             <dd>
-              <a v-if="correo" :href="`mailto:${correo}`">{{ correo }}</a>
+              <a v-if="usuario.correo" :href="`mailto:${usuario.correo}`">{{ usuario.correo }}</a>
               <span v-else>No especificado</span>
             </dd>
           </div>
           <div>
             <dt>Teléfono</dt>
             <dd>
-              <a v-if="telefono" :href="`tel:${telefono}`">{{ telefono }}</a>
+              <a v-if="usuario.telefono" :href="`tel:${usuario.telefono}`">{{
+                usuario.telefono
+              }}</a>
               <span v-else>No especificado</span>
             </dd>
           </div>
@@ -157,15 +141,15 @@ function metrica(valor) {
           </div>
           <div>
             <dt>Fecha de nacimiento</dt>
-            <dd>{{ fechaLegible(fechaNacimiento) }}</dd>
+            <dd>{{ fechaLegible(usuario.fechaNacimiento) }}</dd>
           </div>
           <div class="perfil__dato-completo">
             <dt>Dirección</dt>
-            <dd>{{ direccion || 'No especificada' }}</dd>
+            <dd>{{ usuario.direccion || 'No especificada' }}</dd>
           </div>
           <div class="perfil__dato-completo">
             <dt>Fecha de registro</dt>
-            <dd>{{ fechaLegible(fechaRegistro) }}</dd>
+            <dd>{{ fechaLegible(usuario.fechaRegistro) }}</dd>
           </div>
         </dl>
       </section>
@@ -178,7 +162,7 @@ function metrica(valor) {
               <p>Membresía</p>
               <h2 id="titulo-suscripcion">Suscripción</h2>
             </div>
-            <UsuarioSubscriptionBadge :estado="suscripcionEstado" />
+            <UsuarioSubscriptionBadge :estado="suscripcion?.estado ?? 'none'" />
           </header>
 
           <dl class="perfil__suscripcion">
@@ -188,11 +172,11 @@ function metrica(valor) {
             </div>
             <div>
               <dt>Inicio</dt>
-              <dd>{{ fechaLegible(suscripcionInicio) }}</dd>
+              <dd>{{ fechaLegible(suscripcion?.fechaInicio) }}</dd>
             </div>
             <div>
               <dt>Vencimiento</dt>
-              <dd>{{ fechaLegible(suscripcionVencimiento) }}</dd>
+              <dd>{{ fechaLegible(suscripcion?.fechaVencimiento) }}</dd>
             </div>
             <div>
               <dt>Días restantes</dt>
@@ -216,21 +200,21 @@ function metrica(valor) {
             <div>
               <dt>Rutinas asignadas</dt>
               <dd>
-                {{
-                  metrica(
-                    metricas.rutinas ?? metricas.rutinasAsignadas ?? metricas.assignedRoutines,
-                  )
-                }}
+                {{ metrica(metricas.rutinas) }}
               </dd>
             </div>
             <div>
               <dt>Asistencias este mes</dt>
-              <dd>{{ metrica(metricas.asistenciasMes ?? metricas.monthlyAttendance) }}</dd>
+              <dd>{{ metrica(metricas.asistenciasMes) }}</dd>
             </div>
             <div>
               <dt>Última actividad</dt>
               <dd>
-                {{ ultimaActividad ? formatearTiempoRelativo(ultimaActividad) : 'Sin actividad' }}
+                {{
+                  metricas.ultimaActividad
+                    ? formatearTiempoRelativo(metricas.ultimaActividad)
+                    : 'Sin actividad'
+                }}
               </dd>
             </div>
           </dl>

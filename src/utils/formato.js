@@ -5,18 +5,45 @@ const FORMATEADOR_FECHAS = new Intl.DateTimeFormat('es-PE', {
   year: 'numeric',
   timeZone: 'UTC',
 })
+const FORMATEADOR_FECHA_HORA = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
 
 /** Formato numérico único para los datos del panel. */
 export function formatearNumero(valor) {
   return FORMATEADOR_NUMEROS.format(Number(valor) || 0)
 }
 
-/** Muestra fechas de API de forma localizada y tolerante a valores inválidos. */
+/**
+ * Muestra fechas de API de forma localizada y tolerante a valores inválidos.
+ *
+ * Se fija UTC porque estos valores son fechas de calendario ('2024-01-15',
+ * un alta, un vencimiento). Interpretarlas en la zona local haría que en Perú
+ * (UTC-5) se mostrase el día anterior.
+ */
 export function formatearFecha(fecha) {
   const instante = new Date(fecha)
   return Number.isNaN(instante.getTime())
     ? 'Fecha no disponible'
     : FORMATEADOR_FECHAS.format(instante)
+}
+
+/**
+ * Fecha y hora de un instante concreto (un evento del historial).
+ *
+ * Aquí NO se fija UTC, al contrario que en `formatearFecha`: un evento ocurrió
+ * en un momento del tiempo y quien lo consulta espera verlo en su propia hora.
+ * La diferencia entre ambas funciones es deliberada, no un descuido.
+ */
+export function formatearFechaHora(fecha) {
+  const instante = new Date(fecha)
+  return !fecha || Number.isNaN(instante.getTime())
+    ? 'Fecha no disponible'
+    : FORMATEADOR_FECHA_HORA.format(instante)
 }
 
 /**
