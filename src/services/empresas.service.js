@@ -1,6 +1,12 @@
 import { USE_MOCKS } from '@/config/env'
 import api from '@/services/api'
-import { HttpError } from '@/services/http-error'
+import {
+  crearNormalizadorDeError,
+  ejecutarPeticion as ejecutar,
+  normalizarEstado,
+  normalizarListado as normalizarListadoBase,
+  seleccionarCamposEditables as seleccionarEditables,
+} from '@/services/normalizacion'
 
 /** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
 const cargarMock = () => import('@/mocks/empresas.mock')
@@ -38,13 +44,6 @@ const CAMPOS_EDITABLES = [
   'colorSecundario',
 ]
 
-function normalizarEstado(estado) {
-  if (estado === 'activo' || estado === true || estado === 1) return 'active'
-  if (estado === 'inactivo' || estado === false || estado === 0) return 'inactive'
-  if (estado === 'active' || estado === 'inactive') return estado
-  return 'inactive'
-}
-
 function normalizarEmpresa(datos = {}) {
   return {
     id: datos.id,
@@ -62,28 +61,6 @@ function normalizarEmpresa(datos = {}) {
     logoUrl: datos.logo_url ?? datos.logoUrl ?? '',
     colorPrimario: datos.color_primario ?? datos.colorPrimario ?? '',
     colorSecundario: datos.color_secundario ?? datos.colorSecundario ?? '',
-  }
-}
-
-function normalizarListado(datos = {}) {
-  const itemsCrudos = Array.isArray(datos.data) ? datos.data : (datos.items ?? [])
-  const meta = datos.meta ?? datos.paginacion ?? datos
-  const pagina = Number(meta.current_page ?? meta.pagina ?? 1)
-  const porPagina = Number(meta.per_page ?? meta.porPagina ?? (itemsCrudos.length || 10))
-  const total = Number(meta.total ?? itemsCrudos.length)
-
-  return {
-    items: itemsCrudos.map(normalizarEmpresa),
-    paginacion: {
-      pagina,
-      ultimaPagina: Number(meta.last_page ?? meta.ultimaPagina ?? 1),
-      porPagina,
-      total,
-      desde: Number(meta.from ?? meta.desde ?? (total ? (pagina - 1) * porPagina + 1 : 0)),
-      hasta: Number(
-        meta.to ?? meta.hasta ?? (total ? (pagina - 1) * porPagina + itemsCrudos.length : 0),
-      ),
-    },
   }
 }
 
@@ -106,15 +83,6 @@ function prepararPayload(payload) {
   return Object.fromEntries(Object.entries(campos).filter(([, valor]) => valor !== undefined))
 }
 
-function seleccionarCamposEditables(payload = {}) {
-  return Object.fromEntries(
-    CAMPOS_EDITABLES.filter((campo) => Object.hasOwn(payload, campo)).map((campo) => [
-      campo,
-      payload[campo],
-    ]),
-  )
-}
-
 function prepararParametros({ busqueda = '', estado = '', pagina = 1, porPagina = 10 } = {}) {
   return {
     search: busqueda,
@@ -124,25 +92,10 @@ function prepararParametros({ busqueda = '', estado = '', pagina = 1, porPagina 
   }
 }
 
-function normalizarError(error) {
-  if (error?.status !== 422 || !error.errors) return error
-
-  const errors = Object.fromEntries(
-    Object.entries(error.errors).map(([campo, mensajes]) => [
-      CAMPOS_ERROR[campo] ?? campo,
-      mensajes,
-    ]),
-  )
-  return new HttpError({ status: error.status, message: error.message, errors })
-}
-
-async function ejecutarPeticion(peticion) {
-  try {
-    return await peticion()
-  } catch (error) {
-    throw normalizarError(error)
-  }
-}
+const normalizarError = crearNormalizadorDeError(CAMPOS_ERROR)
+const ejecutarPeticion = (peticion) => ejecutar(peticion, normalizarError)
+const normalizarListado = (datos) => normalizarListadoBase(datos, normalizarEmpresa)
+const seleccionarCamposEditables = (payload) => seleccionarEditables(payload, CAMPOS_EDITABLES)
 
 /** CONTRATO PROVISIONAL: GET /empresas. */
 export async function obtenerEmpresas(params = {}) {

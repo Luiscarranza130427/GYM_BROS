@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 
+import { formatearFechaHora } from '@/utils/formato'
+
 const props = defineProps({
   items: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
@@ -11,68 +13,29 @@ const emit = defineEmits({
   retry: null,
 })
 
+/*
+ * Este componente confía en la forma que garantiza `usuarios.service`:
+ *   { id, fecha, accion, descripcion, autor }
+ *
+ * Antes aceptaba además `creadoEn`/`createdAt`, `realizadoPor`/`performedBy`,
+ * `description`, `author` y un par `valorAnterior`/`valorNuevo`. Ninguno de esos
+ * campos lo produce nunca el servicio, así que eran ramas muertas que sólo
+ * servían para que un cambio de contrato no fallara: en lugar de romperse,
+ * habría empezado a mostrar «Fecha no disponible» y «Sistema Gym Bros» en
+ * silencio. Normalizar es trabajo del servicio; aquí se confía en él.
+ */
+
+/** Cortafuegos: una descripción que mencione credenciales no se muestra. */
 const CAMPOS_SENSIBLES = /password|contrase(?:n|ñ)a|hash|token|secret|credencial/i
 
 const historialSeguro = computed(() =>
-  props.items.filter((item) => {
-    const campo = item?.campo ?? item?.field ?? ''
-    const descripcion = item?.descripcion ?? item?.description ?? ''
-    return !CAMPOS_SENSIBLES.test(`${campo} ${descripcion}`)
-  }),
+  props.items.filter((item) => !CAMPOS_SENSIBLES.test(item?.descripcion ?? '')),
 )
 
 const mensajeError = computed(() => {
   if (typeof props.error === 'string') return props.error
   return props.error?.message ?? 'No pudimos cargar el historial.'
 })
-
-function fechaEvento(item) {
-  return item?.creadoEn ?? item?.createdAt ?? item?.fecha ?? ''
-}
-
-function fechaLegible(fecha) {
-  const instante = new Date(fecha)
-  if (!fecha || Number.isNaN(instante.getTime())) return 'Fecha no disponible'
-
-  return new Intl.DateTimeFormat('es-PE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(instante)
-}
-
-function descripcionDe(item) {
-  return item?.descripcion ?? item?.description ?? 'Información actualizada'
-}
-
-function responsableDe(item) {
-  const responsable =
-    item?.realizadoPor ?? item?.performedBy ?? item?.responsable ?? item?.autor ?? item?.author
-  if (typeof responsable === 'string') return responsable
-  return responsable?.nombre ?? responsable?.name ?? 'Sistema Gym Bros'
-}
-
-function valorSeguro(valor) {
-  if (valor === null || valor === undefined || valor === '') return 'Sin dato'
-  if (['string', 'number', 'boolean'].includes(typeof valor)) return String(valor)
-  return 'Información actualizada'
-}
-
-function valorAnterior(item) {
-  return item?.valorAnterior ?? item?.previousValue
-}
-
-function valorNuevo(item) {
-  return item?.valorNuevo ?? item?.newValue
-}
-
-function tieneComparacion(item) {
-  const anterior = valorAnterior(item)
-  const nuevo = valorNuevo(item)
-  return anterior !== undefined || nuevo !== undefined
-}
 </script>
 
 <template>
@@ -117,31 +80,16 @@ function tieneComparacion(item) {
     </div>
 
     <ol v-else class="historial__lista">
-      <li
-        v-for="(item, indice) in historialSeguro"
-        :key="item.id ?? `${fechaEvento(item)}-${indice}`"
-      >
+      <li v-for="(item, indice) in historialSeguro" :key="item.id ?? `${item.fecha}-${indice}`">
         <span class="historial__marca" aria-hidden="true"></span>
         <article>
           <div class="historial__evento">
             <div>
-              <h3>{{ descripcionDe(item) }}</h3>
-              <p>Realizado por {{ responsableDe(item) }}</p>
+              <h3>{{ item.descripcion || 'Información actualizada' }}</h3>
+              <p>Realizado por {{ item.autor || 'Sistema Gym Bros' }}</p>
             </div>
-            <time :datetime="fechaEvento(item)">{{ fechaLegible(fechaEvento(item)) }}</time>
+            <time :datetime="item.fecha">{{ formatearFechaHora(item.fecha) }}</time>
           </div>
-
-          <dl v-if="tieneComparacion(item)" class="historial__cambio">
-            <div>
-              <dt>Antes</dt>
-              <dd>{{ valorSeguro(valorAnterior(item)) }}</dd>
-            </div>
-            <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            <div>
-              <dt>Ahora</dt>
-              <dd>{{ valorSeguro(valorNuevo(item)) }}</dd>
-            </div>
-          </dl>
         </article>
       </li>
     </ol>
@@ -261,41 +209,6 @@ function tieneComparacion(item) {
   font-variant-numeric: tabular-nums;
 }
 
-.historial__cambio {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0.875rem 0 0;
-  padding: 0.75rem;
-  background-color: var(--gb-surface-lowest);
-  border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius-lg);
-}
-
-.historial__cambio > div {
-  min-width: 0;
-}
-
-.historial__cambio dt {
-  color: var(--gb-text-muted);
-  font-size: var(--gb-tipo-xxs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.historial__cambio dd {
-  margin: 0.25rem 0 0;
-  overflow-wrap: anywhere;
-  color: var(--gb-text);
-  font-size: var(--gb-tipo-xs);
-}
-
-.historial__cambio > i {
-  color: var(--gb-red-text);
-}
-
 .historial__estado {
   display: flex;
   align-items: center;
@@ -383,14 +296,6 @@ function tieneComparacion(item) {
   .historial__evento {
     flex-direction: column;
     gap: 0.375rem;
-  }
-
-  .historial__cambio {
-    grid-template-columns: 1fr;
-  }
-
-  .historial__cambio > i {
-    transform: rotate(90deg);
   }
 
   .historial__estado {

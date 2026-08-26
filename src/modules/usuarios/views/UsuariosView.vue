@@ -1,9 +1,9 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
 
 import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
+import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
 import UsuarioFilters from '@/modules/usuarios/components/UsuarioFilters.vue'
 import UsuarioTable from '@/modules/usuarios/components/UsuarioTable.vue'
 import {
@@ -12,143 +12,47 @@ import {
   obtenerUsuarios,
 } from '@/services/usuarios.service'
 
-const route = useRoute()
-const router = useRouter()
-const ESTADOS = ['all', 'active', 'inactive']
-const SUSCRIPCIONES = ['all', 'active', 'expiring', 'expired', 'none']
-const ROLES = ['all', 'admin', 'manager', 'trainer', 'member']
-const PAGINACION_VACIA = {
-  pagina: 1,
-  ultimaPagina: 1,
-  porPagina: 8,
-  total: 0,
-  desde: 0,
-  hasta: 0,
-}
+const {
+  estadoVista,
+  items,
+  paginacion,
+  busqueda,
+  filtros,
+  hayFiltros,
+  mensajeError,
+  mensajeExito,
+  mensajeExitoRef,
+  cargarListado,
+  cambiarBusqueda,
+  cambiarFiltro,
+  cambiarPagina,
+  limpiarFiltros,
+  anunciarExito,
+} = useListadoFiltrable({
+  nombreRuta: 'usuarios-listado',
+  cargar: obtenerUsuarios,
+  filtros: {
+    // La empresa no es una lista cerrada: su valor es un id, así que no lleva
+    // `permitidos`. El resto sí, para que un valor inventado en la URL no
+    // llegue al servicio.
+    company: {},
+    status: { permitidos: ['all', 'active', 'inactive'] },
+    subscription: { permitidos: ['all', 'active', 'expiring', 'expired', 'none'] },
+    role: { permitidos: ['all', 'admin', 'manager', 'trainer', 'member'] },
+  },
+  mapearParametros: ({ company, status, subscription, role }) => ({
+    empresaId: company,
+    estado: status,
+    suscripcion: subscription,
+    rol: role,
+  }),
+  mensajeDeError: 'No pudimos cargar los usuarios.',
+  avisos: { deactivated: 'Usuario desactivado correctamente.' },
+})
 
-const estadoVista = ref('idle')
-const items = ref([])
+// Opciones del desplegable de empresas. Es dato auxiliar del filtro, no del
+// listado: si falla, la vista sigue siendo utilizable sin ese filtro.
 const empresas = ref([])
-const paginacion = ref({ ...PAGINACION_VACIA })
-const busqueda = ref(String(route.query.search ?? ''))
-const empresa = ref(valorValido(route.query.company, [], 'all'))
-const estado = ref(valorValido(route.query.status, ESTADOS))
-const suscripcion = ref(valorValido(route.query.subscription, SUSCRIPCIONES))
-const rol = ref(valorValido(route.query.role, ROLES))
-const mensajeError = ref('')
-const mensajeExito = ref('')
-const mensajeExitoRef = useTemplateRef('mensajeExitoRef')
-const usuarioSeleccionado = ref(null)
-const desactivando = ref(false)
-let temporizadorBusqueda = null
-let solicitudActual = 0
-
-const hayFiltros = computed(
-  () =>
-    Boolean(busqueda.value.trim()) ||
-    empresa.value !== 'all' ||
-    estado.value !== 'all' ||
-    suscripcion.value !== 'all' ||
-    rol.value !== 'all',
-)
-
-function valorValido(valor, permitidos, porDefecto = 'all') {
-  const texto = String(valor ?? porDefecto)
-  return !permitidos.length || permitidos.includes(texto) ? texto : porDefecto
-}
-
-function paginaValida(valor) {
-  const numero = Number.parseInt(valor, 10)
-  return Number.isFinite(numero) && numero > 0 ? numero : 1
-}
-
-/**
- * Cancela el rebote de la búsqueda y deja constancia de que ya no hay ninguno
- * pendiente. `clearTimeout` por sí solo no borra la variable, y el resto de la
- * vista se apoya en que `temporizadorBusqueda === null` signifique "el usuario
- * no está escribiendo ahora mismo".
- */
-function cancelarBusquedaPendiente() {
-  window.clearTimeout(temporizadorBusqueda)
-  temporizadorBusqueda = null
-}
-
-function construirQuery(cambios = {}) {
-  const filtros = {
-    search: busqueda.value,
-    company: empresa.value,
-    status: estado.value,
-    subscription: suscripcion.value,
-    role: rol.value,
-    page: 1,
-    ...cambios,
-  }
-  const query = {}
-  const termino = String(filtros.search).trim()
-  if (termino) query.search = termino
-  if (filtros.company !== 'all') query.company = String(filtros.company)
-  if (filtros.status !== 'all') query.status = filtros.status
-  if (filtros.subscription !== 'all') query.subscription = filtros.subscription
-  if (filtros.role !== 'all') query.role = filtros.role
-  if (Number(filtros.page) > 1) query.page = String(filtros.page)
-  return query
-}
-
-async function actualizarQuery(cambios = {}) {
-  const query = construirQuery({
-    search: route.query.search ?? busqueda.value,
-    company: valorValido(route.query.company, [], 'all'),
-    status: valorValido(route.query.status, ESTADOS),
-    subscription: valorValido(route.query.subscription, SUSCRIPCIONES),
-    role: valorValido(route.query.role, ROLES),
-    page: paginaValida(route.query.page),
-    ...cambios,
-  })
-  if (JSON.stringify(query) === JSON.stringify(route.query)) return
-  await router.replace({ name: 'usuarios-listado', query })
-}
-
-async function cargarUsuarios() {
-  const idSolicitud = ++solicitudActual
-  estadoVista.value = 'loading'
-  mensajeError.value = ''
-  // El input sólo se resincroniza desde la URL cuando el usuario NO está
-  // escribiendo. Si hay un rebote pendiente, esta carga la provocó otra cosa
-  // (un filtro, el botón atrás) y copiar aquí el `search` viejo de la URL
-  // borraría de la caja lo que se está tecleando.
-  if (temporizadorBusqueda === null) {
-    busqueda.value = String(route.query.search ?? '')
-  }
-  empresa.value = valorValido(route.query.company, [], 'all')
-  estado.value = valorValido(route.query.status, ESTADOS)
-  suscripcion.value = valorValido(route.query.subscription, SUSCRIPCIONES)
-  rol.value = valorValido(route.query.role, ROLES)
-
-  try {
-    const respuesta = await obtenerUsuarios({
-      busqueda: busqueda.value.trim(),
-      empresaId: empresa.value === 'all' ? '' : empresa.value,
-      estado: estado.value === 'all' ? '' : estado.value,
-      suscripcion: suscripcion.value === 'all' ? '' : suscripcion.value,
-      rol: rol.value === 'all' ? '' : rol.value,
-      pagina: paginaValida(route.query.page),
-      porPagina: PAGINACION_VACIA.porPagina,
-    })
-    if (idSolicitud !== solicitudActual) return
-    items.value = respuesta.items
-    paginacion.value = respuesta.paginacion
-    estadoVista.value = 'success'
-    if (respuesta.paginacion.pagina !== paginaValida(route.query.page)) {
-      await actualizarQuery({ page: respuesta.paginacion.pagina })
-    }
-  } catch (error) {
-    if (idSolicitud !== solicitudActual) return
-    items.value = []
-    paginacion.value = { ...PAGINACION_VACIA }
-    mensajeError.value = error?.message || 'No pudimos cargar los usuarios.'
-    estadoVista.value = 'error'
-  }
-}
 
 async function cargarEmpresas() {
   try {
@@ -158,54 +62,22 @@ async function cargarEmpresas() {
   }
 }
 
-function cambiarBusqueda(valor) {
-  busqueda.value = valor
-  cancelarBusquedaPendiente()
-  temporizadorBusqueda = window.setTimeout(() => {
-    temporizadorBusqueda = null
-    actualizarQuery({ search: valor, page: 1 })
-  }, 350)
-}
+cargarEmpresas()
 
-function cambiarFiltro(campo, valor) {
-  if (campo === 'company') empresa.value = valor
-  if (campo === 'status') estado.value = valor
-  if (campo === 'subscription') suscripcion.value = valor
-  if (campo === 'role') rol.value = valor
-
-  // Se navega ya, así que el rebote pendiente sobra: si se dejara vivo, dispararía
-  // una segunda navegación 350 ms después. Y se arrastra lo tecleado hasta ahora
-  // (`busqueda.value`, no el `search` de la URL, que va por detrás) para que el
-  // cambio de filtro no descarte la búsqueda a medio escribir.
-  cancelarBusquedaPendiente()
-  actualizarQuery({ [campo]: valor, search: busqueda.value, page: 1 })
-}
-
-function limpiarFiltros() {
-  cancelarBusquedaPendiente()
-  busqueda.value = ''
-  empresa.value = 'all'
-  estado.value = 'all'
-  suscripcion.value = 'all'
-  rol.value = 'all'
-  router.replace({ name: 'usuarios-listado' })
-}
-
-async function enfocarExito() {
-  await nextTick()
-  mensajeExitoRef.value?.focus()
-}
+// La desactivación se queda en la vista: su texto y su confirmación son propios
+// del recurso, no algo que el composable pueda generalizar sin quedarse soso.
+const usuarioSeleccionado = ref(null)
+const desactivando = ref(false)
 
 async function confirmarDesactivacion() {
   if (!usuarioSeleccionado.value || desactivando.value) return
   desactivando.value = true
+
   try {
-    const nombre = `${usuarioSeleccionado.value.nombre} ${usuarioSeleccionado.value.apellido}`
-    await desactivarUsuario(usuarioSeleccionado.value.id)
+    const { id, nombre, apellido } = usuarioSeleccionado.value
+    await desactivarUsuario(id)
     usuarioSeleccionado.value = null
-    mensajeExito.value = `${nombre} fue desactivado correctamente.`
-    await cargarUsuarios()
-    await enfocarExito()
+    await anunciarExito(`${nombre} ${apellido} fue desactivado correctamente.`)
   } catch (error) {
     usuarioSeleccionado.value = null
     mensajeError.value = error?.message || 'No pudimos desactivar el usuario.'
@@ -214,39 +86,6 @@ async function confirmarDesactivacion() {
     desactivando.value = false
   }
 }
-
-watch(
-  [
-    () => route.query.search,
-    () => route.query.company,
-    () => route.query.status,
-    () => route.query.subscription,
-    () => route.query.role,
-    () => route.query.page,
-  ],
-  cargarUsuarios,
-  { immediate: true },
-)
-
-watch(
-  () => route.query.notice,
-  async (notice) => {
-    if (notice !== 'deactivated') return
-    mensajeExito.value = 'Usuario desactivado correctamente.'
-    const query = { ...route.query }
-    delete query.notice
-    await router.replace({ name: 'usuarios-listado', query })
-    await enfocarExito()
-  },
-  { immediate: true },
-)
-
-cargarEmpresas()
-
-onBeforeUnmount(() => {
-  solicitudActual += 1
-  cancelarBusquedaPendiente()
-})
 </script>
 
 <template>
@@ -277,10 +116,10 @@ onBeforeUnmount(() => {
 
     <UsuarioFilters
       :busqueda="busqueda"
-      :empresa="empresa"
-      :estado="estado"
-      :suscripcion="suscripcion"
-      :rol="rol"
+      :empresa="filtros.company"
+      :estado="filtros.status"
+      :suscripcion="filtros.subscription"
+      :rol="filtros.role"
       :empresas="empresas"
       :cargando="estadoVista === 'loading'"
       @update:busqueda="cambiarBusqueda"
@@ -300,7 +139,7 @@ onBeforeUnmount(() => {
       :items="items"
       :paginacion="paginacion"
       :cargando="estadoVista !== 'success'"
-      @cambiar-pagina="actualizarQuery({ page: $event })"
+      @cambiar-pagina="cambiarPagina"
       @desactivar="usuarioSeleccionado = $event"
     />
 
@@ -308,7 +147,7 @@ onBeforeUnmount(() => {
       <i class="bi bi-cloud-slash" aria-hidden="true"></i>
       <h2>No pudimos cargar los usuarios</h2>
       <p>{{ mensajeError }}</p>
-      <button type="button" class="btn btn-primary" @click="cargarUsuarios">
+      <button type="button" class="btn btn-primary" @click="cargarListado">
         <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Reintentar
       </button>
     </section>

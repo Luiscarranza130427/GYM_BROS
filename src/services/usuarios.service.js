@@ -1,7 +1,13 @@
 import { USE_MOCKS } from '@/config/env'
 import api from '@/services/api'
 import { obtenerEmpresas } from '@/services/empresas.service'
-import { HttpError } from '@/services/http-error'
+import {
+  crearNormalizadorDeError,
+  ejecutarPeticion as ejecutar,
+  normalizarEstado,
+  normalizarListado as normalizarListadoBase,
+  seleccionarCamposEditables as seleccionarEditables,
+} from '@/services/normalizacion'
 
 /** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
 const cargarMock = () => import('@/mocks/usuarios.mock')
@@ -55,12 +61,6 @@ const SUSCRIPCION_VACIA = {
 
 const ACTIVIDAD_VACIA = { rutinas: 0, asistenciasMes: 0, ultimaActividad: '' }
 
-function normalizarEstado(estado) {
-  if (estado === 'activo' || estado === true || estado === 1) return 'active'
-  if (estado === 'inactivo' || estado === false || estado === 0) return 'inactive'
-  return estado === 'active' ? 'active' : 'inactive'
-}
-
 function normalizarEmpresa(datos = {}, empresaId) {
   if (typeof datos === 'string') return { id: Number(empresaId) || null, nombre: datos }
   return {
@@ -113,33 +113,6 @@ function normalizarUsuario(datos = {}) {
   }
 }
 
-function normalizarListado(datos = {}) {
-  const cuerpo = datos.data && !Array.isArray(datos.data) ? datos.data : datos
-  const itemsCrudos = Array.isArray(datos.data)
-    ? datos.data
-    : Array.isArray(cuerpo.items)
-      ? cuerpo.items
-      : []
-  const meta = datos.meta ?? cuerpo.meta ?? cuerpo.paginacion ?? cuerpo
-  const pagina = Number(meta.current_page ?? meta.pagina ?? 1)
-  const porPagina = Number(meta.per_page ?? meta.porPagina ?? (itemsCrudos.length || 10))
-  const total = Number(meta.total ?? itemsCrudos.length)
-
-  return {
-    items: itemsCrudos.map(normalizarUsuario),
-    paginacion: {
-      pagina,
-      ultimaPagina: Number(meta.last_page ?? meta.ultimaPagina ?? 1),
-      porPagina,
-      total,
-      desde: Number(meta.from ?? meta.desde ?? (total ? (pagina - 1) * porPagina + 1 : 0)),
-      hasta: Number(
-        meta.to ?? meta.hasta ?? (total ? (pagina - 1) * porPagina + itemsCrudos.length : 0),
-      ),
-    },
-  }
-}
-
 function normalizarEventoHistorial(datos = {}) {
   return {
     id: datos.id,
@@ -179,15 +152,6 @@ function prepararPayload(payload) {
   return Object.fromEntries(Object.entries(campos).filter(([, valor]) => valor !== undefined))
 }
 
-function seleccionarCamposEditables(payload = {}) {
-  return Object.fromEntries(
-    CAMPOS_EDITABLES.filter((campo) => Object.hasOwn(payload, campo)).map((campo) => [
-      campo,
-      payload[campo],
-    ]),
-  )
-}
-
 function prepararParametros({
   busqueda = '',
   empresaId = '',
@@ -208,27 +172,10 @@ function prepararParametros({
   }
 }
 
-function normalizarError(error) {
-  const status = error?.status ?? error?.response?.status
-  const datos = error?.response?.data ?? error
-  if (status !== 422 || !datos?.errors) return error
-
-  const errors = Object.fromEntries(
-    Object.entries(datos.errors).map(([campo, mensajes]) => [
-      CAMPOS_ERROR[campo] ?? campo,
-      Array.isArray(mensajes) ? mensajes : [mensajes],
-    ]),
-  )
-  return new HttpError({ status, message: datos.message, errors })
-}
-
-async function ejecutarPeticion(peticion) {
-  try {
-    return await peticion()
-  } catch (error) {
-    throw normalizarError(error)
-  }
-}
+const normalizarError = crearNormalizadorDeError(CAMPOS_ERROR)
+const ejecutarPeticion = (peticion) => ejecutar(peticion, normalizarError)
+const normalizarListado = (datos) => normalizarListadoBase(datos, normalizarUsuario)
+const seleccionarCamposEditables = (payload) => seleccionarEditables(payload, CAMPOS_EDITABLES)
 
 /** CONTRATO PROVISIONAL: GET /usuarios. */
 export async function obtenerUsuarios(params = {}) {
