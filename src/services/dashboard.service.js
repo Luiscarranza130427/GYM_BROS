@@ -1,6 +1,8 @@
 import { USE_MOCKS } from '@/config/env'
-import { obtenerDashboardMock } from '@/mocks/dashboard.mock'
 import api from '@/services/api'
+
+/** Import dinámico: mantiene los datos simulados fuera del bundle de producción. */
+const cargarMock = () => import('@/mocks/dashboard.mock')
 
 const RESUMEN_VACIO = {
   banner: { titulo: '', descripcion: '', accion: { texto: '' } },
@@ -78,6 +80,7 @@ function normalizarDashboard(datos) {
  */
 export async function obtenerDashboard() {
   if (USE_MOCKS) {
+    const { obtenerDashboardMock } = await cargarMock()
     return normalizarDashboard(await obtenerDashboardMock())
   }
 

@@ -1,6 +1,16 @@
 import { USE_MOCKS } from '@/config/env'
 import api from '@/services/api'
-import { CREDENCIALES_DEMO, cerrarSesionMock, iniciarSesionMock } from '@/mocks/auth.mock'
+
+/**
+ * Los mocks se cargan con `import()` dinámico, nunca con un import estático.
+ *
+ * Con import estático, Rollup no puede separarlos del bundle principal, porque
+ * `USE_MOCKS` sólo se conoce en tiempo de ejecución: los datos simulados y las
+ * credenciales de demostración acababan viajando al navegador en producción
+ * aunque VITE_USE_MOCKS fuese false. Así quedan en un chunk aparte que sólo se
+ * descarga si el modo mock está activo.
+ */
+const cargarMock = () => import('@/mocks/auth.mock')
 
 /**
  * Única frontera entre la aplicación y el backend de autenticación.
@@ -24,6 +34,7 @@ function normalizarSesion(datos) {
 
 export async function iniciarSesion(credenciales) {
   if (USE_MOCKS) {
+    const { iniciarSesionMock } = await cargarMock()
     return iniciarSesionMock(credenciales)
   }
 
@@ -33,6 +44,7 @@ export async function iniciarSesion(credenciales) {
 
 export async function cerrarSesion() {
   if (USE_MOCKS) {
+    const { cerrarSesionMock } = await cargarMock()
     return cerrarSesionMock()
   }
 
@@ -46,6 +58,9 @@ export async function cerrarSesion() {
  * Existe para que la vista pueda mostrar la ayuda sin importar nada de
  * `@/mocks` ni consultar el entorno: sigue sin saber si hay backend o no.
  */
-export function pistaDeCredenciales() {
-  return USE_MOCKS ? CREDENCIALES_DEMO : null
+export async function pistaDeCredenciales() {
+  if (!USE_MOCKS) return null
+
+  const { CREDENCIALES_DEMO } = await cargarMock()
+  return CREDENCIALES_DEMO
 }

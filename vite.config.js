@@ -1,11 +1,69 @@
+import { sep } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+/**
+ * Retira del build los chunks de `src/mocks/` que nadie referencia.
+ *
+ * Los servicios cargan sus mocks con `import()` dentro de `if (USE_MOCKS)`. En
+ * un build de producción esa condición se pliega a `false` (ver `src/config/env.js`)
+ * y Rollup elimina la rama, pero el chunk del mock ya se había creado al construir
+ * el grafo de módulos: se quedaba en `dist/` como archivo huérfano, con los datos
+ * simulados y las credenciales de demostración dentro, accesible por URL aunque
+ * la aplicación no lo cargue nunca.
+ *
+ * Sólo borra chunks originados en `src/mocks/` y sólo si ningún otro chunk los
+ * importa. En un build con VITE_USE_MOCKS=true sí están referenciados, así que
+ * este plugin no toca nada y el modo mock sigue funcionando.
+ */
+function descartarMocksHuerfanos() {
+  return {
+    name: 'gymbros:descartar-mocks-huerfanos',
+    apply: 'build',
+    generateBundle(_opciones, bundle) {
+      // Se normalizan las barras: en Windows el id puede venir con separador
+      // inverso y la comprobación fallaría en silencio.
+      const esMock = (salida) =>
+        salida.type === 'chunk' &&
+        salida.facadeModuleId?.split(sep).join('/').includes('/src/mocks/')
+
+      const candidatos = Object.entries(bundle).filter(([, salida]) => esMock(salida))
+      if (!candidatos.length) return
+
+      /*
+       * Se inspecciona el CÓDIGO emitido, no los metadatos del bundle: rolldown
+       * sigue listando el mock en `dynamicImports` del chunk que lo importaba
+       * aunque el `import()` haya desaparecido al plegarse `USE_MOCKS` a false.
+       * Fiarse de esos metadatos hacía que este plugin no borrase nunca nada.
+       *
+       * Se excluyen los propios mocks del texto examinado: si uno huérfano
+       * importase a otro, no deben mantenerse vivos entre ellos.
+       */
+      const codigoAjeno = Object.values(bundle)
+        .filter((salida) => salida.type === 'chunk' && !esMock(salida))
+        .map((salida) => salida.code)
+        .join(' ')
+
+      const descartados = candidatos
+        .map(([nombre]) => nombre)
+        .filter((nombre) => !codigoAjeno.includes(nombre.split('/').pop()))
+
+      descartados.forEach((nombre) => delete bundle[nombre])
+
+      // Se deja constancia: un paso de build que borra archivos en silencio es
+      // indistinguible de uno que no se ha ejecutado.
+      if (descartados.length) {
+        this.warn(`Mocks fuera del build (${descartados.length}): ${descartados.join(', ')}`)
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), descartarMocksHuerfanos()],
   resolve: {
     // Alias `@` -> src. Permite `import api from '@/services/api'` en lugar de
     // rutas relativas frágiles como '../../../services/api'.
