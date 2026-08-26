@@ -113,6 +113,42 @@ describe('EmpresasView', () => {
     expect(wrapper.text()).not.toContain('Limpiar filtros')
   })
 
+  it('conserva la búsqueda a medio escribir al cambiar el estado', async () => {
+    // La URL va por detrás de la caja: refleja un rebote anterior ('pow'),
+    // mientras el usuario ya ha escrito 'power'.
+    vi.useFakeTimers()
+    route.query = { search: 'pow' }
+    obtenerEmpresas.mockResolvedValue(RESPUESTA)
+    // Se imita al router de verdad: una navegación cambia la ruta y eso vuelve
+    // a disparar la carga. Sin esto el fallo no se reproduce.
+    replace.mockImplementation(({ query = {} }) => {
+      route.query = query
+    })
+
+    const wrapper = montar()
+    await flushPromises()
+
+    await wrapper.get('#buscar-empresa').setValue('power')
+    await wrapper.findAll('input[name="estado-empresa"]')[1].trigger('change')
+    await flushPromises()
+
+    // La caja conserva lo tecleado en lugar de revertir al 'pow' de la URL...
+    expect(wrapper.get('#buscar-empresa').element.value).toBe('power')
+    // ...y se navega una sola vez, llevando búsqueda y estado juntos.
+    expect(replace).toHaveBeenCalledTimes(1)
+    expect(replace).toHaveBeenCalledWith({
+      name: 'empresas-listado',
+      query: { search: 'power', status: 'active' },
+    })
+
+    // El rebote pendiente quedó cancelado: no hay una segunda navegación tardía.
+    vi.advanceTimersByTime(1000)
+    await flushPromises()
+    expect(replace).toHaveBeenCalledTimes(1)
+
+    vi.useRealTimers()
+  })
+
   it('muestra error y reintenta la carga', async () => {
     obtenerEmpresas
       .mockRejectedValueOnce(new Error('Servicio no disponible.'))

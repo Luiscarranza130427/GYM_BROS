@@ -116,7 +116,7 @@ function validar() {
   if (!documento) erroresLocales.numeroDocumento = 'Introduce el número de documento.'
   else if (formulario.tipoDocumento === 'dni' && !/^\d{8}$/.test(documento)) {
     erroresLocales.numeroDocumento = 'El DNI debe contener exactamente 8 dígitos.'
-  } else if (formulario.tipoDocumento !== 'DNI' && !/^[a-z0-9-]{5,20}$/i.test(documento)) {
+  } else if (formulario.tipoDocumento !== 'dni' && !/^[a-z0-9-]{5,20}$/i.test(documento)) {
     erroresLocales.numeroDocumento = 'El documento debe contener entre 5 y 20 caracteres.'
   }
 
@@ -461,7 +461,7 @@ onBeforeUnmount(liberarVistaPrevia)
           <span aria-hidden="true"><i class="bi bi-camera"></i></span>
           <div>
             <h2 id="titulo-foto">Foto de perfil</h2>
-            <p>Vista previa local; la subida final dependerá del backend.</p>
+            <p>Vista previa local. La imagen todavía no se guarda: falta el endpoint de subida.</p>
           </div>
         </header>
         <div class="foto">
@@ -483,7 +483,10 @@ onBeforeUnmount(liberarVistaPrevia)
               :aria-describedby="errorFoto ? 'error-foto' : 'ayuda-foto'"
               @change="seleccionarFoto"
             />
-            <p id="ayuda-foto" class="campo__ayuda">PNG, JPG o WebP. Máximo 2 MB.</p>
+            <p id="ayuda-foto" class="campo__ayuda">
+              PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
+              <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
+            </p>
             <p v-if="errorFoto" id="error-foto" class="campo__error">{{ errorFoto }}</p>
           </div>
         </div>
