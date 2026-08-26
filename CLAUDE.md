@@ -31,6 +31,10 @@ No introducir Nuxt, Tailwind, jQuery, Vuex ni Options API.
   búsqueda con rebote, paginación y descarte de respuestas obsoletas ya están
   resueltos ahí; el módulo aporta su servicio, el mapeo de filtros a parámetros
   y sus textos.
+- **Un formulario nuevo usa `useFormulario`** (carga de valores, errores 422 por
+  campo, foco en el primer error) y saca sus reglas de forma —correo, teléfono,
+  color, URL, fecha— de `src/utils/validaciones.js`. No se reescribe un regex de
+  correo: afinarlo en un solo formulario deja al otro rechazando datos válidos.
 - **Un servicio de recurso nuevo se apoya en `src/services/normalizacion.js`**
   para la paginación de Laravel, los campos editables y la traducción de los 422.
   Lo que sí escribe cada servicio es su propio `normalizarXxx`, que es su contrato.

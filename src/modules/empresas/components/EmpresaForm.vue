@@ -1,7 +1,10 @@
 <script setup>
-import { nextTick, onBeforeUnmount, reactive, ref, useTemplateRef, watch } from 'vue'
+import { useTemplateRef } from 'vue'
 
+import { useFormulario } from '@/composables/useFormulario'
+import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
 import { REGIONES_PERU } from '@/constants/regionesPeru'
+import { esColorValido, esCorreoValido, esTelefonoValido, esUrlValida } from '@/utils/validaciones'
 
 const props = defineProps({
   valoresIniciales: { type: Object, default: () => ({}) },
@@ -27,11 +30,9 @@ const MODELO_VACIO = {
   colorSecundario: '#1c1b1b',
 }
 
-const formulario = reactive({ ...MODELO_VACIO })
-const erroresLocales = reactive({})
-const erroresRemotos = ref({})
-const errorLogo = ref('')
-const vistaPreviaLogo = ref('')
+/** El RUC es opcional; si viene, debe tener entre 8 y 11 dígitos. */
+const RUC_VALIDO = /^[0-9]{8,11}$/
+
 const nombreInput = useTemplateRef('nombreInput')
 const gerenteInput = useTemplateRef('gerenteInput')
 const correoInput = useTemplateRef('correoInput')
@@ -44,125 +45,61 @@ const logoInput = useTemplateRef('logoInput')
 const colorPrimarioInput = useTemplateRef('colorPrimarioInput')
 const colorSecundarioInput = useTemplateRef('colorSecundarioInput')
 const estadoInput = useTemplateRef('estadoInput')
-let urlTemporal = ''
 
-const referencias = {
-  nombre: nombreInput,
-  gerente: gerenteInput,
-  correo: correoInput,
-  telefono: telefonoInput,
-  ruc: rucInput,
-  sitioWeb: sitioWebInput,
-  region: regionInput,
-  direccion: direccionInput,
-  logoUrl: logoInput,
-  colorPrimario: colorPrimarioInput,
-  colorSecundario: colorSecundarioInput,
-  estado: estadoInput,
+const logo = useVistaPreviaArchivo({ etiqueta: 'logo' })
+
+/** Reglas propias de una empresa. Las de forma salen de `utils/validaciones`. */
+function validar(datos, errores) {
+  const nombre = datos.nombre.trim()
+  if (nombre.length < 3) errores.nombre = 'Introduce un nombre de al menos 3 caracteres.'
+  else if (nombre.length > 80) errores.nombre = 'El nombre no puede superar 80 caracteres.'
+
+  if (datos.gerente.trim().length < 3) errores.gerente = 'Introduce el nombre del gerente.'
+  if (!esCorreoValido(datos.correo)) errores.correo = 'Introduce un correo válido.'
+  if (!esTelefonoValido(datos.telefono)) errores.telefono = 'Introduce un teléfono válido.'
+
+  if (datos.ruc && !RUC_VALIDO.test(datos.ruc.trim())) {
+    errores.ruc = 'El RUC debe contener entre 8 y 11 dígitos.'
+  }
+
+  if (datos.sitioWeb && !esUrlValida(datos.sitioWeb)) {
+    errores.sitioWeb = 'Introduce una URL completa que empiece por http:// o https://.'
+  }
+
+  if (!esColorValido(datos.colorPrimario)) {
+    errores.colorPrimario = 'Introduce un color hexadecimal válido.'
+  }
+  if (!esColorValido(datos.colorSecundario)) {
+    errores.colorSecundario = 'Introduce un color hexadecimal válido.'
+  }
 }
 
-function cargarValores(valores) {
-  Object.keys(MODELO_VACIO).forEach((campo) => {
-    formulario[campo] = valores[campo] ?? MODELO_VACIO[campo]
+const { formulario, erroresLocales, erroresRemotos, errorDe, limpiarError, validarParaEnviar } =
+  useFormulario({
+    modeloVacio: MODELO_VACIO,
+    valoresIniciales: () => props.valoresIniciales,
+    erroresServidor: () => props.erroresServidor,
+    referencias: {
+      nombre: nombreInput,
+      gerente: gerenteInput,
+      correo: correoInput,
+      telefono: telefonoInput,
+      ruc: rucInput,
+      sitioWeb: sitioWebInput,
+      region: regionInput,
+      direccion: direccionInput,
+      logoUrl: logoInput,
+      colorPrimario: colorPrimarioInput,
+      colorSecundario: colorSecundarioInput,
+      estado: estadoInput,
+    },
+    validar,
+    alCargarValores: (_datos, valores) => logo.reiniciar(valores.logoUrl),
   })
-  Object.keys(erroresLocales).forEach((campo) => delete erroresLocales[campo])
-  erroresRemotos.value = {}
-  errorLogo.value = ''
-  // Se libera antes de reemplazar la vista previa: si había un archivo elegido,
-  // su objectURL quedaría reservado en memoria durante toda la sesión.
-  liberarVistaPrevia()
-  vistaPreviaLogo.value = valores.logoUrl || ''
-}
 
-watch(() => props.valoresIniciales, cargarValores, { immediate: true, deep: true })
-watch(
-  () => props.erroresServidor,
-  (errores) => {
-    erroresRemotos.value = { ...errores }
-  },
-  { immediate: true, deep: true },
-)
-
-function primerMensaje(valor) {
-  return Array.isArray(valor) ? valor[0] : valor
-}
-
-function errorDe(campo) {
-  return erroresLocales[campo] || primerMensaje(erroresRemotos.value[campo]) || ''
-}
-
-function limpiarError(campo) {
-  delete erroresLocales[campo]
-  if (erroresRemotos.value[campo]) {
-    const copia = { ...erroresRemotos.value }
-    delete copia[campo]
-    erroresRemotos.value = copia
-  }
-}
-
-function validar() {
-  Object.keys(erroresLocales).forEach((campo) => delete erroresLocales[campo])
-
-  if (formulario.nombre.trim().length < 3) {
-    erroresLocales.nombre = 'Introduce un nombre de al menos 3 caracteres.'
-  } else if (formulario.nombre.trim().length > 80) {
-    erroresLocales.nombre = 'El nombre no puede superar 80 caracteres.'
-  }
-
-  if (formulario.gerente.trim().length < 3) {
-    erroresLocales.gerente = 'Introduce el nombre del gerente.'
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.correo.trim())) {
-    erroresLocales.correo = 'Introduce un correo válido.'
-  }
-
-  const telefono = formulario.telefono.trim()
-  const digitosTelefono = telefono.replace(/\D/g, '')
-  if (
-    !/^\+?[0-9\s-]+$/.test(telefono) ||
-    digitosTelefono.length < 7 ||
-    digitosTelefono.length > 15
-  ) {
-    erroresLocales.telefono = 'Introduce un teléfono válido.'
-  }
-
-  if (formulario.ruc && !/^\d{8,11}$/.test(formulario.ruc.trim())) {
-    erroresLocales.ruc = 'El RUC debe contener entre 8 y 11 dígitos.'
-  }
-
-  if (formulario.sitioWeb) {
-    try {
-      const url = new URL(formulario.sitioWeb)
-      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Protocolo no admitido')
-    } catch {
-      erroresLocales.sitioWeb = 'Introduce una URL completa que empiece por http:// o https://.'
-    }
-  }
-
-  if (!/^#[0-9a-f]{6}$/i.test(formulario.colorPrimario)) {
-    erroresLocales.colorPrimario = 'Introduce un color hexadecimal válido.'
-  }
-
-  if (!/^#[0-9a-f]{6}$/i.test(formulario.colorSecundario)) {
-    erroresLocales.colorSecundario = 'Introduce un color hexadecimal válido.'
-  }
-
-  return Object.keys(erroresLocales).length === 0
-}
-
-async function enfocarPrimerError() {
-  await nextTick()
-  const primerCampo = Object.keys(erroresLocales)[0]
-  referencias[primerCampo]?.value?.focus()
-}
-
-function enviar() {
+async function enviar() {
   if (props.enviando) return
-  if (!validar()) {
-    enfocarPrimerError()
-    return
-  }
+  if (!(await validarParaEnviar())) return
 
   emit('submit', {
     ...formulario,
@@ -176,38 +113,10 @@ function enviar() {
   })
 }
 
-function liberarVistaPrevia() {
-  if (!urlTemporal) return
-  URL.revokeObjectURL(urlTemporal)
-  urlTemporal = ''
-}
-
 function seleccionarLogo(evento) {
-  const archivo = evento.target.files?.[0]
-  liberarVistaPrevia()
-  errorLogo.value = ''
   limpiarError('logoUrl')
-
-  if (!archivo) {
-    vistaPreviaLogo.value = formulario.logoUrl || ''
-    return
-  }
-  if (!archivo.type.startsWith('image/')) {
-    errorLogo.value = 'Selecciona un archivo de imagen.'
-    evento.target.value = ''
-    return
-  }
-  if (archivo.size > 2 * 1024 * 1024) {
-    errorLogo.value = 'El logo no puede superar 2 MB.'
-    evento.target.value = ''
-    return
-  }
-
-  urlTemporal = URL.createObjectURL(archivo)
-  vistaPreviaLogo.value = urlTemporal
+  logo.seleccionar(evento, formulario.logoUrl)
 }
-
-onBeforeUnmount(liberarVistaPrevia)
 </script>
 
 <template>
@@ -416,9 +325,9 @@ onBeforeUnmount(liberarVistaPrevia)
         <div class="identidad">
           <div
             class="identidad__logo"
-            :style="{ backgroundImage: vistaPreviaLogo ? `url(${vistaPreviaLogo})` : null }"
+            :style="{ backgroundImage: logo.url ? `url(${logo.url})` : null }"
           >
-            <i v-if="!vistaPreviaLogo" class="bi bi-buildings" aria-hidden="true"></i>
+            <i v-if="!logo.url" class="bi bi-buildings" aria-hidden="true"></i>
           </div>
           <div class="campo">
             <label class="form-label" for="empresa-logo">Logo</label>
@@ -426,20 +335,20 @@ onBeforeUnmount(liberarVistaPrevia)
               id="empresa-logo"
               ref="logoInput"
               class="form-control"
-              :class="{ 'is-invalid': errorLogo || errorDe('logoUrl') }"
+              :class="{ 'is-invalid': logo.error || errorDe('logoUrl') }"
               type="file"
               name="logo"
               accept="image/*"
-              :aria-invalid="Boolean(errorLogo || errorDe('logoUrl'))"
-              :aria-describedby="errorLogo || errorDe('logoUrl') ? 'error-logo' : 'ayuda-logo'"
+              :aria-invalid="Boolean(logo.error || errorDe('logoUrl'))"
+              :aria-describedby="logo.error || errorDe('logoUrl') ? 'error-logo' : 'ayuda-logo'"
               @change="seleccionarLogo"
             />
             <p id="ayuda-logo" class="campo__ayuda">
               PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
               <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
             </p>
-            <p v-if="errorLogo || errorDe('logoUrl')" id="error-logo" class="campo__error">
-              {{ errorLogo || errorDe('logoUrl') }}
+            <p v-if="logo.error || errorDe('logoUrl')" id="error-logo" class="campo__error">
+              {{ logo.error || errorDe('logoUrl') }}
             </p>
           </div>
         </div>

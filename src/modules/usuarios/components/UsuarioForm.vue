@@ -1,5 +1,9 @@
 <script setup>
-import { nextTick, onBeforeUnmount, reactive, ref, useTemplateRef, watch } from 'vue'
+import { useTemplateRef } from 'vue'
+
+import { useFormulario } from '@/composables/useFormulario'
+import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
+import { esCorreoValido, esFechaPasada, esTelefonoValido } from '@/utils/validaciones'
 
 const props = defineProps({
   valoresIniciales: { type: Object, default: () => ({}) },
@@ -26,11 +30,11 @@ const MODELO_VACIO = {
   estado: 'active',
 }
 
-const formulario = reactive({ ...MODELO_VACIO })
-const erroresLocales = reactive({})
-const erroresRemotos = ref({})
-const errorFoto = ref('')
-const vistaPreviaFoto = ref('')
+/** El DNI peruano son exactamente 8 dígitos. */
+const DNI_VALIDO = /^[0-9]{8}$/
+/** Pasaporte y otros documentos: alfanumérico con guiones, de 5 a 20. */
+const DOCUMENTO_VALIDO = /^[a-z0-9-]{5,20}$/i
+
 const nombreInput = useTemplateRef('nombreInput')
 const apellidoInput = useTemplateRef('apellidoInput')
 const correoInput = useTemplateRef('correoInput')
@@ -39,114 +43,69 @@ const documentoInput = useTemplateRef('documentoInput')
 const empresaInput = useTemplateRef('empresaInput')
 const rolInput = useTemplateRef('rolInput')
 const estadoInput = useTemplateRef('estadoInput')
-let urlTemporal = ''
 
-const referencias = {
-  nombre: nombreInput,
-  apellido: apellidoInput,
-  correo: correoInput,
-  telefono: telefonoInput,
-  numeroDocumento: documentoInput,
-  empresaId: empresaInput,
-  rol: rolInput,
-  estado: estadoInput,
-}
+const foto = useVistaPreviaArchivo({ etiqueta: 'foto' })
 
-function cargarValores(valores) {
-  Object.keys(MODELO_VACIO).forEach((campo) => {
-    formulario[campo] = valores[campo] ?? MODELO_VACIO[campo]
-  })
-  formulario.empresaId = valores.empresa?.id ?? valores.empresaId ?? ''
-  Object.keys(erroresLocales).forEach((campo) => delete erroresLocales[campo])
-  erroresRemotos.value = {}
-  errorFoto.value = ''
-  liberarVistaPrevia()
-  vistaPreviaFoto.value = valores.fotoPerfil || ''
-}
-
-watch(() => props.valoresIniciales, cargarValores, { immediate: true, deep: true })
-watch(
-  () => props.erroresServidor,
-  (errores) => {
-    erroresRemotos.value = { ...errores }
-  },
-  { immediate: true, deep: true },
-)
-
-function primerMensaje(valor) {
-  return Array.isArray(valor) ? valor[0] : valor
-}
-
-function errorDe(campo) {
-  return erroresLocales[campo] || primerMensaje(erroresRemotos.value[campo]) || ''
-}
-
-function limpiarError(campo) {
-  delete erroresLocales[campo]
-  if (!erroresRemotos.value[campo]) return
-  const copia = { ...erroresRemotos.value }
-  delete copia[campo]
-  erroresRemotos.value = copia
-}
-
-function validar() {
-  Object.keys(erroresLocales).forEach((campo) => delete erroresLocales[campo])
-
-  if (formulario.nombre.trim().length < 2) {
-    erroresLocales.nombre = 'Introduce un nombre de al menos 2 caracteres.'
+/** Reglas propias de un usuario. Las de forma salen de `utils/validaciones`. */
+function validar(datos, errores) {
+  if (datos.nombre.trim().length < 2) {
+    errores.nombre = 'Introduce un nombre de al menos 2 caracteres.'
   }
-  if (formulario.apellido.trim().length < 2) {
-    erroresLocales.apellido = 'Introduce un apellido de al menos 2 caracteres.'
+  if (datos.apellido.trim().length < 2) {
+    errores.apellido = 'Introduce un apellido de al menos 2 caracteres.'
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.correo.trim())) {
-    erroresLocales.correo = 'Introduce un correo válido.'
-  }
+  if (!esCorreoValido(datos.correo)) errores.correo = 'Introduce un correo válido.'
+  if (!esTelefonoValido(datos.telefono)) errores.telefono = 'Introduce un teléfono válido.'
 
-  const telefono = formulario.telefono.trim()
-  const digitosTelefono = telefono.replace(/\D/g, '')
-  if (
-    !/^\+?[0-9\s-]+$/.test(telefono) ||
-    digitosTelefono.length < 7 ||
-    digitosTelefono.length > 15
-  ) {
-    erroresLocales.telefono = 'Introduce un teléfono válido.'
-  }
-
-  const documento = formulario.numeroDocumento.trim()
-  if (!documento) erroresLocales.numeroDocumento = 'Introduce el número de documento.'
-  else if (formulario.tipoDocumento === 'dni' && !/^\d{8}$/.test(documento)) {
-    erroresLocales.numeroDocumento = 'El DNI debe contener exactamente 8 dígitos.'
-  } else if (formulario.tipoDocumento !== 'dni' && !/^[a-z0-9-]{5,20}$/i.test(documento)) {
-    erroresLocales.numeroDocumento = 'El documento debe contener entre 5 y 20 caracteres.'
-  }
-
-  if (formulario.fechaNacimiento) {
-    const nacimiento = new Date(`${formulario.fechaNacimiento}T00:00:00`)
-    if (Number.isNaN(nacimiento.getTime()) || nacimiento > new Date()) {
-      erroresLocales.fechaNacimiento = 'La fecha de nacimiento no puede ser futura.'
+  // A cada tipo de documento le toca su regla, y sólo la suya.
+  const documento = datos.numeroDocumento.trim()
+  if (!documento) {
+    errores.numeroDocumento = 'Introduce el número de documento.'
+  } else if (datos.tipoDocumento === 'dni') {
+    if (!DNI_VALIDO.test(documento)) {
+      errores.numeroDocumento = 'El DNI debe contener exactamente 8 dígitos.'
     }
+  } else if (!DOCUMENTO_VALIDO.test(documento)) {
+    errores.numeroDocumento = 'El documento debe contener entre 5 y 20 caracteres.'
   }
 
-  if (!formulario.empresaId) erroresLocales.empresaId = 'Selecciona una empresa.'
-  if (!formulario.rol) erroresLocales.rol = 'Selecciona un rol.'
-  if (!['active', 'inactive'].includes(formulario.estado)) {
-    erroresLocales.estado = 'Selecciona un estado válido.'
+  if (datos.fechaNacimiento && !esFechaPasada(datos.fechaNacimiento)) {
+    errores.fechaNacimiento = 'La fecha de nacimiento no puede ser futura.'
   }
 
-  return Object.keys(erroresLocales).length === 0
+  if (!datos.empresaId) errores.empresaId = 'Selecciona una empresa.'
+  if (!datos.rol) errores.rol = 'Selecciona un rol.'
+  if (!['active', 'inactive'].includes(datos.estado)) {
+    errores.estado = 'Selecciona un estado válido.'
+  }
 }
 
-async function enfocarPrimerError() {
-  await nextTick()
-  referencias[Object.keys(erroresLocales)[0]]?.value?.focus()
-}
+const { formulario, erroresLocales, erroresRemotos, errorDe, limpiarError, validarParaEnviar } =
+  useFormulario({
+    modeloVacio: MODELO_VACIO,
+    valoresIniciales: () => props.valoresIniciales,
+    erroresServidor: () => props.erroresServidor,
+    referencias: {
+      nombre: nombreInput,
+      apellido: apellidoInput,
+      correo: correoInput,
+      telefono: telefonoInput,
+      numeroDocumento: documentoInput,
+      empresaId: empresaInput,
+      rol: rolInput,
+      estado: estadoInput,
+    },
+    validar,
+    alCargarValores: (datos, valores) => {
+      // La empresa llega anidada al editar y plana al crear.
+      datos.empresaId = valores.empresa?.id ?? valores.empresaId ?? ''
+      foto.reiniciar(valores.fotoPerfil)
+    },
+  })
 
-function enviar() {
+async function enviar() {
   if (props.enviando) return
-  if (!validar()) {
-    enfocarPrimerError()
-    return
-  }
+  if (!(await validarParaEnviar())) return
 
   emit('submit', {
     nombre: formulario.nombre.trim(),
@@ -164,35 +123,9 @@ function enviar() {
   })
 }
 
-function liberarVistaPrevia() {
-  if (!urlTemporal) return
-  URL.revokeObjectURL(urlTemporal)
-  urlTemporal = ''
-}
-
 function seleccionarFoto(evento) {
-  const archivo = evento.target.files?.[0]
-  liberarVistaPrevia()
-  errorFoto.value = ''
-  if (!archivo) {
-    vistaPreviaFoto.value = formulario.fotoPerfil
-    return
-  }
-  if (!archivo.type.startsWith('image/')) {
-    errorFoto.value = 'Selecciona un archivo de imagen.'
-    evento.target.value = ''
-    return
-  }
-  if (archivo.size > 2 * 1024 * 1024) {
-    errorFoto.value = 'La foto no puede superar 2 MB.'
-    evento.target.value = ''
-    return
-  }
-  urlTemporal = URL.createObjectURL(archivo)
-  vistaPreviaFoto.value = urlTemporal
+  foto.seleccionar(evento, formulario.fotoPerfil)
 }
-
-onBeforeUnmount(liberarVistaPrevia)
 </script>
 
 <template>
@@ -467,27 +400,27 @@ onBeforeUnmount(liberarVistaPrevia)
         <div class="foto">
           <div
             class="foto__vista"
-            :style="{ backgroundImage: vistaPreviaFoto ? `url(${vistaPreviaFoto})` : null }"
+            :style="{ backgroundImage: foto.url ? `url(${foto.url})` : null }"
           >
-            <i v-if="!vistaPreviaFoto" class="bi bi-person" aria-hidden="true"></i>
+            <i v-if="!foto.url" class="bi bi-person" aria-hidden="true"></i>
           </div>
           <div class="campo">
             <label class="form-label" for="usuario-foto">Archivo de imagen</label>
             <input
               id="usuario-foto"
               class="form-control"
-              :class="{ 'is-invalid': errorFoto }"
+              :class="{ 'is-invalid': foto.error }"
               type="file"
               accept="image/*"
-              :aria-invalid="Boolean(errorFoto)"
-              :aria-describedby="errorFoto ? 'error-foto' : 'ayuda-foto'"
+              :aria-invalid="Boolean(foto.error)"
+              :aria-describedby="foto.error ? 'error-foto' : 'ayuda-foto'"
               @change="seleccionarFoto"
             />
             <p id="ayuda-foto" class="campo__ayuda">
               PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
               <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
             </p>
-            <p v-if="errorFoto" id="error-foto" class="campo__error">{{ errorFoto }}</p>
+            <p v-if="foto.error" id="error-foto" class="campo__error">{{ foto.error }}</p>
           </div>
         </div>
       </section>
