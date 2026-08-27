@@ -75,8 +75,12 @@ Laravel 11, todavía en desarrollo. El contrato de `/auth/login` y `/auth/logout
 documentado en `src/services/auth.service.js` es **provisional**: no darlo por
 cerrado ni inventar contratos nuevos para otros módulos.
 
-**El esquema de la base de datos está en [`docs/MODELO_DE_DATOS.md`](docs/MODELO_DE_DATOS.md)
-y manda sobre cualquier suposición.** Antes de decidir los campos de un módulo,
+**Dos documentos mandan sobre cualquier suposición:**
+[`docs/MODELO_DE_DATOS.md`](docs/MODELO_DE_DATOS.md), que dice qué datos hay, y
+[`docs/PANELES.md`](docs/PANELES.md), que dice qué se hace con ellos en cada
+pantalla. Lo que no figure en ninguno de los dos no se implementa sin acordarlo.
+
+El esquema de la base de datos Antes de decidir los campos de un módulo,
 mirarlo: dice qué guarda cada tabla y, sobre todo, de quién cuelga cada cosa.
 Dos relaciones que no son obvias y ya causaron modelos equivocados:
 
