@@ -107,6 +107,8 @@ pública por olvido.
 
 - [`docs/FRONTEND_ARCHITECTURE.md`](docs/FRONTEND_ARCHITECTURE.md) — estructura,
   flujo de datos, modo mock, integración pendiente con Laravel.
+- [`docs/MODELO_DE_DATOS.md`](docs/MODELO_DE_DATOS.md) — esquema de la base de
+  datos: qué guarda cada tabla y cómo se relacionan.
 - [`CLAUDE.md`](CLAUDE.md) — convenciones del proyecto.
 
 ## Estado

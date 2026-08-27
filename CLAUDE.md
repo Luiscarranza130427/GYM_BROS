@@ -75,6 +75,17 @@ Laravel 11, todavía en desarrollo. El contrato de `/auth/login` y `/auth/logout
 documentado en `src/services/auth.service.js` es **provisional**: no darlo por
 cerrado ni inventar contratos nuevos para otros módulos.
 
+**El esquema de la base de datos está en [`docs/MODELO_DE_DATOS.md`](docs/MODELO_DE_DATOS.md)
+y manda sobre cualquier suposición.** Antes de decidir los campos de un módulo,
+mirarlo: dice qué guarda cada tabla y, sobre todo, de quién cuelga cada cosa.
+Dos relaciones que no son obvias y ya causaron modelos equivocados:
+
+- Quien se suscribe a un plan es la **empresa**, no el usuario.
+- El catálogo de **ejercicios es por empresa**, y su categoría sale de la tabla
+  `grupos_musculares`, no de una lista cerrada en el frontend.
+
+Lo que el esquema no cubra sigue siendo provisional y se marca como tal.
+
 ## Fases del proyecto
 
 El trabajo avanza por fases con aprobación entre una y otra. **No adelantar
