@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { formatearNumero } from '@/utils/formato'
 
 const props = defineProps({
@@ -25,13 +26,13 @@ const tendenciaFormateada = computed(() => {
   <article class="metrica gb-tarjeta" :class="`metrica--${metrica.tendencia.tono}`">
     <div class="metrica__cabecera">
       <span>{{ metrica.etiqueta }}</span>
-      <i class="bi" :class="metrica.icono" aria-hidden="true"></i>
+      <IconoSvg :nombre="metrica.icono" />
     </div>
 
     <strong>{{ valorFormateado }}</strong>
 
     <p class="metrica__tendencia" :class="`metrica__tendencia--${metrica.tendencia.tono}`">
-      <i class="bi" :class="iconoTendencia" aria-hidden="true"></i>
+      <IconoSvg :nombre="iconoTendencia" />
       <b>{{ tendenciaFormateada }}</b>
       <span>{{ metrica.tendencia.detalle }}</span>
     </p>

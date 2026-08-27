@@ -54,8 +54,9 @@ aparezca ningún dato simulado ni las credenciales de demostración. Si alguien
 vuelve a importar `@/mocks` de forma estática, la fuga se detecta en CI y no en
 producción, donde la aplicación seguiría funcionando sin dar ninguna señal.
 
-Los umbrales de cobertura están fijados justo por debajo del nivel actual
-(~64%). No son un objetivo, son un trinquete contra el retroceso.
+Los umbrales de cobertura se mantienen uno o dos puntos por debajo de lo medido
+(hoy ~68%). No son un objetivo de calidad, son un trinquete contra el retroceso:
+con más holgura se puede perder cobertura real durante meses sin que salte.
 
 ## Recursos estáticos
 
@@ -64,6 +65,10 @@ Las fuentes van **autoalojadas en WOFF2 subconjuntado** al rango latino
 un `.ttf` no hace falta para compilar; si alguna vez se necesita, requiere
 `fonttools` y `brotli` de Python y el comando está documentado en
 `src/assets/styles/base.css`.
+
+Los **iconos son SVG en línea** (`src/components/base/IconoSvg.vue`), no una
+fuente. Para añadir uno hay que copiar sus trazos a `src/assets/iconos.js`; la
+prueba del catálogo falla en CI si se olvida.
 
 De Bootstrap **sólo se compilan los parciales que se usan**
 (`src/assets/styles/bootstrap.scss`). Para emplear una clase de un componente

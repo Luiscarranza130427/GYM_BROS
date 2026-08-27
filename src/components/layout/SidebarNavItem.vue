@@ -1,6 +1,8 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 defineProps({
   /** Entrada de SECCIONES: { name, title, icono }. */
   seccion: { type: Object, required: true },
@@ -18,7 +20,7 @@ defineProps({
       :title="compacto ? seccion.title : null"
     >
       <span class="enlace__icono">
-        <i class="bi" :class="seccion.icono" aria-hidden="true"></i>
+        <IconoSvg :nombre="seccion.icono" />
       </span>
 
       <!-- El texto se dibuja siempre: al contraer el menú deja de verse, pero

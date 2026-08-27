@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
 import UsuarioFilters from '@/modules/usuarios/components/UsuarioFilters.vue'
@@ -99,7 +100,7 @@ async function confirmarDesactivacion() {
     >
       <template #acciones>
         <RouterLink class="btn btn-primary usuarios__nuevo" :to="{ name: 'usuario-nuevo' }"
-          ><i class="bi bi-person-plus" aria-hidden="true"></i>Nuevo usuario</RouterLink
+          ><IconoSvg nombre="person-plus" />Nuevo usuario</RouterLink
         >
       </template>
     </PageHeader>
@@ -111,7 +112,7 @@ async function confirmarDesactivacion() {
       role="status"
       tabindex="-1"
     >
-      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ mensajeExito }}
+      <IconoSvg nombre="check-circle-fill" />{{ mensajeExito }}
     </p>
 
     <UsuarioFilters
@@ -144,23 +145,23 @@ async function confirmarDesactivacion() {
     />
 
     <section v-else-if="estadoVista === 'error'" class="usuarios__estado gb-tarjeta" role="alert">
-      <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+      <IconoSvg nombre="cloud-slash" />
       <h2>No pudimos cargar los usuarios</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Reintentar
+        <IconoSvg nombre="arrow-clockwise" />Reintentar
       </button>
     </section>
 
     <section v-else class="usuarios__estado gb-tarjeta" role="status">
-      <i class="bi bi-people" aria-hidden="true"></i>
+      <IconoSvg nombre="people" />
       <h2>{{ hayFiltros ? 'No encontramos usuarios' : 'Aún no hay usuarios registrados' }}</h2>
       <p v-if="hayFiltros">No hay coincidencias con los filtros seleccionados.</p>
       <p v-else>Registra el primer usuario de Gym Bros.</p>
       <button v-if="hayFiltros" type="button" class="btn btn-ghost" @click="limpiarFiltros">
         Limpiar filtros</button
       ><RouterLink v-else class="btn btn-primary" :to="{ name: 'usuario-nuevo' }"
-        ><i class="bi bi-person-plus" aria-hidden="true"></i>Nuevo usuario</RouterLink
+        ><IconoSvg nombre="person-plus" />Nuevo usuario</RouterLink
       >
     </section>
 

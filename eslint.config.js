@@ -45,5 +45,18 @@ export default [
     },
   },
 
+  {
+    // Las pruebas corren bajo Vitest, no en el navegador: algunas necesitan
+    // leer el árbol de fuentes (el guardián del catálogo de iconos) y usan
+    // `process` y `node:fs`.
+    name: 'gymbros/pruebas',
+    files: ['**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   prettier,
 ]

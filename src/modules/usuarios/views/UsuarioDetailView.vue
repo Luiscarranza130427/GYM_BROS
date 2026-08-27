@@ -3,6 +3,7 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import UsuarioHistory from '@/modules/usuarios/components/UsuarioHistory.vue'
 import UsuarioProfileSummary from '@/modules/usuarios/components/UsuarioProfileSummary.vue'
@@ -114,7 +115,7 @@ onBeforeUnmount(() => {
         <RouterLink
           class="btn btn-ghost usuario-detalle__accion"
           :to="{ name: 'usuario-editar', params: { id: usuario.id } }"
-          ><i class="bi bi-pencil" aria-hidden="true"></i>Editar</RouterLink
+          ><IconoSvg nombre="pencil" />Editar</RouterLink
         >
         <button
           v-if="usuario.estado === 'active'"
@@ -122,13 +123,13 @@ onBeforeUnmount(() => {
           class="btn btn-outline-danger usuario-detalle__accion"
           @click="dialogoAbierto = true"
         >
-          <i class="bi bi-slash-circle" aria-hidden="true"></i>Desactivar
+          <IconoSvg nombre="slash-circle" />Desactivar
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="usuario-detalle__exito" role="status">
-      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ mensajeExito }}
+      <IconoSvg nombre="check-circle-fill" />{{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
       {{ mensajeError }}
@@ -158,7 +159,7 @@ onBeforeUnmount(() => {
       class="usuario-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <i class="bi bi-person-x" aria-hidden="true"></i>
+      <IconoSvg nombre="person-x" />
       <h2>
         {{ estado === 'not-found' ? 'Usuario no encontrado' : 'No pudimos cargar el usuario' }}
       </h2>

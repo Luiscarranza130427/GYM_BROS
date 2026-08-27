@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { contarNoLeidas } from '@/services/notificaciones.service'
 
 const sinLeer = ref(0)
@@ -20,7 +21,7 @@ onMounted(async () => {
   <!-- Enlace y no botón: lleva al módulo de notificaciones, que es navegación
        real. La bandeja se construirá dentro de ese módulo. -->
   <RouterLink class="campana" :to="{ name: 'notificaciones' }">
-    <i class="bi bi-bell" aria-hidden="true"></i>
+    <IconoSvg nombre="bell" />
     <span v-if="sinLeer > 0" class="campana__punto" aria-hidden="true"></span>
     <span class="visually-hidden">
       Notificaciones{{ sinLeer > 0 ? `: ${sinLeer} sin leer` : '' }}

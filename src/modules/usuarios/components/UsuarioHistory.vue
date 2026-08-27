@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { formatearFechaHora } from '@/utils/formato'
 
 const props = defineProps({
@@ -41,7 +42,7 @@ const mensajeError = computed(() => {
 <template>
   <section class="historial gb-tarjeta" aria-labelledby="titulo-historial">
     <header class="historial__cabecera">
-      <span class="historial__icono"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+      <span class="historial__icono"><IconoSvg nombre="clock-history" /></span>
       <div>
         <p>Auditoría administrativa</p>
         <h2 id="titulo-historial">Historial de cambios</h2>
@@ -60,19 +61,19 @@ const mensajeError = computed(() => {
     </div>
 
     <div v-else-if="error" class="historial__estado" role="alert">
-      <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+      <IconoSvg nombre="exclamation-triangle" />
       <div>
         <h3>No pudimos cargar el historial</h3>
         <p>{{ mensajeError }}</p>
       </div>
       <button type="button" class="btn btn-ghost" @click="emit('retry')">
-        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <IconoSvg nombre="arrow-clockwise" />
         Reintentar
       </button>
     </div>
 
     <div v-else-if="historialSeguro.length === 0" class="historial__estado" role="status">
-      <i class="bi bi-clock" aria-hidden="true"></i>
+      <IconoSvg nombre="clock" />
       <div>
         <h3>Sin cambios registrados</h3>
         <p>Aún no existen cambios registrados para este usuario.</p>

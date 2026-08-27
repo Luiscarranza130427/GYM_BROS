@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 const props = defineProps({
   busqueda: { type: String, default: '' },
   empresa: { type: String, default: 'all' },
@@ -34,7 +36,7 @@ const filtrosActivos = computed(
   <section class="filtros gb-tarjeta" aria-label="Filtros de usuarios" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-usuario">Buscar usuario</label>
-      <i class="bi bi-search" aria-hidden="true"></i>
+      <IconoSvg nombre="search" />
       <input
         id="buscar-usuario"
         :value="busqueda"
@@ -114,7 +116,7 @@ const filtrosActivos = computed(
       class="btn btn-ghost filtros__limpiar"
       @click="$emit('limpiar')"
     >
-      <i class="bi bi-x-circle" aria-hidden="true"></i>
+      <IconoSvg nombre="x-circle" />
       Limpiar filtros
     </button>
   </section>

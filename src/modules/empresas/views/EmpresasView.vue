@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
 import EmpresaFilters from '@/modules/empresas/components/EmpresaFilters.vue'
@@ -72,7 +73,7 @@ async function confirmarDesactivacion() {
     >
       <template #acciones>
         <RouterLink class="btn btn-primary empresas__nueva" :to="{ name: 'empresa-nueva' }">
-          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          <IconoSvg nombre="plus-lg" />
           Nueva empresa
         </RouterLink>
       </template>
@@ -85,7 +86,7 @@ async function confirmarDesactivacion() {
       role="status"
       tabindex="-1"
     >
-      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+      <IconoSvg nombre="check-circle-fill" />
       {{ mensajeExito }}
     </p>
 
@@ -111,17 +112,17 @@ async function confirmarDesactivacion() {
     />
 
     <section v-else-if="estadoVista === 'error'" class="empresas__estado gb-tarjeta" role="alert">
-      <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+      <IconoSvg nombre="cloud-slash" />
       <h2>No pudimos cargar las empresas</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <IconoSvg nombre="arrow-clockwise" />
         Reintentar
       </button>
     </section>
 
     <section v-else class="empresas__estado gb-tarjeta" role="status">
-      <i class="bi bi-buildings" aria-hidden="true"></i>
+      <IconoSvg nombre="buildings" />
       <h2>{{ hayFiltros ? 'No encontramos resultados' : 'Aún no hay empresas registradas' }}</h2>
       <p v-if="hayFiltros">Prueba con otra búsqueda o limpia los filtros seleccionados.</p>
       <p v-else>Registra tu primera empresa para comenzar.</p>
@@ -129,7 +130,7 @@ async function confirmarDesactivacion() {
         Limpiar filtros
       </button>
       <RouterLink v-else class="btn btn-primary" :to="{ name: 'empresa-nueva' }">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <IconoSvg nombre="plus-lg" />
         Nueva empresa
       </RouterLink>
     </section>

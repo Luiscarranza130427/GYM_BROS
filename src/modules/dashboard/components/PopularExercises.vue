@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { formatearNumero } from '@/utils/formato'
 
 const props = defineProps({
@@ -34,7 +35,7 @@ const maximo = computed(() => Math.max(...props.ejercicios.map((ejercicio) => ej
     </ol>
 
     <div v-else class="populares__vacio" role="status">
-      <i class="bi bi-person-arms-up" aria-hidden="true"></i>
+      <IconoSvg nombre="person-arms-up" />
       <p>Aún no hay ejercicios con usos registrados.</p>
     </div>
   </section>

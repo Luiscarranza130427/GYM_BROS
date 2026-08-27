@@ -1,6 +1,7 @@
 <script setup>
 import { useTemplateRef } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { useFormulario } from '@/composables/useFormulario'
 import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
 import { REGIONES_PERU } from '@/constants/regionesPeru'
@@ -130,7 +131,7 @@ function seleccionarLogo(evento) {
     </p>
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-informacion">
       <header>
-        <span aria-hidden="true"><i class="bi bi-buildings"></i></span>
+        <span aria-hidden="true"><IconoSvg nombre="buildings" /></span>
         <div>
           <h2 id="titulo-informacion">Información principal</h2>
           <p>Datos administrativos y de contacto de la empresa.</p>
@@ -315,7 +316,7 @@ function seleccionarLogo(evento) {
     <div class="formulario__secundarias">
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-identidad">
         <header>
-          <span aria-hidden="true"><i class="bi bi-palette"></i></span>
+          <span aria-hidden="true"><IconoSvg nombre="palette" /></span>
           <div>
             <h2 id="titulo-identidad">Identidad visual</h2>
             <p>Los colores sí se guardan. El logo, todavía no: falta el endpoint de subida.</p>
@@ -327,7 +328,7 @@ function seleccionarLogo(evento) {
             class="identidad__logo"
             :style="{ backgroundImage: logo.url ? `url(${logo.url})` : null }"
           >
-            <i v-if="!logo.url" class="bi bi-buildings" aria-hidden="true"></i>
+            <IconoSvg nombre="buildings" />
           </div>
           <div class="campo">
             <label class="form-label" for="empresa-logo">Logo</label>
@@ -415,7 +416,7 @@ function seleccionarLogo(evento) {
 
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-estado">
         <header>
-          <span aria-hidden="true"><i class="bi bi-power"></i></span>
+          <span aria-hidden="true"><IconoSvg nombre="power" /></span>
           <div>
             <h2 id="titulo-estado">Estado de la empresa</h2>
             <p>Controla el acceso operativo dentro de Gym Bros.</p>

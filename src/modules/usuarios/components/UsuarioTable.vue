@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import UsuarioAvatar from '@/modules/usuarios/components/UsuarioAvatar.vue'
 import UsuarioStatusBadge from '@/modules/usuarios/components/UsuarioStatusBadge.vue'
 import UsuarioSubscriptionBadge from '@/modules/usuarios/components/UsuarioSubscriptionBadge.vue'
@@ -128,7 +129,7 @@ function diasRestantes(suscripcion) {
                   :aria-label="`Ver perfil de ${nombreCompleto(usuario)}`"
                   title="Ver perfil"
                 >
-                  <i class="bi bi-eye" aria-hidden="true"></i>
+                  <IconoSvg nombre="eye" />
                 </RouterLink>
                 <RouterLink
                   class="gb-boton-icono"
@@ -136,7 +137,7 @@ function diasRestantes(suscripcion) {
                   :aria-label="`Editar a ${nombreCompleto(usuario)}`"
                   title="Editar"
                 >
-                  <i class="bi bi-pencil" aria-hidden="true"></i>
+                  <IconoSvg nombre="pencil" />
                 </RouterLink>
                 <button
                   type="button"
@@ -146,7 +147,7 @@ function diasRestantes(suscripcion) {
                   :title="usuario.estado === 'inactive' ? 'Usuario inactivo' : 'Desactivar'"
                   @click="$emit('desactivar', usuario)"
                 >
-                  <i class="bi bi-slash-circle" aria-hidden="true"></i>
+                  <IconoSvg nombre="slash-circle" />
                 </button>
               </div>
             </td>

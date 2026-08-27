@@ -3,6 +3,7 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import EmpresaDetails from '@/modules/empresas/components/EmpresaDetails.vue'
 import { desactivarEmpresa, obtenerEmpresa } from '@/services/empresas.service'
@@ -87,7 +88,7 @@ onBeforeUnmount(() => {
           class="btn btn-ghost empresa-detalle__accion"
           :to="{ name: 'empresa-editar', params: { id: empresa.id } }"
         >
-          <i class="bi bi-pencil" aria-hidden="true"></i>
+          <IconoSvg nombre="pencil" />
           Editar
         </RouterLink>
         <button
@@ -96,14 +97,14 @@ onBeforeUnmount(() => {
           class="btn btn-outline-danger empresa-detalle__accion"
           @click="dialogoAbierto = true"
         >
-          <i class="bi bi-slash-circle" aria-hidden="true"></i>
+          <IconoSvg nombre="slash-circle" />
           Desactivar
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="empresa-detalle__exito" role="status">
-      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+      <IconoSvg nombre="check-circle-fill" />
       {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
@@ -126,7 +127,7 @@ onBeforeUnmount(() => {
       class="empresa-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <i class="bi bi-building-x" aria-hidden="true"></i>
+      <IconoSvg nombre="building-x" />
       <h2>
         {{ estado === 'not-found' ? 'Empresa no encontrada' : 'No pudimos cargar la empresa' }}
       </h2>

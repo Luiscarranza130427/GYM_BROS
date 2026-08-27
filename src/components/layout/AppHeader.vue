@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import NotificationButton from '@/components/layout/NotificationButton.vue'
 import UserMenu from '@/components/layout/UserMenu.vue'
 import { useUiStore } from '@/stores/ui.store'
@@ -32,7 +33,7 @@ const titulo = computed(() => route.meta.title ?? '')
         aria-controls="menu-lateral"
         @click="ui.alternarSidebar()"
       >
-        <i class="bi bi-list" aria-hidden="true"></i>
+        <IconoSvg nombre="list" />
         <span class="visually-hidden">
           {{ ui.sidebarCompacto ? 'Expandir menú lateral' : 'Contraer menú lateral' }}
         </span>

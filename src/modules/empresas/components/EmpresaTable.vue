@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import EmpresaLogo from '@/modules/empresas/components/EmpresaLogo.vue'
 import EmpresaStatusBadge from '@/modules/empresas/components/EmpresaStatusBadge.vue'
 import { formatearFecha, formatearNumero } from '@/utils/formato'
@@ -79,7 +80,7 @@ const paginas = computed(() => {
                   :aria-label="`Ver ${empresa.nombre}`"
                   title="Ver"
                 >
-                  <i class="bi bi-eye" aria-hidden="true"></i>
+                  <IconoSvg nombre="eye" />
                 </RouterLink>
                 <RouterLink
                   class="gb-boton-icono"
@@ -87,7 +88,7 @@ const paginas = computed(() => {
                   :aria-label="`Editar ${empresa.nombre}`"
                   title="Editar"
                 >
-                  <i class="bi bi-pencil" aria-hidden="true"></i>
+                  <IconoSvg nombre="pencil" />
                 </RouterLink>
                 <button
                   type="button"
@@ -97,7 +98,7 @@ const paginas = computed(() => {
                   :title="empresa.estado === 'inactive' ? 'Empresa inactiva' : 'Desactivar'"
                   @click="$emit('desactivar', empresa)"
                 >
-                  <i class="bi bi-slash-circle" aria-hidden="true"></i>
+                  <IconoSvg nombre="slash-circle" />
                 </button>
               </div>
             </td>

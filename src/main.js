@@ -5,8 +5,8 @@ import { createPinia } from 'pinia'
 // Gym Bros puedan sobrescribir a los de Bootstrap por orden de cascada.
 // No se importa el CSS distribuido completo, sino la selección de parciales que
 // el panel usa de verdad: ver `@/assets/styles/bootstrap.scss`.
+// Los iconos ya no son una fuente: son SVG en línea (`@/components/base/Icono.vue`).
 import '@/assets/styles/bootstrap.scss'
-import 'bootstrap-icons/font/bootstrap-icons.css'
 import '@/assets/styles/main.css'
 
 import App from '@/App.vue'

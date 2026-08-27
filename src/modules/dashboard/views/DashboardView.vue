@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import DashboardBanner from '@/modules/dashboard/components/DashboardBanner.vue'
 import DashboardSkeleton from '@/modules/dashboard/components/DashboardSkeleton.vue'
 import MetricCard from '@/modules/dashboard/components/MetricCard.vue'
@@ -65,7 +66,7 @@ onBeforeUnmount(() => {
         <span>Supervisa la operación de Gym Bros desde un único lugar.</span>
       </div>
       <p v-if="estado === 'success'" class="dashboard__actualizacion">
-        <i class="bi bi-clock-history" aria-hidden="true"></i>
+        <IconoSvg nombre="clock-history" />
         Última actualización: {{ etiquetaActualizacion.toLowerCase() }}
       </p>
     </header>
@@ -79,12 +80,12 @@ onBeforeUnmount(() => {
       aria-live="assertive"
     >
       <span class="dashboard__error-icono" aria-hidden="true">
-        <i class="bi bi-exclamation-triangle"></i>
+        <IconoSvg nombre="exclamation-triangle" />
       </span>
       <h2>No pudimos cargar el dashboard</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarDashboard">
-        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <IconoSvg nombre="arrow-clockwise" />
         Reintentar
       </button>
     </section>
