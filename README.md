@@ -83,21 +83,25 @@ Todo lo que cuelga de `/` requiere sesión: `requiresAuth` va en el registro
 padre y Vue Router lo hereda, de modo que una ruta nueva no puede quedarse
 pública por olvido.
 
-| Ruta                                                                   | Acceso                            |
-| ---------------------------------------------------------------------- | --------------------------------- |
-| `/login`                                                               | Sólo sin sesión                   |
-| `/dashboard`                                                           | Requiere sesión                   |
-| `/empresas`                                                            | Requiere sesión                   |
-| `/empresas/nueva`                                                      | Requiere sesión                   |
-| `/empresas/:id`                                                        | Requiere sesión                   |
-| `/empresas/:id/editar`                                                 | Requiere sesión                   |
-| `/usuarios`                                                            | Requiere sesión                   |
-| `/usuarios/nuevo`                                                      | Requiere sesión                   |
-| `/usuarios/:id`                                                        | Requiere sesión                   |
-| `/usuarios/:id/editar`                                                 | Requiere sesión                   |
-| `/perfil`                                                              | Requiere sesión · en construcción |
-| `/ejercicios`, `/alimentacion`, `/notificaciones`, `/planes`, `/pagos` | Requiere sesión · en construcción |
-| `/404` y cualquier otra                                                | Pública                           |
+| Ruta                                                    | Acceso                            |
+| ------------------------------------------------------- | --------------------------------- |
+| `/login`                                                | Sólo sin sesión                   |
+| `/dashboard`                                            | Requiere sesión                   |
+| `/empresas`                                             | Requiere sesión                   |
+| `/empresas/nueva`                                       | Requiere sesión                   |
+| `/empresas/:id`                                         | Requiere sesión                   |
+| `/empresas/:id/editar`                                  | Requiere sesión                   |
+| `/usuarios`                                             | Requiere sesión                   |
+| `/usuarios/nuevo`                                       | Requiere sesión                   |
+| `/usuarios/:id`                                         | Requiere sesión                   |
+| `/usuarios/:id/editar`                                  | Requiere sesión                   |
+| `/ejercicios`                                           | Requiere sesión                   |
+| `/ejercicios/nuevo`                                     | Requiere sesión                   |
+| `/ejercicios/:id`                                       | Requiere sesión                   |
+| `/ejercicios/:id/editar`                                | Requiere sesión                   |
+| `/perfil`                                               | Requiere sesión · en construcción |
+| `/alimentacion`, `/notificaciones`, `/planes`, `/pagos` | Requiere sesión · en construcción |
+| `/404` y cualquier otra                                 | Pública                           |
 
 ## Documentación
 
@@ -107,16 +111,16 @@ pública por olvido.
 
 ## Estado
 
-| Fase | Alcance                                        | Estado     |
-| ---- | ---------------------------------------------- | ---------- |
-| 1    | Fundación del frontend                         | Completada |
-| 2    | Layout administrativo (sidebar y header)       | Completada |
-| 3    | Dashboard (KPIs, gráfico y estados)            | Completada |
-| 4    | Módulo de Empresas (CRUD, filtros, paginación) | Completada |
-| 5    | Módulo de Usuarios (CRUD, filtros, historial)  | Completada |
+| Fase | Alcance                                         | Estado     |
+| ---- | ----------------------------------------------- | ---------- |
+| 1    | Fundación del frontend                          | Completada |
+| 2    | Layout administrativo (sidebar y header)        | Completada |
+| 3    | Dashboard (KPIs, gráfico y estados)             | Completada |
+| 4    | Módulo de Empresas (CRUD, filtros, paginación)  | Completada |
+| 5    | Módulo de Usuarios (CRUD, filtros, historial)   | Completada |
+| 6    | Módulo de Ejercicios (CRUD, catálogo y filtros) | Completada |
 
-Los módulos restantes —ejercicios, alimentación, notificaciones, planes, pagos y
-perfil— usan la pantalla compartida «En construcción» y pertenecen a fases
+Los módulos restantes —alimentación, notificaciones, planes, pagos y perfil— usan la pantalla compartida «En construcción» y pertenecen a fases
 posteriores.
 
 Nada de esto habla todavía con Laravel: el backend está en desarrollo y la

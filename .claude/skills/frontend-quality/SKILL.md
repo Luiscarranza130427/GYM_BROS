@@ -78,7 +78,28 @@ limitarse a listarlo.
 - [ ] Sin imports sin usar, código muerto, archivos vacíos ni carpetas de relleno.
 - [ ] Nombres del dominio en español y descriptivos.
 
-## 9. Comprobación final
+## 9. Trampas ya pisadas
+
+Comprobaciones nacidas de fallos reales de este repositorio (ver la sección
+«Reglas nacidas de errores reales» de `CLAUDE.md`).
+
+- [ ] Ningún `watch` sin `immediate: true` cuyo efecto haga falta también en el
+      montaje (bloquear scroll, enfocar, suscribirse).
+- [ ] Ningún rol ARIA declarado sin su comportamiento: `role="menu"` implica
+      flechas + Home/End; `aria-modal` implica trampa de foco real.
+- [ ] Ningún control decorativo: todo `v-model` tiene a alguien que lea su valor.
+- [ ] Todo `router.push`/`replace` fuera de un guard lleva `.catch()`.
+- [ ] Ningún componente vuelve a normalizar lo que el servicio ya garantiza:
+      los `?? datos.otro_nombre` en una vista son ramas muertas que enmascaran
+      un cambio de contrato.
+- [ ] Los mocks se cargan con `import()` dinámico dentro de `if (USE_MOCKS)`,
+      nunca con import estático.
+- [ ] Los iconos usados existen en `src/assets/iconos.js`.
+- [ ] Al refactorizar no ha quedado huérfano: reglas CSS de bloques eliminados,
+      `ref` de plantilla sin variable, imports sin usar.
+- [ ] Si se ha escrito lógica nueva, la cobertura **no ha bajado**.
+
+## 10. Comprobación final
 
 Ejecutar de verdad, no suponer (desde PowerShell en Windows):
 
@@ -89,6 +110,9 @@ npm run lint && npm run test && npm run build
 Y en el navegador: la ruta cargada, consola sin errores ni avisos de Vue, red sin
 404 y sin scroll horizontal.
 
-## 10. Alcance de fase
+Y tras fusionar en `main`, no sólo antes: `lint` vuelve a ejecutarse, porque una
+fusión puede producir código inválido sin marcar conflicto.
+
+## 11. Alcance de fase
 
 - [ ] No se ha implementado nada de una fase posterior a la pedida.

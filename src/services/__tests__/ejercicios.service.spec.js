@@ -1,0 +1,339 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const EJERCICIO_NUEVO = {
+  nombre: 'Hip thrust',
+  categoria: 'piernas',
+  nivel: 'intermedio',
+  equipo: 'barra',
+  descripcion: 'Extensión de cadera con apoyo escapular.',
+  seriesSugeridas: 4,
+  repeticionesSugeridas: 10,
+  estado: 'active',
+}
+
+async function cargarServicioMock() {
+  vi.doMock('@/config/env', () => ({ USE_MOCKS: true }))
+  vi.doMock('@/services/api', () => ({
+    default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  }))
+  vi.useFakeTimers()
+  vi.spyOn(Math, 'random').mockReturnValue(0)
+  const servicio = await import('@/services/ejercicios.service')
+  // El servicio carga sus mocks con import() dinámico para que no entren en el
+  // bundle de producción. Se precarga aquí para dejarlo en el registro: así la
+  // promesa se resuelve en un microtask y los temporizadores simulados siguen
+  // siendo deterministas.
+  await import('@/mocks/ejercicios.mock')
+  return servicio
+}
+
+/** Resuelve el import() del mock (ya cacheado) antes de tocar los temporizadores. */
+async function asentarImportDinamico() {
+  await vi.advanceTimersByTimeAsync(0)
+}
+
+async function completarPeticion(peticion, latencia = 250) {
+  await asentarImportDinamico()
+  await vi.advanceTimersByTimeAsync(latencia)
+  return peticion
+}
+
+describe('ejercicios.service en modo mock', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  it('lista el catálogo con paginación coherente', async () => {
+    const servicio = await cargarServicioMock()
+
+    const resultado = await completarPeticion(servicio.obtenerEjercicios({ porPagina: 8 }))
+
+    expect(resultado.items).toHaveLength(8)
+    expect(resultado.paginacion).toEqual({
+      pagina: 1,
+      ultimaPagina: 4,
+      porPagina: 8,
+      total: 30,
+      desde: 1,
+      hasta: 8,
+    })
+    expect(resultado.items[0]).toEqual(
+      expect.objectContaining({
+        id: expect.any(Number),
+        nombre: expect.any(String),
+        categoria: expect.any(String),
+        nivel: expect.any(String),
+        equipo: expect.any(String),
+        estado: expect.stringMatching(/^(active|inactive)$/),
+      }),
+    )
+  })
+
+  it('busca sin distinguir tildes ni mayúsculas', async () => {
+    const servicio = await cargarServicioMock()
+
+    // "Jalón" lleva tilde: buscar sin ella debe encontrarlo igual.
+    const resultado = await completarPeticion(servicio.obtenerEjercicios({ busqueda: 'JALON' }))
+
+    expect(resultado.items).toHaveLength(1)
+    expect(resultado.items[0].nombre).toBe('Jalón al pecho')
+  })
+
+  it('combina los filtros de categoría, nivel y equipo', async () => {
+    const servicio = await cargarServicioMock()
+
+    const resultado = await completarPeticion(
+      servicio.obtenerEjercicios({ categoria: 'piernas', nivel: 'principiante', porPagina: 30 }),
+    )
+
+    expect(resultado.items).not.toHaveLength(0)
+    expect(
+      resultado.items.every((e) => e.categoria === 'piernas' && e.nivel === 'principiante'),
+    ).toBe(true)
+
+    const conBarra = await completarPeticion(
+      servicio.obtenerEjercicios({ equipo: 'barra', porPagina: 30 }),
+    )
+    expect(conBarra.items.every((e) => e.equipo === 'barra')).toBe(true)
+    expect(conBarra.paginacion.total).toBe(conBarra.items.length)
+  })
+
+  it('entrega una copia segura: mutarla no altera el catálogo', async () => {
+    const servicio = await cargarServicioMock()
+
+    const primera = await completarPeticion(servicio.obtenerEjercicio(1))
+    primera.nombre = 'Alterado desde la vista'
+    const segunda = await completarPeticion(servicio.obtenerEjercicio(1))
+
+    expect(segunda.nombre).toBe('Press de banca')
+  })
+
+  it('crea un ejercicio y lo hace visible de inmediato', async () => {
+    const servicio = await cargarServicioMock()
+
+    const creado = await completarPeticion(servicio.crearEjercicio(EJERCICIO_NUEVO))
+    expect(creado).toEqual(
+      expect.objectContaining({
+        id: 31,
+        nombre: 'Hip thrust',
+        categoria: 'piernas',
+        usos: 0,
+        estado: 'active',
+        fechaRegistro: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    )
+
+    const listado = await completarPeticion(servicio.obtenerEjercicios({ busqueda: 'hip thrust' }))
+    expect(listado.items).toHaveLength(1)
+    expect(listado.items[0].id).toBe(creado.id)
+  })
+
+  it('rechaza un nombre duplicado con un 422 por campo', async () => {
+    const servicio = await cargarServicioMock()
+
+    // Sin tilde y en minúsculas: debe detectarse igual que "Jalón al pecho".
+    const peticion = servicio.crearEjercicio({ ...EJERCICIO_NUEVO, nombre: 'jalon al pecho' })
+    const rechazo = expect(peticion).rejects.toMatchObject({
+      status: 422,
+      errors: { nombre: ['Ya existe un ejercicio con este nombre.'] },
+    })
+
+    await asentarImportDinamico()
+    await vi.advanceTimersByTimeAsync(250)
+    await rechazo
+  })
+
+  it('rechaza valores fuera de catálogo con un 422 por campo', async () => {
+    const servicio = await cargarServicioMock()
+
+    const peticion = servicio.crearEjercicio({
+      ...EJERCICIO_NUEVO,
+      nombre: 'Ejercicio inventado',
+      categoria: 'teletransporte',
+      nivel: 'imposible',
+    })
+    const rechazo = expect(peticion).rejects.toMatchObject({
+      status: 422,
+      errors: expect.objectContaining({
+        categoria: expect.any(Array),
+        nivel: expect.any(Array),
+      }),
+    })
+
+    await asentarImportDinamico()
+    await vi.advanceTimersByTimeAsync(250)
+    await rechazo
+  })
+
+  it('actualiza sólo lo editable y no deja tocar lo que calcula el backend', async () => {
+    const servicio = await cargarServicioMock()
+
+    const actualizado = await completarPeticion(
+      servicio.actualizarEjercicio(1, {
+        nivel: 'avanzado',
+        usos: 9999,
+        fechaRegistro: '2000-01-01',
+      }),
+    )
+
+    expect(actualizado.nivel).toBe('avanzado')
+    expect(actualizado.usos).not.toBe(9999)
+    expect(actualizado.fechaRegistro).not.toBe('2000-01-01')
+
+    const recargado = await completarPeticion(servicio.obtenerEjercicio(1))
+    expect(recargado.nivel).toBe('avanzado')
+  })
+
+  it('desactiva sin eliminar', async () => {
+    const servicio = await cargarServicioMock()
+
+    const desactivado = await completarPeticion(servicio.desactivarEjercicio(2))
+    const recargado = await completarPeticion(servicio.obtenerEjercicio(2))
+
+    expect(desactivado.estado).toBe('inactive')
+    expect(recargado.estado).toBe('inactive')
+  })
+
+  it('responde 404 ante un id inexistente', async () => {
+    const servicio = await cargarServicioMock()
+
+    const peticion = servicio.obtenerEjercicio(9999)
+    const rechazo = expect(peticion).rejects.toMatchObject({ status: 404 })
+
+    await asentarImportDinamico()
+    await vi.advanceTimersByTimeAsync(250)
+    await rechazo
+  })
+})
+
+describe('ejercicios.service con API Laravel', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('normaliza el listado en snake_case y traduce los parámetros', async () => {
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: 7,
+            name: 'Press de banca',
+            category: 'pecho',
+            level: 'intermedio',
+            equipment: 'barra',
+            description: 'Empuje horizontal.',
+            series_sugeridas: 4,
+            repeticiones_sugeridas: 8,
+            usos_count: 154,
+            status: 'active',
+            created_at: '2026-01-15',
+          },
+        ],
+        current_page: 2,
+        last_page: 3,
+        per_page: 5,
+        total: 12,
+        from: 6,
+        to: 6,
+      },
+    })
+    vi.doMock('@/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/services/api', () => ({ default: { get } }))
+    const { obtenerEjercicios } = await import('@/services/ejercicios.service')
+
+    const resultado = await obtenerEjercicios({
+      busqueda: 'press',
+      categoria: 'pecho',
+      nivel: 'intermedio',
+      equipo: 'barra',
+      estado: 'active',
+      pagina: 2,
+      porPagina: 5,
+    })
+
+    expect(get).toHaveBeenCalledWith('/ejercicios', {
+      params: {
+        search: 'press',
+        category: 'pecho',
+        level: 'intermedio',
+        equipment: 'barra',
+        status: 'active',
+        page: 2,
+        per_page: 5,
+      },
+    })
+    expect(resultado.items[0]).toEqual({
+      id: 7,
+      nombre: 'Press de banca',
+      categoria: 'pecho',
+      nivel: 'intermedio',
+      equipo: 'barra',
+      descripcion: 'Empuje horizontal.',
+      seriesSugeridas: 4,
+      repeticionesSugeridas: 8,
+      usos: 154,
+      estado: 'active',
+      fechaRegistro: '2026-01-15',
+    })
+    expect(resultado.paginacion).toEqual({
+      pagina: 2,
+      ultimaPagina: 3,
+      porPagina: 5,
+      total: 12,
+      desde: 6,
+      hasta: 6,
+    })
+  })
+
+  it('traduce los campos de un 422 al vocabulario del formulario', async () => {
+    const { HttpError } = await import('@/services/http-error')
+    const post = vi.fn().mockRejectedValue(
+      new HttpError({
+        status: 422,
+        message: 'Revisa los datos introducidos.',
+        errors: { name: ['Ya existe.'], suggested_sets: ['Debe ser un entero.'] },
+      }),
+    )
+    vi.doMock('@/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/services/api', () => ({ default: { post } }))
+    const { crearEjercicio } = await import('@/services/ejercicios.service')
+
+    // Sin esta traducción el mensaje existe pero no se pinta bajo ningún campo.
+    await expect(crearEjercicio(EJERCICIO_NUEVO)).rejects.toMatchObject({
+      status: 422,
+      errors: {
+        nombre: ['Ya existe.'],
+        seriesSugeridas: ['Debe ser un entero.'],
+      },
+    })
+  })
+
+  it('envía sólo los campos editables, en el vocabulario del backend', async () => {
+    const post = vi.fn().mockResolvedValue({ data: { id: 40 } })
+    vi.doMock('@/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/services/api', () => ({ default: { post } }))
+    const { crearEjercicio } = await import('@/services/ejercicios.service')
+
+    await crearEjercicio({ ...EJERCICIO_NUEVO, usos: 500, fechaRegistro: '2000-01-01', id: 99 })
+
+    expect(post).toHaveBeenCalledWith('/ejercicios', {
+      nombre: 'Hip thrust',
+      categoria: 'piernas',
+      nivel: 'intermedio',
+      equipo: 'barra',
+      descripcion: 'Extensión de cadera con apoyo escapular.',
+      series_sugeridas: 4,
+      repeticiones_sugeridas: 10,
+      estado: 'active',
+    })
+  })
+})
