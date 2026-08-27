@@ -23,7 +23,7 @@ const rutaNoEncontrada = {
  * agregan después manteniendo el mismo nombre padre que usa el sidebar.
  */
 const rutasDeSeccion = [...SECCIONES, ...SECCIONES_DE_USUARIO]
-  .filter((seccion) => !['empresas', 'usuarios'].includes(seccion.name))
+  .filter((seccion) => !seccion.arbolPropio)
   .map((seccion) => ({
     path: seccion.path,
     name: seccion.name,
@@ -105,6 +105,41 @@ const rutaUsuarios = {
   ],
 }
 
+/** Árbol CRUD de Ejercicios; mantiene activo el enlace padre del sidebar. */
+const rutaEjercicios = {
+  path: 'ejercicios',
+  name: 'ejercicios',
+  component: RouterView,
+  redirect: { name: 'ejercicios-listado' },
+  meta: { title: 'Ejercicios' },
+  children: [
+    {
+      path: '',
+      name: 'ejercicios-listado',
+      component: () => import('@/modules/ejercicios/views/EjerciciosView.vue'),
+      meta: { title: 'Ejercicios' },
+    },
+    {
+      path: 'nuevo',
+      name: 'ejercicio-nuevo',
+      component: () => import('@/modules/ejercicios/views/EjercicioCreateView.vue'),
+      meta: { title: 'Nuevo ejercicio' },
+    },
+    {
+      path: ':id/editar',
+      name: 'ejercicio-editar',
+      component: () => import('@/modules/ejercicios/views/EjercicioEditView.vue'),
+      meta: { title: 'Editar ejercicio' },
+    },
+    {
+      path: ':id',
+      name: 'ejercicio-detalle',
+      component: () => import('@/modules/ejercicios/views/EjercicioDetailView.vue'),
+      meta: { title: 'Detalle ejercicio' },
+    },
+  ],
+}
+
 /**
  * `requiresAuth` va en el registro PADRE y vue-router lo fusiona hacia las
  * hijas: así ninguna ruta nueva puede quedarse pública por olvido. Si algún día
@@ -132,6 +167,7 @@ const routes = [
       ...rutasDeSeccion,
       rutaEmpresas,
       rutaUsuarios,
+      rutaEjercicios,
     ],
   },
   { path: '/404', name: 'not-found', ...rutaNoEncontrada },

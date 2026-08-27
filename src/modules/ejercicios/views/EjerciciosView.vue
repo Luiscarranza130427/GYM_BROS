@@ -1,0 +1,228 @@
+<script setup>
+import { ref } from 'vue'
+
+import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
+import IconoSvg from '@/components/base/IconoSvg.vue'
+import PageHeader from '@/components/base/PageHeader.vue'
+import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
+import { CATEGORIAS, EQUIPOS, NIVELES, valoresDe } from '@/modules/ejercicios/catalogos'
+import EjercicioFilters from '@/modules/ejercicios/components/EjercicioFilters.vue'
+import EjercicioTable from '@/modules/ejercicios/components/EjercicioTable.vue'
+import { desactivarEjercicio, obtenerEjercicios } from '@/services/ejercicios.service'
+
+const {
+  estadoVista,
+  items,
+  paginacion,
+  busqueda,
+  filtros,
+  hayFiltros,
+  mensajeError,
+  mensajeExito,
+  mensajeExitoRef,
+  cargarListado,
+  cambiarBusqueda,
+  cambiarFiltro,
+  cambiarPagina,
+  limpiarFiltros,
+  anunciarExito,
+} = useListadoFiltrable({
+  nombreRuta: 'ejercicios-listado',
+  cargar: obtenerEjercicios,
+  // Los cuatro filtros son listas cerradas: con `permitidos`, un valor
+  // inventado en la URL cae al valor por defecto y nunca llega al servicio.
+  filtros: {
+    category: { permitidos: ['all', ...valoresDe(CATEGORIAS)] },
+    level: { permitidos: ['all', ...valoresDe(NIVELES)] },
+    equipment: { permitidos: ['all', ...valoresDe(EQUIPOS)] },
+    status: { permitidos: ['all', 'active', 'inactive'] },
+  },
+  mapearParametros: ({ category, level, equipment, status }) => ({
+    categoria: category,
+    nivel: level,
+    equipo: equipment,
+    estado: status,
+  }),
+  mensajeDeError: 'No pudimos cargar los ejercicios.',
+  avisos: { deactivated: 'Ejercicio desactivado correctamente.' },
+})
+
+// La desactivación se queda en la vista: su texto y su confirmación son propios
+// del recurso, no algo que el composable pueda generalizar sin quedarse soso.
+const ejercicioSeleccionado = ref(null)
+const desactivando = ref(false)
+
+async function confirmarDesactivacion() {
+  if (!ejercicioSeleccionado.value || desactivando.value) return
+  desactivando.value = true
+
+  try {
+    const { id, nombre } = ejercicioSeleccionado.value
+    await desactivarEjercicio(id)
+    ejercicioSeleccionado.value = null
+    await anunciarExito(`El ejercicio ${nombre} fue desactivado correctamente.`)
+  } catch (error) {
+    ejercicioSeleccionado.value = null
+    mensajeError.value = error?.message || 'No pudimos desactivar el ejercicio.'
+    estadoVista.value = 'error'
+  } finally {
+    desactivando.value = false
+  }
+}
+</script>
+
+<template>
+  <section class="ejercicios">
+    <PageHeader
+      titulo="Ejercicios"
+      descripcion="Administra el catálogo de ejercicios disponible para las rutinas."
+      seccion="Ejercicios"
+      :ruta-seccion="{ name: 'ejercicios-listado' }"
+      etiqueta="Catálogo de entrenamiento"
+    >
+      <template #acciones>
+        <RouterLink class="btn btn-primary ejercicios__nuevo" :to="{ name: 'ejercicio-nuevo' }">
+          <IconoSvg nombre="plus-lg" />
+          Nuevo ejercicio
+        </RouterLink>
+      </template>
+    </PageHeader>
+
+    <p
+      v-if="mensajeExito"
+      ref="mensajeExitoRef"
+      class="ejercicios__exito"
+      role="status"
+      tabindex="-1"
+    >
+      <IconoSvg nombre="check-circle-fill" />
+      {{ mensajeExito }}
+    </p>
+
+    <EjercicioFilters
+      :busqueda="busqueda"
+      :categoria="filtros.category"
+      :nivel="filtros.level"
+      :equipo="filtros.equipment"
+      :estado="filtros.status"
+      :cargando="estadoVista === 'loading'"
+      @update:busqueda="cambiarBusqueda"
+      @update:categoria="cambiarFiltro('category', $event)"
+      @update:nivel="cambiarFiltro('level', $event)"
+      @update:equipo="cambiarFiltro('equipment', $event)"
+      @update:estado="cambiarFiltro('status', $event)"
+      @limpiar="limpiarFiltros"
+    />
+
+    <EjercicioTable
+      v-if="
+        estadoVista === 'idle' ||
+        estadoVista === 'loading' ||
+        (estadoVista === 'success' && items.length)
+      "
+      :items="items"
+      :paginacion="paginacion"
+      :cargando="estadoVista === 'idle' || estadoVista === 'loading'"
+      @cambiar-pagina="cambiarPagina"
+      @desactivar="ejercicioSeleccionado = $event"
+    />
+
+    <section v-else-if="estadoVista === 'error'" class="ejercicios__estado gb-tarjeta" role="alert">
+      <IconoSvg nombre="cloud-slash" />
+      <h2>No pudimos cargar los ejercicios</h2>
+      <p>{{ mensajeError }}</p>
+      <button type="button" class="btn btn-primary" @click="cargarListado">
+        <IconoSvg nombre="arrow-clockwise" />
+        Reintentar
+      </button>
+    </section>
+
+    <section v-else class="ejercicios__estado gb-tarjeta" role="status">
+      <IconoSvg nombre="person-arms-up" />
+      <h2>
+        {{ hayFiltros ? 'No encontramos ejercicios' : 'Aún no hay ejercicios en el catálogo' }}
+      </h2>
+      <p v-if="hayFiltros">Prueba con otra búsqueda o limpia los filtros seleccionados.</p>
+      <p v-else>Registra el primer ejercicio del catálogo.</p>
+      <button v-if="hayFiltros" type="button" class="btn btn-ghost" @click="limpiarFiltros">
+        Limpiar filtros
+      </button>
+      <RouterLink v-else class="btn btn-primary" :to="{ name: 'ejercicio-nuevo' }">
+        <IconoSvg nombre="plus-lg" />
+        Nuevo ejercicio
+      </RouterLink>
+    </section>
+
+    <ConfirmDialog
+      :abierto="Boolean(ejercicioSeleccionado)"
+      titulo="¿Desactivar ejercicio?"
+      :descripcion="`${ejercicioSeleccionado?.nombre ?? 'El ejercicio'} dejará de poder asignarse a rutinas nuevas.`"
+      :confirmando="desactivando"
+      etiqueta-confirmar="Desactivar ejercicio"
+      etiqueta-confirmando="Desactivando…"
+      @cancelar="ejercicioSeleccionado = null"
+      @confirmar="confirmarDesactivacion"
+    />
+  </section>
+</template>
+
+<style scoped>
+.ejercicios {
+  display: grid;
+  gap: var(--gb-dashboard-gap);
+  width: 100%;
+  max-width: 100rem;
+  margin: 0 auto;
+  padding-bottom: var(--gb-margen);
+}
+
+.ejercicios__nuevo,
+.ejercicios__estado .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding-inline: 1.25rem;
+  text-decoration: none;
+}
+
+.ejercicios__exito {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background-color: rgba(var(--gb-green-rgb), 0.08);
+  border: 1px solid rgba(var(--gb-green-rgb), 0.28);
+  border-radius: var(--gb-radius-lg);
+  color: var(--gb-green);
+  font-size: var(--gb-tipo-sm);
+}
+
+.ejercicios__estado {
+  display: grid;
+  place-items: center;
+  min-height: 24rem;
+  padding: 2rem;
+  border-radius: var(--gb-radius-xl);
+  text-align: center;
+}
+
+.ejercicios__estado > svg {
+  color: var(--gb-text-soft);
+  font-size: 2rem;
+}
+
+.ejercicios__estado h2 {
+  margin: 1rem 0 0;
+  font-size: var(--gb-tipo-lg);
+  text-transform: uppercase;
+}
+
+.ejercicios__estado p {
+  max-width: 30rem;
+  margin: 0.5rem 0 1.25rem;
+  color: var(--gb-text-muted);
+  font-size: var(--gb-tipo-sm);
+}
+</style>

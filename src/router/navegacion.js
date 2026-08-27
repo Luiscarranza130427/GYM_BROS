@@ -5,9 +5,16 @@
  * con rutas anidadas, como Empresas, conservan aquí sus metadatos de navegación
  * y declaran su árbol especializado en `router/index.js`.
  *
- * Salvo en módulos con árbol especializado, `vista: null` significa que el
- * módulo todavía no está implementado y usa la pantalla compartida
- * "En construcción".
+ * Cada sección declara una de tres cosas:
+ *   - `vista`: componente propio, ruta simple.
+ *   - `arbolPropio: true`: el módulo declara su árbol CRUD en `router/index.js`
+ *     (listado, alta, detalle, edición) conservando este mismo `name` como
+ *     padre, para que el enlace del menú siga activo dentro de todo el árbol.
+ *   - `vista: null`: todavía no implementado; usa la pantalla compartida
+ *     "En construcción".
+ *
+ * Marcar `arbolPropio` aquí evita tener que mantener a mano en `router/index.js`
+ * una lista de nombres excluidos, que había que tocar con cada módulo nuevo.
  */
 export const SECCIONES = [
   {
@@ -22,15 +29,21 @@ export const SECCIONES = [
     path: 'empresas',
     title: 'Empresas',
     icono: 'bi-buildings-fill',
-    vista: null,
+    arbolPropio: true,
   },
-  { name: 'usuarios', path: 'usuarios', title: 'Usuarios', icono: 'bi-people-fill', vista: null },
+  {
+    name: 'usuarios',
+    path: 'usuarios',
+    title: 'Usuarios',
+    icono: 'bi-people-fill',
+    arbolPropio: true,
+  },
   {
     name: 'ejercicios',
     path: 'ejercicios',
     title: 'Ejercicios',
     icono: 'bi-person-arms-up',
-    vista: null,
+    arbolPropio: true,
   },
   {
     name: 'alimentacion',
