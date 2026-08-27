@@ -1,6 +1,7 @@
 <script setup>
 import { useTemplateRef } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { useFormulario } from '@/composables/useFormulario'
 import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
 import { esCorreoValido, esFechaPasada, esTelefonoValido } from '@/utils/validaciones'
@@ -140,7 +141,7 @@ function seleccionarFoto(evento) {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-personales">
       <header>
-        <span aria-hidden="true"><i class="bi bi-person-vcard"></i></span>
+        <span aria-hidden="true"><IconoSvg nombre="person-vcard" /></span>
         <div>
           <h2 id="titulo-personales">Datos personales</h2>
           <p>Información de identificación y contacto del usuario.</p>
@@ -300,7 +301,7 @@ function seleccionarFoto(evento) {
     <div class="formulario__secundarias">
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-organizacion">
         <header>
-          <span aria-hidden="true"><i class="bi bi-buildings"></i></span>
+          <span aria-hidden="true"><IconoSvg nombre="buildings" /></span>
           <div>
             <h2 id="titulo-organizacion">Organización y acceso</h2>
             <p>Empresa, rol administrativo y estado operativo.</p>
@@ -391,7 +392,7 @@ function seleccionarFoto(evento) {
 
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-foto">
         <header>
-          <span aria-hidden="true"><i class="bi bi-camera"></i></span>
+          <span aria-hidden="true"><IconoSvg nombre="camera" /></span>
           <div>
             <h2 id="titulo-foto">Foto de perfil</h2>
             <p>Vista previa local. La imagen todavía no se guarda: falta el endpoint de subida.</p>
@@ -402,7 +403,7 @@ function seleccionarFoto(evento) {
             class="foto__vista"
             :style="{ backgroundImage: foto.url ? `url(${foto.url})` : null }"
           >
-            <i v-if="!foto.url" class="bi bi-person" aria-hidden="true"></i>
+            <IconoSvg nombre="person" />
           </div>
           <div class="campo">
             <label class="form-label" for="usuario-foto">Archivo de imagen</label>

@@ -2,6 +2,7 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import UsuarioForm from '@/modules/usuarios/components/UsuarioForm.vue'
 import {
@@ -112,7 +113,7 @@ onBeforeUnmount(() => {
       class="usuario-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <i class="bi bi-person-x" aria-hidden="true"></i>
+      <IconoSvg nombre="person-x" />
       <h2>
         {{ estado === 'not-found' ? 'Usuario no encontrado' : 'No pudimos cargar el usuario' }}
       </h2>

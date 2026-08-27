@@ -1,4 +1,5 @@
 <script setup>
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { formatearTiempoRelativo } from '@/utils/formato'
 
 defineProps({
@@ -24,7 +25,7 @@ function fechaValida(fecha) {
     <ol v-if="actividades.length" class="actividad__lista">
       <li v-for="actividad in actividades" :key="actividad.id">
         <span class="actividad__icono" aria-hidden="true">
-          <i class="bi" :class="actividad.icono"></i>
+          <IconoSvg :nombre="actividad.icono" />
         </span>
         <div>
           <strong>{{ actividad.titulo }}</strong>
@@ -37,7 +38,7 @@ function fechaValida(fecha) {
     </ol>
 
     <div v-else class="actividad__vacio" role="status">
-      <i class="bi bi-clock-history" aria-hidden="true"></i>
+      <IconoSvg nombre="clock-history" />
       <p>Aún no hay actividad registrada.</p>
     </div>
   </section>

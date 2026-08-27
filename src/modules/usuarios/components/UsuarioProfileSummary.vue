@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import UsuarioAvatar from '@/modules/usuarios/components/UsuarioAvatar.vue'
 import UsuarioStatusBadge from '@/modules/usuarios/components/UsuarioStatusBadge.vue'
 import UsuarioSubscriptionBadge from '@/modules/usuarios/components/UsuarioSubscriptionBadge.vue'
@@ -89,9 +90,7 @@ function metrica(valor) {
         <h2 id="usuario-nombre">{{ nombreCompleto }}</h2>
         <div class="perfil__metadatos">
           <UsuarioStatusBadge :estado="usuario.estado" />
-          <span class="perfil__rol"
-            ><i class="bi bi-shield-check" aria-hidden="true"></i>{{ rolLegible }}</span
-          >
+          <span class="perfil__rol"><IconoSvg nombre="shield-check" />{{ rolLegible }}</span>
         </div>
       </div>
 
@@ -102,7 +101,7 @@ function metrica(valor) {
           :to="{ name: 'empresa-detalle', params: { id: empresa.id } }"
         >
           {{ empresa.nombre }}
-          <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+          <IconoSvg nombre="arrow-up-right" />
         </RouterLink>
         <strong v-else>{{ empresa?.nombre || 'No asignada' }}</strong>
       </div>
@@ -111,7 +110,7 @@ function metrica(valor) {
     <div class="perfil__rejilla">
       <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-personal">
         <header>
-          <span class="perfil__icono"><i class="bi bi-person-vcard" aria-hidden="true"></i></span>
+          <span class="perfil__icono"><IconoSvg nombre="person-vcard" /></span>
           <div>
             <p>Datos de gestión</p>
             <h2 id="titulo-personal">Información personal</h2>
@@ -157,7 +156,7 @@ function metrica(valor) {
       <aside class="perfil__lateral">
         <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-suscripcion">
           <header>
-            <span class="perfil__icono"><i class="bi bi-credit-card" aria-hidden="true"></i></span>
+            <span class="perfil__icono"><IconoSvg nombre="credit-card" /></span>
             <div>
               <p>Membresía</p>
               <h2 id="titulo-suscripcion">Suscripción</h2>
@@ -189,7 +188,7 @@ function metrica(valor) {
 
         <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-actividad">
           <header>
-            <span class="perfil__icono"><i class="bi bi-activity" aria-hidden="true"></i></span>
+            <span class="perfil__icono"><IconoSvg nombre="activity" /></span>
             <div>
               <p>Lectura provisional</p>
               <h2 id="titulo-actividad">Actividad resumida</h2>

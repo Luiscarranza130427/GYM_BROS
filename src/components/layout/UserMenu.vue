@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { SECCIONES_DE_USUARIO } from '@/router/navegacion'
 import { useAuthStore } from '@/stores/auth.store'
 import { inicialesDe } from '@/utils/iniciales'
@@ -146,7 +147,7 @@ async function cerrarSesion() {
         <span>{{ auth.usuario?.nombre }}</span>
         <small>{{ rol }}</small>
       </span>
-      <i class="bi bi-chevron-down menu__flecha" aria-hidden="true"></i>
+      <IconoSvg nombre="chevron-down" />
     </button>
 
     <div v-show="abierto" id="menu-usuario" class="menu__panel">
@@ -167,7 +168,7 @@ async function cerrarSesion() {
           tabindex="-1"
           @click="cerrar"
         >
-          <i class="bi" :class="seccion.icono" aria-hidden="true"></i>
+          <IconoSvg :nombre="seccion.icono" />
           {{ seccion.title }}
         </RouterLink>
 
@@ -179,7 +180,7 @@ async function cerrarSesion() {
           :disabled="cerrando"
           @click="cerrarSesion"
         >
-          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <IconoSvg nombre="box-arrow-right" />
           {{ cerrando ? 'Cerrando…' : 'Cerrar sesión' }}
         </button>
       </div>

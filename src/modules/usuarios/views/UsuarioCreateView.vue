@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import UsuarioForm from '@/modules/usuarios/components/UsuarioForm.vue'
 import { crearUsuario, obtenerOpcionesEmpresas } from '@/services/usuarios.service'
@@ -82,7 +83,7 @@ cargarOpciones()
       @cancel="router.push({ name: 'usuarios-listado' })"
     />
     <section v-else class="usuario-editor__estado gb-tarjeta" role="alert">
-      <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+      <IconoSvg nombre="cloud-slash" />
       <h2>No pudimos preparar el formulario</h2>
       <p>{{ mensajeError }}</p>
       <div>

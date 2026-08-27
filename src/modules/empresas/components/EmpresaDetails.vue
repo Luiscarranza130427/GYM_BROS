@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import EmpresaLogo from '@/modules/empresas/components/EmpresaLogo.vue'
 import EmpresaStatusBadge from '@/modules/empresas/components/EmpresaStatusBadge.vue'
 import { formatearFecha, formatearNumero } from '@/utils/formato'
@@ -70,7 +71,7 @@ const sitioSeguro = computed(() => {
             <dt>Sitio web</dt>
             <dd>
               <a v-if="sitioSeguro" :href="sitioSeguro" target="_blank" rel="noopener noreferrer">
-                {{ empresa.sitioWeb }} <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                {{ empresa.sitioWeb }} <IconoSvg nombre="box-arrow-up-right" />
               </a>
               <span v-else>{{ empresa.sitioWeb || 'No especificado' }}</span>
             </dd>

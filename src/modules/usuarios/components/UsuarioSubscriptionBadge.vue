@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 const props = defineProps({
   estado: { type: String, default: 'none' },
 })
@@ -18,7 +20,7 @@ const presentacion = computed(
 
 <template>
   <span class="suscripcion" :class="`suscripcion--${estado}`">
-    <i class="bi" :class="presentacion.icono" aria-hidden="true"></i>
+    <IconoSvg :nombre="presentacion.icono" />
     {{ presentacion.etiqueta }}
   </span>
 </template>

@@ -7,7 +7,7 @@ proyectos aparte.
 ## Stack
 
 Vue 3 · Composition API con `<script setup>` · JavaScript (sin TypeScript) · Vite ·
-Vue Router · Pinia · Axios · Bootstrap 5 · Bootstrap Icons.
+Vue Router · Pinia · Axios · Bootstrap 5 (sólo los parciales que se usan).
 
 No introducir Nuxt, Tailwind, jQuery, Vuex ni Options API.
 
@@ -60,6 +60,10 @@ No introducir Nuxt, Tailwind, jQuery, Vuex ni Options API.
   tendrá estilo. Si algo aparece sin formato, mirar ahí primero.
 - Las fuentes van autoalojadas en WOFF2 subconjuntado; no enlazar Google Fonts
   ni ningún CDN de tipografías.
+- **Los iconos son SVG en línea**, no una fuente: `<IconoSvg nombre="bell" />`.
+  Para usar uno nuevo hay que copiar sus trazos a `src/assets/iconos.js` desde
+  `node_modules/bootstrap-icons/icons/`. Si se olvida, la prueba del catálogo
+  falla en CI; sin ella el icono simplemente no se dibujaría y nadie lo notaría.
 - Antes de añadir una imagen a `src/assets/`, comprobar su peso frente al tamaño
   al que se muestra. No servir un original de cámara para un avatar de 32 px.
 - HTML semántico, `<label for>` en todos los campos, botones reales (nunca

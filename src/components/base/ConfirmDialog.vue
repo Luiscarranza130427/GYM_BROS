@@ -1,6 +1,8 @@
 <script setup>
 import { nextTick, onBeforeUnmount, useId, useTemplateRef, watch } from 'vue'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 const props = defineProps({
   abierto: { type: Boolean, default: false },
   titulo: { type: String, required: true },
@@ -133,7 +135,7 @@ onBeforeUnmount(() => {
         :aria-describedby="descripcionId"
       >
         <span class="dialogo__icono" aria-hidden="true">
-          <i class="bi bi-exclamation-triangle"></i>
+          <IconoSvg nombre="exclamation-triangle" />
         </span>
         <h2 :id="tituloId">{{ titulo }}</h2>
         <p :id="descripcionId">{{ descripcion }}</p>

@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 const route = useRoute()
 
 /** El nombre de la sección sale de la ruta: una sola vista sirve para todas. */
@@ -14,7 +16,7 @@ const seccion = computed(() => route.meta.title ?? 'Esta sección')
 
     <div class="gb-tarjeta pendiente__aviso">
       <span class="pendiente__icono" aria-hidden="true">
-        <i class="bi bi-cone-striped"></i>
+        <IconoSvg nombre="cone-striped" />
       </span>
 
       <div>

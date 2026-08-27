@@ -2,6 +2,7 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import PageHeader from '@/components/base/PageHeader.vue'
 import EmpresaForm from '@/modules/empresas/components/EmpresaForm.vue'
 import { actualizarEmpresa, obtenerEmpresa } from '@/services/empresas.service'
@@ -108,7 +109,7 @@ onBeforeUnmount(() => {
       class="empresa-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <i class="bi bi-building-x" aria-hidden="true"></i>
+      <IconoSvg nombre="building-x" />
       <h2>
         {{ estado === 'not-found' ? 'Empresa no encontrada' : 'No pudimos cargar la empresa' }}
       </h2>

@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'chart.js'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { formatearNumero } from '@/utils/formato'
 
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, LineController, Tooltip)
@@ -148,7 +149,7 @@ onBeforeUnmount(destruirGrafico)
     </div>
 
     <div v-else class="estado-vacio" role="status">
-      <i class="bi bi-graph-up" aria-hidden="true"></i>
+      <IconoSvg nombre="graph-up" />
       <p>Aún no hay progreso suficiente para construir la gráfica.</p>
     </div>
   </section>

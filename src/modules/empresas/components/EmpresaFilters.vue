@@ -1,4 +1,6 @@
 <script setup>
+import IconoSvg from '@/components/base/IconoSvg.vue'
+
 defineProps({
   busqueda: { type: String, default: '' },
   estado: { type: String, default: 'all' },
@@ -12,7 +14,7 @@ defineEmits(['update:busqueda', 'update:estado'])
   <section class="filtros gb-tarjeta" aria-label="Filtros de empresas" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-empresa">Buscar empresa</label>
-      <i class="bi bi-search" aria-hidden="true"></i>
+      <IconoSvg nombre="search" />
       <input
         id="buscar-empresa"
         :value="busqueda"

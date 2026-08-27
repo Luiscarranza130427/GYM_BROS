@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import IconoSvg from '@/components/base/IconoSvg.vue'
 import { pistaDeCredenciales } from '@/services/auth.service'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -73,7 +74,7 @@ async function enviar() {
       <div class="login__campo">
         <label class="form-label" for="correo">Correo electrónico</label>
         <div class="login__control">
-          <i class="bi bi-envelope" aria-hidden="true"></i>
+          <IconoSvg nombre="envelope" />
           <input
             id="correo"
             ref="campoCorreo"
@@ -96,7 +97,7 @@ async function enviar() {
           <span>Acceso seguro</span>
         </div>
         <div class="login__control">
-          <i class="bi bi-shield-lock" aria-hidden="true"></i>
+          <IconoSvg nombre="shield-lock" />
           <input
             id="contrasena"
             v-model="contrasena"
@@ -116,11 +117,7 @@ async function enviar() {
             :aria-label="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             @click="mostrarContrasena = !mostrarContrasena"
           >
-            <i
-              :class="mostrarContrasena ? 'bi-eye-slash' : 'bi-eye'"
-              class="bi"
-              aria-hidden="true"
-            ></i>
+            <IconoSvg :nombre="mostrarContrasena ? 'bi-eye-slash' : 'bi-eye'" />
           </button>
         </div>
       </div>
@@ -132,12 +129,12 @@ async function enviar() {
           aria-hidden="true"
         ></span>
         <span>{{ auth.cargando ? 'Entrando…' : 'Entrar al dashboard' }}</span>
-        <i v-if="!auth.cargando" class="bi bi-arrow-right" aria-hidden="true"></i>
+        <IconoSvg nombre="arrow-right" />
       </button>
     </form>
 
     <p v-if="pistaDemo" class="login__demo">
-      <i class="bi bi-terminal" aria-hidden="true"></i>
+      <IconoSvg nombre="terminal" />
       <span>
         Demo: <code>{{ pistaDemo.correo }}</code> · <code>{{ pistaDemo.contrasena }}</code>
       </span>

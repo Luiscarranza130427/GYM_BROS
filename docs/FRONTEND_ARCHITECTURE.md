@@ -235,10 +235,6 @@ Implementado en Fase 2:
 
 ## 13. Deuda técnica conocida
 
-- **Iconos.** Se carga la fuente completa de Bootstrap Icons (~131 KB woff2) y
-  sus ~2000 reglas CSS (~95 KB) para los 45 iconos que se usan. Recortarlo exige
-  generar un subconjunto, con el riesgo de que un icono añadido más tarde deje de
-  renderizarse en silencio; la alternativa es pasar a SVG en línea. Sin decidir.
 - **Subida de imágenes.** El selector de logo y el de foto de perfil muestran
   vista previa pero no envían el archivo: falta acordar con Natan si va en
   `multipart/form-data` dentro del propio POST/PUT o en un endpoint previo que
@@ -258,6 +254,9 @@ Resuelto desde la revisión de código:
 - Los formularios ya no duplican su mitad no visual: `useFormulario`,
   `useVistaPreviaArchivo` y `utils/validaciones.js`.
 - Hay verificación automática en CI y medición de cobertura.
+- Los iconos son SVG en línea (`IconoSvg.vue` + `assets/iconos.js`), no una
+  fuente. `assets/__tests__/iconos.spec.js` impide tanto usar un icono que no
+  esté en el catálogo como dejar en él iconos que ya nadie usa.
 - `ConfirmDialog` bloquea el scroll de fondo y atrapa el foco de verdad;
   `UserMenu` implementa el patrón `menu` con flechas, Home y End.
 

@@ -28,16 +28,19 @@ export default mergeConfig(
           '**/__tests__/**',
         ],
         /*
-         * Umbrales fijados justo por debajo de la cobertura actual (~64%). No
-         * son un objetivo de calidad, son un trinquete: impiden que un cambio
-         * la haga retroceder sin que nadie se entere. Al subir la cobertura
-         * real conviene subir también estos números.
+         * Trinquete, no objetivo de calidad: impide que la cobertura retroceda
+         * sin que nadie se entere.
+         *
+         * Se mantienen ~2 puntos por debajo de lo medido, no más. Con una
+         * holgura mayor la red deja de servir: se puede perder cobertura real
+         * durante meses sin que el umbral llegue a saltar. Al subir la
+         * cobertura, subir también estos números.
          */
         thresholds: {
-          statements: 60,
-          branches: 60,
-          functions: 60,
-          lines: 60,
+          statements: 67,
+          branches: 65,
+          functions: 67,
+          lines: 69,
         },
       },
     },
