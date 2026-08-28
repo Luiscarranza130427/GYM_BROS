@@ -134,6 +134,34 @@ referencia y se puede medir cuánto se desvían.
 | `suscriptores`                   | no está en `planes`; se cuenta desde `suscripciones`             |
 | —                                | falta `enlace_whatsapp` y los botones «comprar ahora» y WhatsApp |
 
+### Alimentación — construido según el esquema; el diseño pide más de lo que hay
+
+Lo que este documento describe arriba no se puede construir entero: pide para las
+comidas tres campos que la tabla `comidas` no tiene.
+
+| `docs/PANELES.md` pide           | El esquema tiene                                       |
+| -------------------------------- | ------------------------------------------------------ |
+| Tarjeta de comida con **imagen** | nada; y subir imágenes está bloqueado (incidencia #12) |
+| Tarjeta de comida con **nombre** | `tipo_comida` (ENUM), que no es un nombre libre        |
+| Tarjeta de comida con **texto**  | nada                                                   |
+
+**Qué se hizo:** no inventar columnas. Cada tarjeta del horario se compone con lo
+que el esquema sí da —`hora_sugerida`, `tipo_comida` y los alimentos de la comida
+con su cantidad y sus macros—. Si esas tarjetas con foto y descripción importan,
+hay que pedirle a Natan tres campos más en `comidas`.
+
+Dos decisiones de modelo que conviene no perder de vista, porque son al revés de
+lo que uno supondría viniendo de Ejercicios:
+
+- **`alimentos` es un catálogo GLOBAL**, sin `id_empresas`. `ejercicios` sí es
+  por empresa. No funcionan igual.
+- **`planes_alimentacion` cuelga del USUARIO**, no de la empresa. La empresa sólo
+  se arrastra desde el usuario para poder filtrar.
+
+Pendiente de confirmar con Natan, y anotado como supuesto en el mock: **los
+macros de `alimentos` se entienden por 100 g o 100 ml**. El esquema no lo dice, y
+sin fijarlo las cantidades de `comida_alimentos` no significan nada.
+
 ### Ejercicios — ya fusionado, requiere corrección
 
 | Frontend                                   | Esquema                                                                                                                                                            |

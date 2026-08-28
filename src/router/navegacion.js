@@ -50,7 +50,7 @@ export const SECCIONES = [
     path: 'alimentacion',
     title: 'Alimentación',
     icono: 'bi-fork-knife',
-    vista: null,
+    arbolPropio: true,
   },
   {
     name: 'notificaciones',

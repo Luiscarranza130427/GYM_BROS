@@ -37,10 +37,10 @@ export default mergeConfig(
          * cobertura, subir también estos números.
          */
         thresholds: {
-          statements: 67,
-          branches: 65,
+          statements: 68,
+          branches: 69,
           functions: 67,
-          lines: 69,
+          lines: 70,
         },
       },
     },

@@ -141,6 +141,71 @@ const rutaEjercicios = {
 }
 
 /**
+ * Alimentación tiene DOS recursos bajo la misma sección: los planes, que es lo
+ * que pide `docs/PANELES.md` como pantalla principal —el horario de comidas de
+ * un usuario—, y el catálogo de alimentos en que se apoyan. Por eso la sección
+ * aterriza en los planes y el catálogo cuelga aparte, en vez de ser dos entradas
+ * distintas del menú.
+ */
+const rutaAlimentacion = {
+  path: 'alimentacion',
+  name: 'alimentacion',
+  component: RouterView,
+  redirect: { name: 'alimentacion-listado' },
+  meta: { title: 'Alimentación' },
+  children: [
+    {
+      path: '',
+      name: 'alimentacion-listado',
+      component: () => import('@/modules/alimentacion/views/PlanesView.vue'),
+      meta: { title: 'Planes de alimentación' },
+    },
+    {
+      path: 'planes/:id',
+      name: 'plan-alimentacion-detalle',
+      component: () => import('@/modules/alimentacion/views/PlanDetailView.vue'),
+      meta: { title: 'Plan de alimentación' },
+    },
+    {
+      path: 'planes/:idPlan/comidas/nueva',
+      name: 'comida-nueva',
+      component: () => import('@/modules/alimentacion/views/ComidaCreateView.vue'),
+      meta: { title: 'Nueva comida' },
+    },
+    {
+      path: 'planes/:idPlan/comidas/:idComida/editar',
+      name: 'comida-editar',
+      component: () => import('@/modules/alimentacion/views/ComidaEditView.vue'),
+      meta: { title: 'Editar comida' },
+    },
+    {
+      path: 'alimentos',
+      name: 'alimentos-listado',
+      component: () => import('@/modules/alimentacion/views/AlimentosView.vue'),
+      meta: { title: 'Catálogo de alimentos' },
+    },
+    {
+      path: 'alimentos/nuevo',
+      name: 'alimento-nuevo',
+      component: () => import('@/modules/alimentacion/views/AlimentoCreateView.vue'),
+      meta: { title: 'Nuevo alimento' },
+    },
+    {
+      path: 'alimentos/:id/editar',
+      name: 'alimento-editar',
+      component: () => import('@/modules/alimentacion/views/AlimentoEditView.vue'),
+      meta: { title: 'Editar alimento' },
+    },
+    {
+      path: 'alimentos/:id',
+      name: 'alimento-detalle',
+      component: () => import('@/modules/alimentacion/views/AlimentoDetailView.vue'),
+      meta: { title: 'Detalle del alimento' },
+    },
+  ],
+}
+
+/**
  * `requiresAuth` va en el registro PADRE y vue-router lo fusiona hacia las
  * hijas: así ninguna ruta nueva puede quedarse pública por olvido. Si algún día
  * hace falta una hija pública, se excluye de forma explícita.
@@ -168,6 +233,7 @@ const routes = [
       rutaEmpresas,
       rutaUsuarios,
       rutaEjercicios,
+      rutaAlimentacion,
     ],
   },
   { path: '/404', name: 'not-found', ...rutaNoEncontrada },

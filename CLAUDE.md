@@ -162,6 +162,28 @@ run lint` lo detecta («Parsing error: Identifier … has already been declared�
   bloque eliminado, `ref` de plantilla sin variable, imports sin usar. Lint no
   ve el CSS muerto.
 
+### Pruebas
+
+- **Una prueba de ORDEN necesita datos donde los criterios discrepen.** Si se
+  comprueba «ordena por hora» con un desayuno a las siete y una cena a las nueve,
+  la prueba pasa igual ordenando por tipo de comida, por el campo `orden` o por
+  el orden de llegada. Hay que forzar el desacuerdo: un snack de madrugada y un
+  desayuno a media mañana. Lo mismo vale para cualquier criterio compuesto.
+
+  > Pasó dos veces el mismo día, en el servicio y en la vista de alimentación:
+  > las dos pruebas seguían verdes con el criterio de orden eliminado.
+
+- **El mock TIENE que hablar el contrato del servicio.** En modo mock nadie
+  normaliza: el mock _es_ la respuesta. Si el servicio promete
+  `objetivos: { calorias }` y el mock emite `caloriasObjetivo`, la vista revienta
+  —o peor, pinta un cero— sólo en desarrollo, que es justo donde nadie lo mira
+  con lupa. Vale la pena una prueba que compare la forma del mock con la que el
+  normalizador garantiza.
+
+- **Verificar rompiendo el código, no confiar en el verde.** Antes de dar por
+  buena una prueba, revertir lo que comprueba y confirmar que falla —y que falla
+  sólo ella—. Una prueba que pasa con el código roto no prueba nada.
+
 ### Cobertura
 
 - **Un umbral con holgura no es un trinquete.** Los umbrales van uno o dos puntos
