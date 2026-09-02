@@ -1,10 +1,10 @@
 <script setup>
+import { CircleMinus, Clock, Pencil, Plus, Utensils } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { TIPOS_COMIDA, UNIDADES, etiquetaDe, ordenDeComida } from '@/modules/alimentacion/catalogos'
-import { formatearNumero } from '@/utils/formato'
+import { formatearNumero } from '@/shared/utils/formato'
 
 /**
  * El horario de comidas de un plan.
@@ -81,7 +81,7 @@ function nombreDeUnidad(unidad) {
 <template>
   <section class="horario gb-tarjeta" aria-labelledby="titulo-horario">
     <header class="horario__cabecera">
-      <span class="horario__icono" aria-hidden="true"><IconoSvg nombre="fork-knife" /></span>
+      <span class="horario__icono" aria-hidden="true"><Utensils :size="20" /></span>
       <div>
         <p>Plan del día</p>
         <h2 id="titulo-horario">Horario de comidas</h2>
@@ -90,13 +90,13 @@ function nombreDeUnidad(unidad) {
         class="btn btn-primary horario__nueva"
         :to="{ name: 'comida-nueva', params: { idPlan } }"
       >
-        <IconoSvg nombre="plus-lg" />
+        <Plus :size="16" aria-hidden="true" />
         Añadir comida
       </RouterLink>
     </header>
 
     <div v-if="!comidasOrdenadas.length" class="horario__vacio" role="status">
-      <IconoSvg nombre="clock" />
+      <Clock :size="32" aria-hidden="true" />
       <div>
         <h3>Este plan todavía no tiene comidas</h3>
         <p>Añade la primera para que el horario diga algo.</p>
@@ -130,7 +130,7 @@ function nombreDeUnidad(unidad) {
                       :aria-label="`Editar la comida de las ${comida.horaSugerida || 'sin hora'}`"
                       title="Editar comida"
                     >
-                      <IconoSvg nombre="pencil" />
+                      <Pencil :size="16" aria-hidden="true" />
                     </RouterLink>
                     <button
                       type="button"
@@ -140,7 +140,7 @@ function nombreDeUnidad(unidad) {
                       title="Retirar comida"
                       @click="$emit('eliminar', comida)"
                     >
-                      <IconoSvg nombre="dash-circle" />
+                      <CircleMinus :size="16" aria-hidden="true" />
                     </button>
                   </div>
                 </header>

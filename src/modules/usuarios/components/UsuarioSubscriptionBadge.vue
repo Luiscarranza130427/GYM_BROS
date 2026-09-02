@@ -1,7 +1,6 @@
 <script setup>
+import { AlertTriangle, CheckCircle2, CircleMinus, XCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
-
-import IconoSvg from '@/components/base/IconoSvg.vue'
 
 const props = defineProps({
   estado: { type: String, default: 'none' },
@@ -10,17 +9,17 @@ const props = defineProps({
 const presentacion = computed(
   () =>
     ({
-      active: { etiqueta: 'Activa', icono: 'bi-check-circle-fill' },
-      expiring: { etiqueta: 'Por vencer', icono: 'bi-exclamation-triangle-fill' },
-      expired: { etiqueta: 'Vencida', icono: 'bi-x-circle-fill' },
-      none: { etiqueta: 'Sin suscripción', icono: 'bi-dash-circle' },
-    })[props.estado] ?? { etiqueta: 'Sin suscripción', icono: 'bi-dash-circle' },
+      active: { etiqueta: 'Activa', icono: CheckCircle2 },
+      expiring: { etiqueta: 'Por vencer', icono: AlertTriangle },
+      expired: { etiqueta: 'Vencida', icono: XCircle },
+      none: { etiqueta: 'Sin suscripción', icono: CircleMinus },
+    })[props.estado] ?? { etiqueta: 'Sin suscripción', icono: CircleMinus },
 )
 </script>
 
 <template>
   <span class="suscripcion" :class="`suscripcion--${estado}`">
-    <IconoSvg :nombre="presentacion.icono" />
+    <component :is="presentacion.icono" :size="12" aria-hidden="true" />
     {{ presentacion.etiqueta }}
   </span>
 </template>

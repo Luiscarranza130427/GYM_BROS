@@ -1,10 +1,10 @@
 <script setup>
+import { ExternalLink } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import EmpresaLogo from '@/modules/empresas/components/EmpresaLogo.vue'
 import EmpresaStatusBadge from '@/modules/empresas/components/EmpresaStatusBadge.vue'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   empresa: { type: Object, required: true },
@@ -33,7 +33,10 @@ const sitioSeguro = computed(() => {
     </section>
 
     <div class="detalle__rejilla">
-      <section class="detalle__panel gb-tarjeta" aria-labelledby="titulo-contacto">
+      <section
+        class="detalle__panel detalle__panel--principal gb-tarjeta"
+        aria-labelledby="titulo-contacto"
+      >
         <header>
           <p>Datos administrativos</p>
           <h2 id="titulo-contacto">Información y contacto</h2>
@@ -59,7 +62,7 @@ const sitioSeguro = computed(() => {
               <a :href="`tel:${empresa.telefono}`">{{ empresa.telefono }}</a>
             </dd>
           </div>
-          <div>
+          <div class="detalle__completo">
             <dt>Región</dt>
             <dd>{{ empresa.region || 'No especificada' }}</dd>
           </div>
@@ -71,7 +74,7 @@ const sitioSeguro = computed(() => {
             <dt>Sitio web</dt>
             <dd>
               <a v-if="sitioSeguro" :href="sitioSeguro" target="_blank" rel="noopener noreferrer">
-                {{ empresa.sitioWeb }} <IconoSvg nombre="box-arrow-up-right" />
+                {{ empresa.sitioWeb }} <ExternalLink :size="14" aria-hidden="true" />
               </a>
               <span v-else>{{ empresa.sitioWeb || 'No especificado' }}</span>
             </dd>
@@ -106,15 +109,15 @@ const sitioSeguro = computed(() => {
             <div>
               <dt>Principal</dt>
               <dd>
-                <span :style="{ backgroundColor: empresa.colorPrimario }"></span
-                >{{ empresa.colorPrimario }}
+                <span :style="{ backgroundColor: empresa.colorPrimario }"></span>
+                <span>{{ empresa.colorPrimario }}</span>
               </dd>
             </div>
             <div>
               <dt>Secundario</dt>
               <dd>
-                <span :style="{ backgroundColor: empresa.colorSecundario }"></span
-                >{{ empresa.colorSecundario }}
+                <span :style="{ backgroundColor: empresa.colorSecundario }"></span>
+                <span>{{ empresa.colorSecundario }}</span>
               </dd>
             </div>
           </dl>
@@ -127,14 +130,14 @@ const sitioSeguro = computed(() => {
 <style scoped>
 .detalle {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .detalle__resumen {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   padding: 1.5rem;
   border-radius: var(--gb-radius-xl);
 }
@@ -167,26 +170,38 @@ const sitioSeguro = computed(() => {
   font-size: var(--gb-tipo-sm);
 }
 
+/* Rejilla principal con tarjetas al mismo nivel */
 .detalle__rejilla {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.8fr);
-  gap: var(--gb-gutter);
-  align-items: start;
+  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
+  gap: var(--gb-gutter, 1.25rem);
+  align-items: stretch;
 }
 
 .detalle__lateral {
   display: grid;
-  gap: var(--gb-gutter);
+  grid-template-rows: 1fr 1fr;
+  gap: var(--gb-gutter, 1.25rem);
+  height: 100%;
 }
 
 .detalle__panel {
-  padding: 1.25rem;
+  min-width: 0;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.detalle__panel--principal {
+  height: 100%;
 }
 
 .detalle__panel header {
+  min-height: 3.5rem;
   padding-bottom: 0.875rem;
   border-bottom: 1px solid var(--gb-border);
+  flex-shrink: 0;
 }
 
 .detalle__panel header p,
@@ -195,34 +210,35 @@ const sitioSeguro = computed(() => {
 }
 
 .detalle__panel header h2 {
-  margin-top: 0.25rem;
+  margin-top: 0.125rem;
   font-size: var(--gb-tipo-md);
   text-transform: uppercase;
 }
 
 .detalle__panel dl {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: space-between;
   gap: 0;
   margin: 0;
 }
 
 .detalle__panel dl > div {
   min-width: 0;
-  padding: 1rem 0;
+  padding: 0.85rem 0;
   border-bottom: 1px solid var(--gb-border);
 }
 
-.detalle__panel dl > div:nth-last-child(-n + 2),
 .detalle__panel dl > div:last-child {
   border-bottom: 0;
 }
 
-.detalle__panel dl > div:nth-child(even) {
+.detalle__panel dl > div:nth-child(even):not(.detalle__completo) {
   padding-left: 1rem;
 }
 
-.detalle__panel dl > div:nth-child(odd) {
+.detalle__panel dl > div:nth-child(odd):not(.detalle__completo) {
   padding-right: 1rem;
 }
 
@@ -241,13 +257,16 @@ const sitioSeguro = computed(() => {
 }
 
 .detalle__panel dd {
-  margin: 0.375rem 0 0;
+  margin: 0.25rem 0 0;
   overflow-wrap: anywhere;
   color: var(--gb-text);
   font-size: var(--gb-tipo-sm);
 }
 
 .detalle__panel a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--gb-red-text);
   text-decoration: none;
 }
@@ -259,10 +278,11 @@ const sitioSeguro = computed(() => {
 
 .detalle__metricas {
   grid-template-columns: 1fr !important;
+  align-content: space-around;
 }
 
 .detalle__metricas > div {
-  padding: 0.875rem 0 !important;
+  padding: 0.75rem 0 !important;
 }
 
 .detalle__metricas dd {
@@ -274,6 +294,7 @@ const sitioSeguro = computed(() => {
 
 .detalle__colores {
   grid-template-columns: 1fr !important;
+  align-content: space-around;
 }
 
 .detalle__colores > div {
@@ -287,11 +308,12 @@ const sitioSeguro = computed(() => {
   font-family: monospace;
 }
 
-.detalle__colores dd span {
+.detalle__colores dd span:first-child {
   width: 1.5rem;
   height: 1.5rem;
-  border: 1px solid var(--gb-border-soft);
-  border-radius: var(--gb-radius);
+  border: 1px solid var(--gb-border-soft, #404040);
+  border-radius: var(--gb-radius, 0.5rem);
+  flex-shrink: 0;
 }
 
 .tabular {
@@ -305,6 +327,7 @@ const sitioSeguro = computed(() => {
 
   .detalle__lateral {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
   }
 }
 

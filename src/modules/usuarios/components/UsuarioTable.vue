@@ -1,12 +1,12 @@
 <script setup>
+import { Ban, Eye, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import UsuarioAvatar from '@/modules/usuarios/components/UsuarioAvatar.vue'
 import UsuarioStatusBadge from '@/modules/usuarios/components/UsuarioStatusBadge.vue'
 import UsuarioSubscriptionBadge from '@/modules/usuarios/components/UsuarioSubscriptionBadge.vue'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   items: { type: Array, required: true },
@@ -104,6 +104,7 @@ function diasRestantes(suscripcion) {
                 />
                 <span>
                   <strong>{{ nombreCompleto(usuario) }}</strong>
+                  <small v-if="usuario.apodo" class="tabla__apodo">@{{ usuario.apodo }}</small>
                   <small>{{ usuario.correo }}</small>
                 </span>
               </RouterLink>
@@ -129,7 +130,7 @@ function diasRestantes(suscripcion) {
                   :aria-label="`Ver perfil de ${nombreCompleto(usuario)}`"
                   title="Ver perfil"
                 >
-                  <IconoSvg nombre="eye" />
+                  <Eye :size="16" aria-hidden="true" />
                 </RouterLink>
                 <RouterLink
                   class="gb-boton-icono"
@@ -137,7 +138,7 @@ function diasRestantes(suscripcion) {
                   :aria-label="`Editar a ${nombreCompleto(usuario)}`"
                   title="Editar"
                 >
-                  <IconoSvg nombre="pencil" />
+                  <Pencil :size="16" aria-hidden="true" />
                 </RouterLink>
                 <button
                   type="button"
@@ -147,7 +148,7 @@ function diasRestantes(suscripcion) {
                   :title="usuario.estado === 'inactive' ? 'Usuario inactivo' : 'Desactivar'"
                   @click="$emit('desactivar', usuario)"
                 >
-                  <IconoSvg nombre="slash-circle" />
+                  <Ban :size="16" aria-hidden="true" />
                 </button>
               </div>
             </td>

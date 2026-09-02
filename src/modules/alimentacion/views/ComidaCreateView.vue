@@ -1,15 +1,15 @@
 <script setup>
+import { RotateCw, XCircle } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import ComidaForm from '@/modules/alimentacion/components/ComidaForm.vue'
 import {
   crearComida,
   obtenerAlimentosParaElegir,
   obtenerPlan,
-} from '@/services/alimentacion.service'
+} from '@/modules/alimentacion/services/alimentacion.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -156,14 +156,14 @@ onBeforeUnmount(() => {
       class="comida-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Plan no encontrado' : 'No pudimos cargar el plan' }}
       </h2>
       <p>{{ mensajeError }}</p>
       <div>
         <button v-if="estado === 'error'" type="button" class="btn btn-primary" @click="cargarPlan">
-          <IconoSvg nombre="arrow-clockwise" />
+          <RotateCw :size="16" aria-hidden="true" />
           Reintentar
         </button>
         <RouterLink class="btn btn-ghost" :to="{ name: 'alimentacion-listado' }">
@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.comida-editor__estado > svg {
+.comida-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

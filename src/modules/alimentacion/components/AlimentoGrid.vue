@@ -1,11 +1,11 @@
 <script setup>
+import { Eye, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { UNIDADES, etiquetaDe } from '@/modules/alimentacion/catalogos'
 import AlimentoTipoBadge from '@/modules/alimentacion/components/AlimentoTipoBadge.vue'
-import { formatearNumero } from '@/utils/formato'
+import { formatearNumero } from '@/shared/utils/formato'
 
 /**
  * El catálogo se muestra en tarjetas y no en tabla porque de un alimento se
@@ -102,7 +102,7 @@ function unidad(alimento) {
                 :aria-label="`Ver ${alimento.nombre}`"
                 title="Ver"
               >
-                <IconoSvg nombre="eye" />
+                <Eye :size="16" aria-hidden="true" />
               </RouterLink>
               <RouterLink
                 class="gb-boton-icono"
@@ -110,7 +110,7 @@ function unidad(alimento) {
                 :aria-label="`Editar ${alimento.nombre}`"
                 title="Editar"
               >
-                <IconoSvg nombre="pencil" />
+                <Pencil :size="16" aria-hidden="true" />
               </RouterLink>
             </div>
           </footer>

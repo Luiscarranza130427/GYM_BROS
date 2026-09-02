@@ -1,10 +1,9 @@
 <script setup>
+import { ArrowRight, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-vue-next'
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { pistaDeCredenciales } from '@/services/auth.service'
-import { useAuthStore } from '@/stores/auth.store'
+import { useAuthStore } from '@/core/auth/auth.store'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -16,15 +15,10 @@ const mensajeError = ref('')
 const mostrarContrasena = ref(false)
 const campoCorreo = useTemplateRef('campoCorreo')
 
-// La pista de demo llega de forma asíncrona: el servicio carga los datos
-// simulados con `import()` para que no entren en el bundle de producción. La
-// vista sigue sin saber si hay backend o no; sólo espera la respuesta.
-const pistaDemo = ref(null)
 const hayError = computed(() => Boolean(mensajeError.value))
 
-onMounted(async () => {
+onMounted(() => {
   campoCorreo.value?.focus()
-  pistaDemo.value = await pistaDeCredenciales()
 })
 
 function destinoSeguro(redirect) {
@@ -60,11 +54,12 @@ async function enviar() {
 
 <template>
   <section aria-labelledby="titulo-login">
-    <header class="login__cabecera">
-      <p>Acceso administrativo</p>
-      <h2 id="titulo-login">Bienvenido de nuevo</h2>
-      <span>Introduce tus credenciales para entrar al centro de mando.</span>
-    </header>
+    <!--
+      El título va oculto a la vista, no eliminado: sin ningún encabezado la
+      página deja de ser navegable para un lector de pantalla, y el `<section>`
+      se quedaría con un `aria-labelledby` apuntando a nada.
+    -->
+    <h1 id="titulo-login" class="visually-hidden">Iniciar sesión</h1>
 
     <p v-if="mensajeError" id="error-login" class="alert alert-danger login__error" role="alert">
       {{ mensajeError }}
@@ -74,7 +69,7 @@ async function enviar() {
       <div class="login__campo">
         <label class="form-label" for="correo">Correo electrónico</label>
         <div class="login__control">
-          <IconoSvg nombre="envelope" />
+          <Mail class="login__icono" :size="16" aria-hidden="true" />
           <input
             id="correo"
             ref="campoCorreo"
@@ -83,7 +78,7 @@ async function enviar() {
             type="email"
             name="correo"
             autocomplete="username"
-            placeholder="admin@gymbros.com"
+            placeholder="juan.perez@gmail.com"
             required
             :aria-invalid="hayError"
             :aria-describedby="hayError ? 'error-login' : undefined"
@@ -92,12 +87,9 @@ async function enviar() {
       </div>
 
       <div class="login__campo">
-        <div class="login__fila-label">
-          <label class="form-label" for="contrasena">Contraseña</label>
-          <span>Acceso seguro</span>
-        </div>
+        <label class="form-label" for="contrasena">Contraseña</label>
         <div class="login__control">
-          <IconoSvg nombre="shield-lock" />
+          <ShieldCheck class="login__icono" :size="16" aria-hidden="true" />
           <input
             id="contrasena"
             v-model="contrasena"
@@ -117,7 +109,7 @@ async function enviar() {
             :aria-label="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             @click="mostrarContrasena = !mostrarContrasena"
           >
-            <IconoSvg :nombre="mostrarContrasena ? 'bi-eye-slash' : 'bi-eye'" />
+            <component :is="mostrarContrasena ? EyeOff : Eye" :size="16" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -129,50 +121,13 @@ async function enviar() {
           aria-hidden="true"
         ></span>
         <span>{{ auth.cargando ? 'Entrando…' : 'Entrar al dashboard' }}</span>
-        <IconoSvg nombre="arrow-right" />
+        <ArrowRight :size="16" aria-hidden="true" />
       </button>
     </form>
-
-    <p v-if="pistaDemo" class="login__demo">
-      <IconoSvg nombre="terminal" />
-      <span>
-        Demo: <code>{{ pistaDemo.correo }}</code> · <code>{{ pistaDemo.contrasena }}</code>
-      </span>
-    </p>
   </section>
 </template>
 
 <style scoped>
-.login__cabecera {
-  margin-bottom: 1.25rem;
-}
-
-.login__cabecera p {
-  margin: 0 0 0.625rem;
-  color: var(--gb-red-text);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.login__cabecera h2 {
-  margin: 0;
-  font-size: clamp(1.5rem, 2.4vw, 1.8rem);
-  font-weight: 900;
-  line-height: 1.15;
-  text-transform: uppercase;
-}
-
-.login__cabecera span {
-  display: block;
-  margin-top: 0.5rem;
-  color: var(--gb-text-muted);
-  font-size: 0.9375rem;
-}
-
-/* Sustituye a la utilidad `py-2` de Bootstrap: era la única en todo el proyecto
-   y arrastrar por ella la API de utilidades costaba cientos de clases. */
 .login__error {
   padding-block: 0.5rem;
 }
@@ -181,30 +136,19 @@ async function enviar() {
   margin-top: 0.875rem;
 }
 
-.login__fila-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.login__fila-label span {
-  color: var(--gb-text-muted);
-  font-size: 0.6875rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .login__control {
   position: relative;
 }
 
-.login__control > .bi:first-child {
+.login__control > .login__icono,
+.login__control > :deep(svg:first-child) {
   position: absolute;
   top: 50%;
   left: 0.875rem;
   z-index: 1;
   color: var(--gb-text-muted);
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .login__control .form-control {
@@ -248,33 +192,7 @@ async function enviar() {
   border-radius: 0.875rem;
 }
 
-.login__demo {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  margin: 1rem 0 0;
-  padding: 0.625rem 0.75rem;
-  background-color: var(--gb-bg);
-  border: 1px dashed var(--gb-border);
-  border-radius: var(--gb-radius);
-  color: var(--gb-text-muted);
-  font-size: 0.75rem;
-  line-height: 1.55;
-}
-
 @media (max-height: 48rem) and (min-width: 42.01rem) {
-  .login__cabecera {
-    margin-bottom: 1rem;
-  }
-
-  .login__cabecera p {
-    margin-bottom: 0.375rem;
-  }
-
-  .login__cabecera span {
-    font-size: 0.875rem;
-  }
-
   .login__campo + .login__campo {
     margin-top: 0.75rem;
   }
@@ -282,13 +200,5 @@ async function enviar() {
   .login__enviar {
     margin-top: 1rem;
   }
-
-  .login__demo {
-    margin-top: 0.75rem;
-  }
-}
-
-.login__demo code {
-  color: var(--gb-red-text);
 }
 </style>

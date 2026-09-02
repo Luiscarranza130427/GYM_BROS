@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import EmpresaForm from '@/modules/empresas/components/EmpresaForm.vue'
-import { crearEmpresa } from '@/services/empresas.service'
+import { crearEmpresa } from '@/modules/empresas/services/empresas.service'
 
 const router = useRouter()
 const enviando = ref(false)

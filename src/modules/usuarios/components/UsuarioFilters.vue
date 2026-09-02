@@ -1,34 +1,18 @@
 <script setup>
+import { Search, XCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
-
-import IconoSvg from '@/components/base/IconoSvg.vue'
 
 const props = defineProps({
   busqueda: { type: String, default: '' },
-  empresa: { type: String, default: 'all' },
   estado: { type: String, default: 'all' },
   suscripcion: { type: String, default: 'all' },
-  rol: { type: String, default: 'all' },
-  empresas: { type: Array, default: () => [] },
   cargando: { type: Boolean, default: false },
 })
 
-defineEmits([
-  'update:busqueda',
-  'update:empresa',
-  'update:estado',
-  'update:suscripcion',
-  'update:rol',
-  'limpiar',
-])
+defineEmits(['update:busqueda', 'update:estado', 'update:suscripcion', 'limpiar'])
 
 const filtrosActivos = computed(
-  () =>
-    props.busqueda.trim() ||
-    props.empresa !== 'all' ||
-    props.estado !== 'all' ||
-    props.suscripcion !== 'all' ||
-    props.rol !== 'all',
+  () => props.busqueda.trim() || props.estado !== 'all' || props.suscripcion !== 'all',
 )
 </script>
 
@@ -36,7 +20,7 @@ const filtrosActivos = computed(
   <section class="filtros gb-tarjeta" aria-label="Filtros de usuarios" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-usuario">Buscar usuario</label>
-      <IconoSvg nombre="search" />
+      <Search class="filtros__icono" :size="16" aria-hidden="true" />
       <input
         id="buscar-usuario"
         :value="busqueda"
@@ -47,21 +31,6 @@ const filtrosActivos = computed(
         autocomplete="off"
         @input="$emit('update:busqueda', $event.target.value)"
       />
-    </div>
-
-    <div class="filtros__campo">
-      <label for="filtro-empresa">Empresa</label>
-      <select
-        id="filtro-empresa"
-        :value="empresa"
-        class="form-select"
-        @change="$emit('update:empresa', $event.target.value)"
-      >
-        <option value="all">Todas</option>
-        <option v-for="opcion in empresas" :key="opcion.id" :value="String(opcion.id)">
-          {{ opcion.nombre }}
-        </option>
-      </select>
     </div>
 
     <div class="filtros__campo">
@@ -94,29 +63,13 @@ const filtrosActivos = computed(
       </select>
     </div>
 
-    <div class="filtros__campo">
-      <label for="filtro-rol">Rol</label>
-      <select
-        id="filtro-rol"
-        :value="rol"
-        class="form-select"
-        @change="$emit('update:rol', $event.target.value)"
-      >
-        <option value="all">Todos</option>
-        <option value="admin">Administrador</option>
-        <option value="manager">Empresa</option>
-        <option value="trainer">Entrenador</option>
-        <option value="member">Usuario</option>
-      </select>
-    </div>
-
     <button
       v-if="filtrosActivos"
       type="button"
       class="btn btn-ghost filtros__limpiar"
       @click="$emit('limpiar')"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="16" aria-hidden="true" />
       Limpiar filtros
     </button>
   </section>
@@ -125,7 +78,7 @@ const filtrosActivos = computed(
 <style scoped>
 .filtros {
   display: grid;
-  grid-template-columns: minmax(17rem, 2fr) repeat(4, minmax(8.5rem, 1fr)) auto;
+  grid-template-columns: minmax(17rem, 2fr) repeat(2, minmax(8.5rem, 1fr)) auto;
   align-items: end;
   gap: 0.75rem;
   padding: 0.875rem;
@@ -136,13 +89,15 @@ const filtrosActivos = computed(
   position: relative;
 }
 
-.filtros__busqueda i {
+.filtros__busqueda :deep(svg),
+.filtros__icono {
   position: absolute;
   top: 50%;
   left: 0.875rem;
   z-index: 1;
   color: var(--gb-text-muted);
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .filtros__busqueda .form-control {
@@ -168,6 +123,9 @@ const filtrosActivos = computed(
 }
 
 .filtros__limpiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   min-height: 2.75rem;
   padding-inline: 0.75rem;
   color: var(--gb-text-muted);
@@ -175,13 +133,9 @@ const filtrosActivos = computed(
   white-space: nowrap;
 }
 
-.filtros__limpiar i {
-  margin-right: 0.375rem;
-}
-
 @media (max-width: 90rem) {
   .filtros {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
   }
 
   .filtros__busqueda {

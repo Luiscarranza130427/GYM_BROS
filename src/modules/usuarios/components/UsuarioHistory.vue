@@ -1,8 +1,8 @@
 <script setup>
+import { AlertTriangle, Clock, History, RotateCw } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearFechaHora } from '@/utils/formato'
+import { formatearFechaHora } from '@/shared/utils/formato'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -13,18 +13,6 @@ const props = defineProps({
 const emit = defineEmits({
   retry: null,
 })
-
-/*
- * Este componente confía en la forma que garantiza `usuarios.service`:
- *   { id, fecha, accion, descripcion, autor }
- *
- * Antes aceptaba además `creadoEn`/`createdAt`, `realizadoPor`/`performedBy`,
- * `description`, `author` y un par `valorAnterior`/`valorNuevo`. Ninguno de esos
- * campos lo produce nunca el servicio, así que eran ramas muertas que sólo
- * servían para que un cambio de contrato no fallara: en lugar de romperse,
- * habría empezado a mostrar «Fecha no disponible» y «Sistema Gym Bros» en
- * silencio. Normalizar es trabajo del servicio; aquí se confía en él.
- */
 
 /** Cortafuegos: una descripción que mencione credenciales no se muestra. */
 const CAMPOS_SENSIBLES = /password|contrase(?:n|ñ)a|hash|token|secret|credencial/i
@@ -42,7 +30,7 @@ const mensajeError = computed(() => {
 <template>
   <section class="historial gb-tarjeta" aria-labelledby="titulo-historial">
     <header class="historial__cabecera">
-      <span class="historial__icono"><IconoSvg nombre="clock-history" /></span>
+      <span class="historial__icono"><History :size="18" aria-hidden="true" /></span>
       <div>
         <p>Auditoría administrativa</p>
         <h2 id="titulo-historial">Historial de cambios</h2>
@@ -61,19 +49,19 @@ const mensajeError = computed(() => {
     </div>
 
     <div v-else-if="error" class="historial__estado" role="alert">
-      <IconoSvg nombre="exclamation-triangle" />
+      <AlertTriangle :size="20" aria-hidden="true" />
       <div>
         <h3>No pudimos cargar el historial</h3>
         <p>{{ mensajeError }}</p>
       </div>
       <button type="button" class="btn btn-ghost" @click="emit('retry')">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="14" aria-hidden="true" />
         Reintentar
       </button>
     </div>
 
     <div v-else-if="historialSeguro.length === 0" class="historial__estado" role="status">
-      <IconoSvg nombre="clock" />
+      <Clock :size="20" aria-hidden="true" />
       <div>
         <h3>Sin cambios registrados</h3>
         <p>Aún no existen cambios registrados para este usuario.</p>
@@ -222,7 +210,7 @@ const mensajeError = computed(() => {
   border-radius: var(--gb-radius-lg);
 }
 
-.historial__estado > i {
+.historial__estado > :deep(svg) {
   flex: none;
   color: var(--gb-text-soft);
   font-size: 1.35rem;

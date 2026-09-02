@@ -1,7 +1,7 @@
 <script setup>
+import { Search, XCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { CATEGORIAS, EQUIPOS, NIVELES } from '@/modules/ejercicios/catalogos'
 
 const props = defineProps({
@@ -36,7 +36,7 @@ const filtrosActivos = computed(
   <section class="filtros gb-tarjeta" aria-label="Filtros de ejercicios" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-ejercicio">Buscar ejercicio</label>
-      <IconoSvg nombre="search" />
+      <Search class="filtros__icono" :size="16" aria-hidden="true" />
       <input
         id="buscar-ejercicio"
         :value="busqueda"
@@ -114,7 +114,7 @@ const filtrosActivos = computed(
       class="btn btn-ghost filtros__limpiar"
       @click="$emit('limpiar')"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="16" aria-hidden="true" />
       Limpiar filtros
     </button>
   </section>
@@ -134,13 +134,15 @@ const filtrosActivos = computed(
   position: relative;
 }
 
-.filtros__busqueda > svg {
+.filtros__busqueda :deep(svg),
+.filtros__icono {
   position: absolute;
   top: 50%;
   left: 0.875rem;
   z-index: 1;
   color: var(--gb-text-muted);
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .filtros__busqueda .form-control {

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 
-import { inicialesDe } from '@/utils/iniciales'
+import { inicialesDe } from '@/shared/utils/iniciales'
 
 const props = defineProps({
   nombre: { type: String, required: true },

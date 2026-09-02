@@ -1,5 +1,5 @@
 <script setup>
-import IconoSvg from '@/components/base/IconoSvg.vue'
+import { Search } from 'lucide-vue-next'
 
 defineProps({
   busqueda: { type: String, default: '' },
@@ -14,7 +14,7 @@ defineEmits(['update:busqueda', 'update:estado'])
   <section class="filtros gb-tarjeta" aria-label="Filtros de empresas" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-empresa">Buscar empresa</label>
-      <IconoSvg nombre="search" />
+      <Search class="filtros__icono" :size="16" aria-hidden="true" />
       <input
         id="buscar-empresa"
         :value="busqueda"
@@ -60,13 +60,15 @@ defineEmits(['update:busqueda', 'update:estado'])
   max-width: 36rem;
 }
 
-.filtros__busqueda i {
+.filtros__busqueda :deep(svg),
+.filtros__icono {
   position: absolute;
   top: 50%;
   left: 0.875rem;
   z-index: 1;
   color: var(--gb-text-muted);
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .filtros__busqueda .form-control {

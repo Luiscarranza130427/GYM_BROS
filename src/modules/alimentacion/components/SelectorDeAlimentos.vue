@@ -1,8 +1,8 @@
 <script setup>
+import { CloudOff, List, Plus, RotateCw, XCircle } from 'lucide-vue-next'
 import { computed, ref, useId, useTemplateRef } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { TIPOS_ALIMENTO, UNIDADES, etiquetaDe } from '@/modules/alimentacion/catalogos'
 
 /**
@@ -106,16 +106,16 @@ defineExpose({ focus: () => selectAlimento.value?.focus() })
     </div>
 
     <div v-else-if="errorCatalogo" class="selector__aviso selector__aviso--error" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="24" aria-hidden="true" />
       <p>{{ errorCatalogo }}</p>
       <button type="button" class="btn btn-ghost" @click="emit('recargar-catalogo')">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </div>
 
     <div v-else-if="!catalogo.length" class="selector__aviso" role="status">
-      <IconoSvg nombre="list" />
+      <List :size="24" aria-hidden="true" />
       <p>No hay alimentos disponibles en el catálogo.</p>
       <RouterLink class="btn btn-ghost" :to="{ name: 'alimentos-listado' }">
         Ir al catálogo
@@ -142,7 +142,7 @@ defineExpose({ focus: () => selectAlimento.value?.focus() })
         </select>
       </div>
       <button type="button" class="btn btn-ghost" :disabled="!alimentoElegido" @click="anadir">
-        <IconoSvg nombre="plus-lg" />
+        <Plus :size="16" aria-hidden="true" />
         Añadir
       </button>
     </div>
@@ -189,7 +189,7 @@ defineExpose({ focus: () => selectAlimento.value?.focus() })
           title="Quitar"
           @click="quitar(indice)"
         >
-          <IconoSvg nombre="x-circle" />
+          <XCircle :size="16" aria-hidden="true" />
         </button>
       </li>
     </ul>

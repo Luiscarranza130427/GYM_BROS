@@ -165,4 +165,25 @@ No actionable P0, P1, or P2 issues remain.
 - [x] Stitch-aligned dashboard content without CRUD.
 - [x] Desktop responsive checks, test suite, build, console check, and visual correction pass.
 
+## Ajuste de marca del sidebar — 2026-08-28
+
+- Fuente visual: `C:\Users\carra\AppData\Local\Temp\codex-clipboard-14fb6bb6-cbc2-4059-b15e-3747beaa4b79.png` (407 × 113 px).
+- Implementación enfocada: `C:\Users\carra\Videos\gym-bros-web\design-qa-evidence\sidebar-logo-after-focused.png` (407 × 113 px).
+- Implementación completa: `C:\Users\carra\Videos\gym-bros-web\design-qa-evidence\sidebar-logo-after.png` (1919 × 922 px).
+- Comparación conjunta: `C:\Users\carra\Videos\gym-bros-web\design-qa-evidence\sidebar-logo-comparison.png`.
+- Viewport CSS: 1919 × 922 a densidad 1; ambas regiones enfocadas se compararon a 407 × 113 sin reescalado.
+- Estado: perfil autenticado con datos mock; sidebar expandido y tema oscuro. El logo fallback cuadrado usa el mismo contenedor que el logo horizontal de la empresa.
+
+### Comparación visual y correcciones
+
+- [P1, corregido] La cabecera incluía el nombre del tenant y “Gym Bros SaaS”, contrario al objetivo de mostrar únicamente la marca. Ambos textos y sus estilos se eliminaron.
+- [P1, corregido] La primera iteración dejó la imagen a 128 px de alto dentro de un marco de 48 px, por lo que quedaba recortada. Se fijó un alto efectivo de 48 px con ancho automático y `object-fit: contain`.
+- Resultado final: logo completo, centrado, sin caja decorativa ni títulos. El logo horizontal real del tenant dispone de hasta 128 × 48 px; el fallback cuadrado queda en 48 × 48 px.
+- Tipografía y copy: no se añadieron estilos tipográficos; se retiró exclusivamente el copy solicitado.
+- Espaciado y layout: se conserva la altura original del header y la alineación con la barra superior.
+- Color: se mantienen los tokens existentes y no se introdujeron colores nuevos.
+- Calidad de imagen: se reutilizan los assets reales, sin estiramiento ni recreaciones.
+- No quedan hallazgos P0, P1 o P2 en esta región. No fue necesaria una comparación adicional fuera de la región enfocada porque el cambio no altera navegación ni contenido.
+- Interacción comprobada: acceso de prueba, apertura de `/perfil`, render del sidebar expandido; consola sin warnings ni errores.
+
 final result: passed

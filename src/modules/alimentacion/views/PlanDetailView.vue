@@ -1,14 +1,14 @@
 <script setup>
+import { CheckCircle2, RotateCw, Utensils, XCircle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import { TIPOS_COMIDA, etiquetaDe } from '@/modules/alimentacion/catalogos'
 import HorarioDeComidas from '@/modules/alimentacion/components/HorarioDeComidas.vue'
-import { eliminarComida, obtenerPlan } from '@/services/alimentacion.service'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { eliminarComida, obtenerPlan } from '@/modules/alimentacion/services/alimentacion.service'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const route = useRoute()
 const router = useRouter()
@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
     />
 
     <p v-if="mensajeExito" class="plan-detalle__exito" role="status">
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
@@ -174,7 +174,9 @@ onBeforeUnmount(() => {
 
     <div v-else-if="estado === 'success' && plan" class="detalle">
       <section class="detalle__resumen gb-tarjeta">
-        <span class="detalle__icono" aria-hidden="true"><IconoSvg nombre="fork-knife" /></span>
+        <span class="detalle__icono" aria-hidden="true"
+          ><Utensils :size="28" aria-hidden="true"
+        /></span>
         <div>
           <p>Plan de alimentación</p>
           <h2>{{ plan.usuario?.nombre || 'Usuario sin nombre' }}</h2>
@@ -270,14 +272,14 @@ onBeforeUnmount(() => {
       class="plan-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Plan no encontrado' : 'No pudimos cargar el plan' }}
       </h2>
       <p>{{ mensajeError }}</p>
       <div>
         <button v-if="estado === 'error'" type="button" class="btn btn-primary" @click="cargar()">
-          <IconoSvg nombre="arrow-clockwise" />
+          <RotateCw :size="16" aria-hidden="true" />
           Reintentar
         </button>
         <RouterLink class="btn btn-ghost" :to="{ name: 'alimentacion-listado' }">
@@ -570,6 +572,11 @@ onBeforeUnmount(() => {
   .detalle__rejilla {
     grid-template-columns: 1fr;
   }
+
+  .detalle__lateral {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
 }
 
 @media (max-width: 52rem) {
@@ -580,6 +587,10 @@ onBeforeUnmount(() => {
   .detalle__resumen > :last-child {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+
+  .detalle__lateral {
+    grid-template-columns: 1fr;
   }
 }
 </style>

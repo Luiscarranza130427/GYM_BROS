@@ -1,17 +1,17 @@
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { Ban, CheckCircle2, Pencil, UserX } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import UsuarioHistory from '@/modules/usuarios/components/UsuarioHistory.vue'
 import UsuarioProfileSummary from '@/modules/usuarios/components/UsuarioProfileSummary.vue'
 import {
   desactivarUsuario,
   obtenerHistorialUsuario,
   obtenerUsuario,
-} from '@/services/usuarios.service'
+} from '@/modules/usuarios/services/usuarios.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,6 +26,9 @@ const dialogoAbierto = ref(false)
 const desactivando = ref(false)
 let solicitudActual = 0
 let solicitudHistorial = 0
+const nombreCompleto = computed(() =>
+  [usuario.value?.nombre, usuario.value?.apellido].filter(Boolean).join(' '),
+)
 
 async function cargarHistorial() {
   const idSolicitud = ++solicitudHistorial
@@ -104,32 +107,40 @@ onBeforeUnmount(() => {
 <template>
   <section class="usuario-detalle">
     <PageHeader
-      :titulo="usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Perfil de usuario'"
-      descripcion="Consulta su información, membresía y trazabilidad administrativa."
+      :titulo="nombreCompleto || 'Perfil de usuario'"
+      :descripcion="
+        usuario?.apodo
+          ? `@${usuario.apodo} · Consulta su información, membresía y trazabilidad administrativa.`
+          : 'Consulta su información, membresía y trazabilidad administrativa.'
+      "
       seccion="Usuarios"
       :ruta-seccion="{ name: 'usuarios-listado' }"
       etiqueta="Gestión de usuarios"
-      :migas="[usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario']"
+      :migas="[nombreCompleto || 'Usuario']"
     >
       <template v-if="estado === 'success' && usuario" #acciones>
         <RouterLink
-          class="btn btn-ghost usuario-detalle__accion"
+          class="btn btn-secondary"
           :to="{ name: 'usuario-editar', params: { id: usuario.id } }"
-          ><IconoSvg nombre="pencil" />Editar</RouterLink
         >
+          <Pencil :size="16" aria-hidden="true" />
+          <span>Editar</span>
+        </RouterLink>
         <button
           v-if="usuario.estado === 'active'"
           type="button"
-          class="btn btn-outline-danger usuario-detalle__accion"
+          class="btn btn-danger"
           @click="dialogoAbierto = true"
         >
-          <IconoSvg nombre="slash-circle" />Desactivar
+          <Ban :size="16" aria-hidden="true" />
+          <span>Desactivar</span>
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="usuario-detalle__exito" role="status">
-      <IconoSvg nombre="check-circle-fill" />{{ mensajeExito }}
+      <CheckCircle2 :size="18" aria-hidden="true" />
+      {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
       {{ mensajeError }}
@@ -159,15 +170,16 @@ onBeforeUnmount(() => {
       class="usuario-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="person-x" />
+      <UserX :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Usuario no encontrado' : 'No pudimos cargar el usuario' }}
       </h2>
       <p>{{ mensajeError }}</p>
       <div>
         <button v-if="estado === 'error'" type="button" class="btn btn-primary" @click="cargar">
-          Reintentar</button
-        ><RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
+          Reintentar
+        </button>
+        <RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
           >Volver a usuarios</RouterLink
         >
       </div>
@@ -176,7 +188,7 @@ onBeforeUnmount(() => {
     <ConfirmDialog
       :abierto="dialogoAbierto"
       titulo="¿Desactivar usuario?"
-      :descripcion="`${usuario?.nombre ?? 'El usuario'} ${usuario?.apellido ?? ''} dejará de tener acceso a Gym Bros.`"
+      :descripcion="`${nombreCompleto || 'El usuario'} dejará de tener acceso a Gym Bros.`"
       :confirmando="desactivando"
       etiqueta-confirmar="Desactivar usuario"
       etiqueta-confirmando="Desactivando…"
@@ -193,19 +205,6 @@ onBeforeUnmount(() => {
   width: min(100%, 86rem);
   margin: 0 auto;
   padding-bottom: var(--gb-margen);
-}
-.usuario-detalle__accion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding-inline: 1rem;
-  font-family: var(--gb-fuente-titulo);
-  font-size: var(--gb-tipo-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  text-transform: uppercase;
 }
 .usuario-detalle__exito {
   display: flex;
@@ -227,7 +226,7 @@ onBeforeUnmount(() => {
   border-radius: var(--gb-radius-xl);
   text-align: center;
 }
-.usuario-detalle__estado > i {
+.usuario-detalle__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

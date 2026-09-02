@@ -1,9 +1,9 @@
 <script setup>
+import { Eye } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 /**
  * Listado de planes en TABLA, no en tarjetas.
@@ -127,7 +127,7 @@ function desviacion({ macros, objetivos }) {
                   :aria-label="`Ver el plan de ${plan.usuario?.nombre || 'este usuario'}`"
                   title="Ver horario"
                 >
-                  <IconoSvg nombre="eye" />
+                  <Eye :size="16" aria-hidden="true" />
                 </RouterLink>
               </div>
             </td>

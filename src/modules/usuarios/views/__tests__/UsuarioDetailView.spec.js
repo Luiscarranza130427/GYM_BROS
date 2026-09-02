@@ -3,7 +3,10 @@ import { reactive } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import UsuarioDetailView from '@/modules/usuarios/views/UsuarioDetailView.vue'
-import { obtenerHistorialUsuario, obtenerUsuario } from '@/services/usuarios.service'
+import {
+  obtenerHistorialUsuario,
+  obtenerUsuario,
+} from '@/modules/usuarios/services/usuarios.service'
 
 const route = reactive({ params: { id: '1' }, query: {} })
 const replace = vi.fn()
@@ -17,7 +20,7 @@ vi.mock('vue-router', async (importOriginal) => {
   }
 })
 
-vi.mock('@/services/usuarios.service', () => ({
+vi.mock('@/modules/usuarios/services/usuarios.service', () => ({
   obtenerUsuario: vi.fn(),
   obtenerHistorialUsuario: vi.fn(),
   desactivarUsuario: vi.fn(),

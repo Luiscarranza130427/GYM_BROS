@@ -1,29 +1,17 @@
 <script setup>
+import { Activity, ArrowUpRight, CreditCard, IdCard, ShieldCheck } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import UsuarioAvatar from '@/modules/usuarios/components/UsuarioAvatar.vue'
 import UsuarioStatusBadge from '@/modules/usuarios/components/UsuarioStatusBadge.vue'
 import UsuarioSubscriptionBadge from '@/modules/usuarios/components/UsuarioSubscriptionBadge.vue'
-import { formatearFecha, formatearNumero, formatearTiempoRelativo } from '@/utils/formato'
+import { formatearFecha, formatearNumero, formatearTiempoRelativo } from '@/shared/utils/formato'
 
 const props = defineProps({
   usuario: { type: Object, required: true },
 })
 
-/*
- * Este componente confía en la forma que garantiza `usuarios.service`. Antes
- * aceptaba además un vocabulario inglés en camelCase —firstName, lastName,
- * email, phone, address, profilePhoto, avatarUrl, company, status, role,
- * subscription, activity, startedAt, daysRemaining…— que el servicio no produce
- * en ningún caso, ni con mocks ni con API.
- *
- * Eran ramas muertas, y además peligrosas: si el normalizador cambiase un
- * nombre de campo, el perfil no fallaría, se limitaría a mostrar «No
- * especificado» sin que nadie se enterase. La anticorrupción vive en el
- * servicio; duplicarla aquí sólo servía para enmascarar sus fallos.
- */
 const nombreCompleto = computed(
   () =>
     [props.usuario.nombre, props.usuario.apellido].filter(Boolean).join(' ').trim() ||
@@ -77,6 +65,7 @@ function metrica(valor) {
 
 <template>
   <div class="perfil">
+    <!-- Cabecera de perfil -->
     <section class="perfil__cabecera gb-tarjeta" aria-labelledby="usuario-nombre">
       <UsuarioAvatar
         :nombre="usuario.nombre"
@@ -88,9 +77,12 @@ function metrica(valor) {
       <div class="perfil__identidad">
         <p>Perfil administrativo</p>
         <h2 id="usuario-nombre">{{ nombreCompleto }}</h2>
+        <span v-if="usuario.apodo" class="perfil__apodo">@{{ usuario.apodo }}</span>
         <div class="perfil__metadatos">
           <UsuarioStatusBadge :estado="usuario.estado" />
-          <span class="perfil__rol"><IconoSvg nombre="shield-check" />{{ rolLegible }}</span>
+          <span class="perfil__rol"
+            ><ShieldCheck :size="14" aria-hidden="true" />{{ rolLegible }}</span
+          >
         </div>
       </div>
 
@@ -101,16 +93,21 @@ function metrica(valor) {
           :to="{ name: 'empresa-detalle', params: { id: empresa.id } }"
         >
           {{ empresa.nombre }}
-          <IconoSvg nombre="arrow-up-right" />
+          <ArrowUpRight :size="14" aria-hidden="true" />
         </RouterLink>
         <strong v-else>{{ empresa?.nombre || 'No asignada' }}</strong>
       </div>
     </section>
 
+    <!-- Rejilla nivelada de datos principales -->
     <div class="perfil__rejilla">
-      <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-personal">
+      <!-- Tarjeta izquierda: Información personal (nivelada a altura 100%) -->
+      <section
+        class="perfil__panel perfil__panel--principal gb-tarjeta"
+        aria-labelledby="titulo-personal"
+      >
         <header>
-          <span class="perfil__icono"><IconoSvg nombre="person-vcard" /></span>
+          <span class="perfil__icono"><IdCard :size="18" aria-hidden="true" /></span>
           <div>
             <p>Datos de gestión</p>
             <h2 id="titulo-personal">Información personal</h2>
@@ -153,10 +150,15 @@ function metrica(valor) {
         </dl>
       </section>
 
+      <!-- Columna lateral derecha: Suscripción + Actividad resumida -->
       <aside class="perfil__lateral">
-        <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-suscripcion">
+        <!-- Tarjeta Suscripción -->
+        <section
+          class="perfil__panel perfil__panel--suscripcion gb-tarjeta"
+          aria-labelledby="titulo-suscripcion"
+        >
           <header>
-            <span class="perfil__icono"><IconoSvg nombre="credit-card" /></span>
+            <span class="perfil__icono"><CreditCard :size="18" aria-hidden="true" /></span>
             <div>
               <p>Membresía</p>
               <h2 id="titulo-suscripcion">Suscripción</h2>
@@ -186,9 +188,13 @@ function metrica(valor) {
           </dl>
         </section>
 
-        <section class="perfil__panel gb-tarjeta" aria-labelledby="titulo-actividad">
+        <!-- Tarjeta Actividad Resumida -->
+        <section
+          class="perfil__panel perfil__panel--actividad gb-tarjeta"
+          aria-labelledby="titulo-actividad"
+        >
           <header>
-            <span class="perfil__icono"><IconoSvg nombre="activity" /></span>
+            <span class="perfil__icono"><Activity :size="18" aria-hidden="true" /></span>
             <div>
               <p>Lectura provisional</p>
               <h2 id="titulo-actividad">Actividad resumida</h2>
@@ -226,7 +232,7 @@ function metrica(valor) {
 <style scoped>
 .perfil {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .perfil__cabecera {
@@ -269,6 +275,13 @@ function metrica(valor) {
   margin-top: 0.625rem;
 }
 
+.perfil__apodo {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--gb-text-muted);
+  font-size: var(--gb-tipo-xs);
+}
+
 .perfil__rol {
   display: inline-flex;
   align-items: center;
@@ -306,31 +319,41 @@ function metrica(valor) {
   text-decoration: underline;
 }
 
+/* Rejilla principal con tarjetas al mismo nivel */
 .perfil__rejilla {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(22rem, 0.85fr);
-  align-items: start;
-  gap: var(--gb-gutter);
+  grid-template-columns: minmax(0, 1.4fr) minmax(22rem, 1fr);
+  align-items: stretch;
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .perfil__lateral {
   display: grid;
-  gap: var(--gb-gutter);
+  grid-template-rows: 1fr 1fr;
+  gap: var(--gb-gutter, 1.25rem);
+  height: 100%;
 }
 
 .perfil__panel {
   min-width: 0;
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.perfil__panel--principal {
+  height: 100%;
 }
 
 .perfil__panel header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-height: 3.25rem;
+  min-height: 3.5rem;
   padding-bottom: 0.875rem;
   border-bottom: 1px solid var(--gb-border);
+  flex-shrink: 0;
 }
 
 .perfil__panel header > :last-child:not(:nth-child(2)) {
@@ -365,14 +388,16 @@ function metrica(valor) {
 }
 
 .perfil__datos {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: space-between;
 }
 
 .perfil__datos > div,
 .perfil__suscripcion > div {
   min-width: 0;
-  padding: 1rem 0;
+  padding: 0.85rem 0;
   border-bottom: 1px solid var(--gb-border);
 }
 
@@ -402,7 +427,7 @@ function metrica(valor) {
 }
 
 .perfil__panel dd {
-  margin: 0.375rem 0 0;
+  margin: 0.25rem 0 0;
   overflow-wrap: anywhere;
   color: var(--gb-text);
   font-size: var(--gb-tipo-sm);
@@ -419,8 +444,10 @@ function metrica(valor) {
 }
 
 .perfil__suscripcion {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: space-between;
 }
 
 .perfil__suscripcion > div:nth-child(odd) {
@@ -438,18 +465,23 @@ function metrica(valor) {
 }
 
 .perfil__kpis {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding-top: 1rem;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+  align-items: stretch;
 }
 
 .perfil__kpis > div {
   min-width: 0;
-  padding: 0.875rem;
+  padding: 0.85rem 0.75rem;
   background-color: var(--gb-surface-lowest);
   border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-lg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .perfil__kpis dd {
@@ -457,6 +489,7 @@ function metrica(valor) {
   font-size: var(--gb-tipo-md);
   font-variant-numeric: tabular-nums;
   font-weight: 800;
+  margin-top: 0.35rem;
 }
 
 .tabular {
@@ -470,6 +503,7 @@ function metrica(valor) {
 
   .perfil__lateral {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
   }
 }
 

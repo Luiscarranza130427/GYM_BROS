@@ -1,8 +1,8 @@
 <script setup>
+import { Dumbbell } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearNumero } from '@/utils/formato'
+import { formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   ejercicios: { type: Array, required: true },
@@ -35,7 +35,7 @@ const maximo = computed(() => Math.max(...props.ejercicios.map((ejercicio) => ej
     </ol>
 
     <div v-else class="populares__vacio" role="status">
-      <IconoSvg nombre="person-arms-up" />
+      <Dumbbell :size="32" aria-hidden="true" />
       <p>Aún no hay ejercicios con usos registrados.</p>
     </div>
   </section>
@@ -152,9 +152,8 @@ const maximo = computed(() => Math.max(...props.ejercicios.map((ejercicio) => ej
   text-align: center;
 }
 
-.populares__vacio i {
+.populares__vacio :deep(svg) {
   color: var(--gb-text-soft);
-  font-size: 1.75rem;
 }
 
 .populares__vacio p {

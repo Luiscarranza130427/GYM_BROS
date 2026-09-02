@@ -1,12 +1,12 @@
 <script setup>
+import { Ban, Building2, CheckCircle2, Pencil } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import EmpresaDetails from '@/modules/empresas/components/EmpresaDetails.vue'
-import { desactivarEmpresa, obtenerEmpresa } from '@/services/empresas.service'
+import { desactivarEmpresa, obtenerEmpresa } from '@/modules/empresas/services/empresas.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -85,26 +85,26 @@ onBeforeUnmount(() => {
     >
       <template v-if="estado === 'success' && empresa" #acciones>
         <RouterLink
-          class="btn btn-ghost empresa-detalle__accion"
+          class="btn btn-secondary"
           :to="{ name: 'empresa-editar', params: { id: empresa.id } }"
         >
-          <IconoSvg nombre="pencil" />
-          Editar
+          <Pencil :size="16" aria-hidden="true" />
+          <span>Editar</span>
         </RouterLink>
         <button
           v-if="empresa.estado === 'active'"
           type="button"
-          class="btn btn-outline-danger empresa-detalle__accion"
+          class="btn btn-danger"
           @click="dialogoAbierto = true"
         >
-          <IconoSvg nombre="slash-circle" />
-          Desactivar
+          <Ban :size="16" aria-hidden="true" />
+          <span>Desactivar</span>
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="empresa-detalle__exito" role="status">
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
@@ -127,7 +127,7 @@ onBeforeUnmount(() => {
       class="empresa-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="building-x" />
+      <Building2 :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Empresa no encontrada' : 'No pudimos cargar la empresa' }}
       </h2>
@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
     <ConfirmDialog
       :abierto="dialogoAbierto"
       titulo="¿Desactivar empresa?"
-      :descripcion="`Esta acción suspenderá el acceso de ${empresa?.nombre ?? 'la empresa'} al sistema.`"
+      :descripcion="`La empresa ${empresa?.nombre ?? ''} y sus accesos asociados quedarán desactivados.`"
       :confirmando="desactivando"
       etiqueta-confirmar="Desactivar empresa"
       etiqueta-confirmando="Desactivando…"
@@ -162,20 +162,6 @@ onBeforeUnmount(() => {
   width: min(100%, 86rem);
   margin: 0 auto;
   padding-bottom: var(--gb-margen);
-}
-
-.empresa-detalle__accion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding-inline: 1rem;
-  font-family: var(--gb-fuente-titulo);
-  font-size: var(--gb-tipo-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  text-transform: uppercase;
 }
 
 .empresa-detalle__exito {
@@ -200,7 +186,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.empresa-detalle__estado > i {
+.empresa-detalle__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

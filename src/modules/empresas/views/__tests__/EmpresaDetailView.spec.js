@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 
 import EmpresaDetailView from '@/modules/empresas/views/EmpresaDetailView.vue'
-import { obtenerEmpresa } from '@/services/empresas.service'
+import { obtenerEmpresa } from '@/modules/empresas/services/empresas.service'
 
 const route = reactive({ params: { id: '999999' }, query: {} })
 
@@ -16,7 +16,7 @@ vi.mock('vue-router', async (importOriginal) => {
   }
 })
 
-vi.mock('@/services/empresas.service', () => ({
+vi.mock('@/modules/empresas/services/empresas.service', () => ({
   obtenerEmpresa: vi.fn(),
   desactivarEmpresa: vi.fn(),
 }))

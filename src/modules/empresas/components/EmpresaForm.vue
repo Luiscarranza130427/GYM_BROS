@@ -1,11 +1,18 @@
 <script setup>
-import { useTemplateRef } from 'vue'
+import { Building2, Palette, Power } from 'lucide-vue-next'
+import { onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { useFormulario } from '@/composables/useFormulario'
-import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
-import { REGIONES_PERU } from '@/constants/regionesPeru'
-import { esColorValido, esCorreoValido, esTelefonoValido, esUrlValida } from '@/utils/validaciones'
+import { useFormulario } from '@/shared/composables/useFormulario'
+import api from '@/core/api/api'
+import { useVistaPreviaArchivo } from '@/shared/composables/useVistaPreviaArchivo'
+import { REGIONES_PERU } from '@/shared/constants/regionesPeru'
+import { normalizarLogoEmpresa } from '@/shared/utils/logoEmpresa'
+import {
+  esColorValido,
+  esCorreoValido,
+  esTelefonoValido,
+  esUrlValida,
+} from '@/shared/utils/validaciones'
 
 const props = defineProps({
   valoresIniciales: { type: Object, default: () => ({}) },
@@ -47,7 +54,42 @@ const colorPrimarioInput = useTemplateRef('colorPrimarioInput')
 const colorSecundarioInput = useTemplateRef('colorSecundarioInput')
 const estadoInput = useTemplateRef('estadoInput')
 
-const logo = useVistaPreviaArchivo({ etiqueta: 'logo' })
+const logo = useVistaPreviaArchivo({ etiqueta: 'logo', procesarImagen: normalizarLogoEmpresa })
+const logoImagenFallida = ref(false)
+const logoRenderUrl = ref('')
+let logoObjectUrl = ''
+
+function liberarLogoObjectUrl() {
+  if (!logoObjectUrl) return
+  URL.revokeObjectURL(logoObjectUrl)
+  logoObjectUrl = ''
+}
+
+watch(
+  () => logo.url.value,
+  async (url, _anterior, onCleanup) => {
+    liberarLogoObjectUrl()
+    logoRenderUrl.value = url || ''
+    logoImagenFallida.value = false
+    if (!url || url.startsWith('data:') || url.startsWith('blob:')) return
+
+    let cancelado = false
+    onCleanup(() => {
+      cancelado = true
+    })
+    try {
+      const respuesta = await api.get(url, { responseType: 'blob' })
+      if (cancelado) return
+      logoObjectUrl = URL.createObjectURL(respuesta.data)
+      logoRenderUrl.value = logoObjectUrl
+    } catch {
+      // Se conserva la URL directa como último intento.
+    }
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(liberarLogoObjectUrl)
 
 /** Reglas propias de una empresa. Las de forma salen de `utils/validaciones`. */
 function validar(datos, errores) {
@@ -95,7 +137,11 @@ const { formulario, erroresLocales, erroresRemotos, errorDe, limpiarError, valid
       estado: estadoInput,
     },
     validar,
-    alCargarValores: (_datos, valores) => logo.reiniciar(valores.logoUrl),
+    alCargarValores: (_datos, valores) =>
+      (() => {
+        logoImagenFallida.value = false
+        logo.reiniciar(valores.logoUrl || valores.logo_url || valores.logo || '')
+      })(),
   })
 
 async function enviar() {
@@ -131,7 +177,7 @@ function seleccionarLogo(evento) {
     </p>
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-informacion">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="buildings" /></span>
+        <span aria-hidden="true"><Building2 :size="20" /></span>
         <div>
           <h2 id="titulo-informacion">Información principal</h2>
           <p>Datos administrativos y de contacto de la empresa.</p>
@@ -316,19 +362,22 @@ function seleccionarLogo(evento) {
     <div class="formulario__secundarias">
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-identidad">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="palette" /></span>
+          <span aria-hidden="true"><Palette :size="20" /></span>
           <div>
             <h2 id="titulo-identidad">Identidad visual</h2>
-            <p>Los colores sí se guardan. El logo, todavía no: falta el endpoint de subida.</p>
+            <p>Personaliza el logo y los colores de tu empresa.</p>
           </div>
         </header>
 
         <div class="identidad">
-          <div
-            class="identidad__logo"
-            :style="{ backgroundImage: logo.url ? `url(${logo.url})` : null }"
-          >
-            <IconoSvg nombre="buildings" />
+          <div class="identidad__logo" :class="{ 'identidad__logo--con-imagen': logo.url }">
+            <img
+              v-if="logoRenderUrl && !logoImagenFallida"
+              :src="logoRenderUrl"
+              alt="Logo actual de la empresa"
+              @error="logoImagenFallida = true"
+            />
+            <Building2 v-if="!logo.url || logoImagenFallida" :size="24" />
           </div>
           <div class="campo">
             <label class="form-label" for="empresa-logo">Logo</label>
@@ -339,14 +388,16 @@ function seleccionarLogo(evento) {
               :class="{ 'is-invalid': logo.error || errorDe('logoUrl') }"
               type="file"
               name="logo"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
+              :disabled="logo.procesando"
               :aria-invalid="Boolean(logo.error || errorDe('logoUrl'))"
               :aria-describedby="logo.error || errorDe('logoUrl') ? 'error-logo' : 'ayuda-logo'"
               @change="seleccionarLogo"
             />
             <p id="ayuda-logo" class="campo__ayuda">
-              PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
-              <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
+              PNG, JPG o WebP. Máximo 2 MB. Se adapta automáticamente a
+              <strong>400 × 180 px</strong>. Puedes reemplazar el logo cuando el API habilite la
+              subida.
             </p>
             <p v-if="logo.error || errorDe('logoUrl')" id="error-logo" class="campo__error">
               {{ logo.error || errorDe('logoUrl') }}
@@ -356,7 +407,7 @@ function seleccionarLogo(evento) {
 
         <div class="colores">
           <div class="campo">
-            <label class="form-label" for="color-primario">Color principal</label>
+            <label class="form-label" for="color-primario">Color de fondo</label>
             <div class="campo-color">
               <input
                 id="color-primario"
@@ -373,7 +424,7 @@ function seleccionarLogo(evento) {
                 type="text"
                 name="colorPrimarioHex"
                 maxlength="7"
-                aria-label="Código hexadecimal del color principal"
+                aria-label="Código hexadecimal del color de fondo"
                 :aria-invalid="Boolean(errorDe('colorPrimario'))"
                 :aria-describedby="errorDe('colorPrimario') ? 'error-color-primario' : null"
                 @input="limpiarError('colorPrimario')"
@@ -384,7 +435,7 @@ function seleccionarLogo(evento) {
             </p>
           </div>
           <div class="campo">
-            <label class="form-label" for="color-secundario">Color secundario</label>
+            <label class="form-label" for="color-secundario">Color de texto</label>
             <div class="campo-color">
               <input
                 id="color-secundario"
@@ -401,7 +452,7 @@ function seleccionarLogo(evento) {
                 type="text"
                 name="colorSecundarioHex"
                 maxlength="7"
-                aria-label="Código hexadecimal del color secundario"
+                aria-label="Código hexadecimal del color de texto"
                 :aria-invalid="Boolean(errorDe('colorSecundario'))"
                 :aria-describedby="errorDe('colorSecundario') ? 'error-color-secundario' : null"
                 @input="limpiarError('colorSecundario')"
@@ -416,7 +467,7 @@ function seleccionarLogo(evento) {
 
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-estado">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="power" /></span>
+          <span aria-hidden="true"><Power :size="20" /></span>
           <div>
             <h2 id="titulo-estado">Estado de la empresa</h2>
             <p>Controla el acceso operativo dentro de Gym Bros.</p>
@@ -458,7 +509,7 @@ function seleccionarLogo(evento) {
     </div>
 
     <div class="formulario__acciones">
-      <button type="button" class="btn btn-ghost" :disabled="enviando" @click="emit('cancel')">
+      <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" :disabled="enviando">
@@ -472,11 +523,11 @@ function seleccionarLogo(evento) {
 <style scoped>
 .formulario {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .formulario__seccion {
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
 }
 
@@ -545,9 +596,20 @@ function seleccionarLogo(evento) {
 
 .formulario__secundarias {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-  gap: var(--gb-gutter);
-  align-items: start;
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.75fr);
+  gap: var(--gb-gutter, 1.25rem);
+  align-items: stretch;
+}
+
+.formulario__secundarias .formulario__seccion {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.formulario__secundarias .formulario__seccion > header {
+  min-height: 3.5rem;
+  margin-bottom: 1rem;
 }
 
 .identidad {
@@ -564,11 +626,23 @@ function seleccionarLogo(evento) {
   height: 5rem;
   background-color: var(--gb-surface-lowest);
   background-position: center;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-lg);
   color: var(--gb-text-soft);
   font-size: 1.5rem;
+}
+
+.identidad__logo--con-imagen {
+  padding: 0.25rem;
+}
+
+.identidad__logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .colores {
@@ -591,8 +665,10 @@ function seleccionarLogo(evento) {
 }
 
 .estado-opciones {
+  flex: 1;
   display: grid;
   gap: 0.75rem;
+  align-content: space-around;
   margin: 0;
   padding: 0;
   border: 0;

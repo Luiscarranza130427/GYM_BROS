@@ -1,11 +1,11 @@
 <script setup>
+import { CloudOff } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import UsuarioForm from '@/modules/usuarios/components/UsuarioForm.vue'
-import { crearUsuario, obtenerOpcionesEmpresas } from '@/services/usuarios.service'
+import { crearUsuario, obtenerOpcionesEmpresas } from '@/modules/usuarios/services/usuarios.service'
 
 const router = useRouter()
 const empresas = ref([])
@@ -83,12 +83,12 @@ cargarOpciones()
       @cancel="router.push({ name: 'usuarios-listado' })"
     />
     <section v-else class="usuario-editor__estado gb-tarjeta" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="48" aria-hidden="true" />
       <h2>No pudimos preparar el formulario</h2>
       <p>{{ mensajeError }}</p>
       <div>
-        <button type="button" class="btn btn-primary" @click="cargarOpciones">Reintentar</button
-        ><RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
+        <button type="button" class="btn btn-primary" @click="cargarOpciones">Reintentar</button>
+        <RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
           >Volver a usuarios</RouterLink
         >
       </div>
@@ -114,7 +114,7 @@ cargarOpciones()
   border-radius: var(--gb-radius-xl);
   text-align: center;
 }
-.usuario-editor__estado > i {
+.usuario-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

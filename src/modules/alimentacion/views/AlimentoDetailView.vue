@@ -1,14 +1,17 @@
 <script setup>
+import { CheckCircle2, CircleMinus, Pencil, Utensils, XCircle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import { TIPOS_ALIMENTO, UNIDADES, etiquetaDe } from '@/modules/alimentacion/catalogos'
 import AlimentoTipoBadge from '@/modules/alimentacion/components/AlimentoTipoBadge.vue'
-import { eliminarAlimento, obtenerAlimento } from '@/services/alimentacion.service'
-import { formatearNumero } from '@/utils/formato'
+import {
+  eliminarAlimento,
+  obtenerAlimento,
+} from '@/modules/alimentacion/services/alimentacion.service'
+import { formatearNumero } from '@/shared/utils/formato'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,9 +22,6 @@ const mensajeExito = ref('')
 const dialogoAbierto = ref(false)
 const eliminando = ref(false)
 let solicitudActual = 0
-
-/** `g` o `ml`: la medida a la que se refieren todas las cifras de la ficha. */
-const unidad = computed(() => etiquetaDe(UNIDADES, alimento.value?.unidadBase))
 
 /**
  * Un alimento que forma parte de alguna comida no se puede retirar: el servicio
@@ -129,26 +129,26 @@ onBeforeUnmount(() => {
     >
       <template v-if="estado === 'success' && alimento" #acciones>
         <RouterLink
-          class="btn btn-ghost alimento-detalle__accion"
+          class="btn btn-secondary"
           :to="{ name: 'alimento-editar', params: { id: alimento.id } }"
         >
-          <IconoSvg nombre="pencil" />
-          Editar
+          <Pencil :size="16" aria-hidden="true" />
+          <span>Editar</span>
         </RouterLink>
         <button
           v-if="sePuedeRetirar"
           type="button"
-          class="btn btn-outline-danger alimento-detalle__accion"
+          class="btn btn-danger"
           @click="dialogoAbierto = true"
         >
-          <IconoSvg nombre="dash-circle" />
-          Retirar del catálogo
+          <CircleMinus :size="16" aria-hidden="true" />
+          <span>Retirar del catálogo</span>
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="alimento-detalle__exito" role="status">
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
@@ -166,7 +166,9 @@ onBeforeUnmount(() => {
 
     <div v-else-if="estado === 'success' && alimento" class="detalle">
       <section class="detalle__resumen gb-tarjeta">
-        <span class="detalle__icono" aria-hidden="true"><IconoSvg nombre="fork-knife" /></span>
+        <span class="detalle__icono" aria-hidden="true"
+          ><Utensils :size="28" aria-hidden="true"
+        /></span>
         <div>
           <p>Alimento del catálogo</p>
           <h2>{{ alimento.nombre }}</h2>
@@ -178,11 +180,13 @@ onBeforeUnmount(() => {
         <section class="detalle__panel gb-tarjeta" aria-labelledby="titulo-nutricion">
           <header>
             <p>Ficha nutricional</p>
-            <h2 id="titulo-nutricion">Valores por 100 {{ unidad }}</h2>
+            <h2 id="titulo-nutricion">
+              Valores por 100 {{ etiquetaDe(UNIDADES, alimento.unidadBase) }}
+            </h2>
           </header>
           <dl>
             <div>
-              <dt>Energía</dt>
+              <dt>Calorías</dt>
               <dd class="tabular">{{ formatearNumero(alimento.calorias) }} kcal</dd>
             </div>
             <div>
@@ -202,21 +206,21 @@ onBeforeUnmount(() => {
               <dd class="tabular">{{ formatearNumero(alimento.fibra) }} g</dd>
             </div>
             <div>
-              <dt>Tipo</dt>
+              <dt>Tipo de alimento</dt>
               <dd>{{ etiquetaDe(TIPOS_ALIMENTO, alimento.tipo) }}</dd>
             </div>
           </dl>
         </section>
 
         <aside class="detalle__lateral">
-          <section class="detalle__panel gb-tarjeta" aria-labelledby="titulo-uso">
+          <section class="detalle__panel gb-tarjeta" aria-labelledby="titulo-generales">
             <header>
               <p>Resumen operativo</p>
-              <h2 id="titulo-uso">Uso en comidas</h2>
+              <h2 id="titulo-generales">Datos generales</h2>
             </header>
             <dl class="detalle__metricas">
               <div>
-                <dt>Comidas que lo usan</dt>
+                <dt>Veces usado en comidas</dt>
                 <dd>{{ formatearNumero(alimento.usos) }}</dd>
               </div>
             </dl>
@@ -239,7 +243,7 @@ onBeforeUnmount(() => {
       class="alimento-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Alimento no encontrado' : 'No pudimos cargar el alimento' }}
       </h2>
@@ -274,20 +278,6 @@ onBeforeUnmount(() => {
   width: min(100%, 86rem);
   margin: 0 auto;
   padding-bottom: var(--gb-margen);
-}
-
-.alimento-detalle__accion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding-inline: 1rem;
-  font-family: var(--gb-fuente-titulo);
-  font-size: var(--gb-tipo-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  text-transform: uppercase;
 }
 
 .alimento-detalle__exito {
@@ -350,14 +340,14 @@ onBeforeUnmount(() => {
 
 .detalle {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .detalle__resumen {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   padding: 1.5rem;
   border-radius: var(--gb-radius-xl);
 }
@@ -375,7 +365,8 @@ onBeforeUnmount(() => {
 }
 
 .detalle__resumen p,
-.detalle__resumen h2 {
+.detalle__resumen h2,
+.detalle__resumen div > span {
   margin: 0;
 }
 
@@ -389,31 +380,48 @@ onBeforeUnmount(() => {
 }
 
 .detalle__resumen h2 {
-  margin: 0.25rem 0 0.5rem;
+  margin-top: 0.25rem;
   font-size: var(--gb-tipo-lg);
   text-transform: uppercase;
 }
 
+.detalle__resumen div > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--gb-text-muted);
+  font-size: var(--gb-tipo-sm);
+}
+
 .detalle__rejilla {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.8fr);
-  gap: var(--gb-gutter);
-  align-items: start;
+  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
+  gap: var(--gb-gutter, 1.25rem);
+  align-items: stretch;
 }
 
 .detalle__lateral {
   display: grid;
-  gap: var(--gb-gutter);
+  grid-template-rows: 1fr 1fr;
+  gap: var(--gb-gutter, 1.25rem);
+  height: 100%;
 }
 
 .detalle__panel {
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.detalle__panel--principal {
+  height: 100%;
 }
 
 .detalle__panel header {
+  min-height: 3.5rem;
   padding-bottom: 0.875rem;
   border-bottom: 1px solid var(--gb-border);
+  flex-shrink: 0;
 }
 
 .detalle__panel header p,
@@ -497,6 +505,11 @@ onBeforeUnmount(() => {
   .detalle__rejilla {
     grid-template-columns: 1fr;
   }
+
+  .detalle__lateral {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
 }
 
 @media (max-width: 52rem) {
@@ -509,6 +522,7 @@ onBeforeUnmount(() => {
     justify-self: start;
   }
 
+  .detalle__lateral,
   .detalle__panel dl {
     grid-template-columns: 1fr;
   }

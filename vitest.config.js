@@ -14,6 +14,9 @@ export default mergeConfig(
       environment: 'jsdom',
       include: ['src/**/*.spec.js'],
       root: fileURLToPath(new URL('./', import.meta.url)),
+      env: {
+        VITE_USE_MOCKS: 'true',
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text-summary', 'lcov'],

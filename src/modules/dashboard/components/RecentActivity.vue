@@ -1,11 +1,27 @@
 <script setup>
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearTiempoRelativo } from '@/utils/formato'
+import { Activity, Building2, Contact, History, UserPlus } from 'lucide-vue-next'
+
+import { formatearTiempoRelativo } from '@/shared/utils/formato'
 
 defineProps({
   actividades: { type: Array, required: true },
   ahora: { type: Date, required: true },
 })
+
+const MAPA_ACTIVIDAD = {
+  'bi-person-plus-fill': UserPlus,
+  'bi-clipboard2-pulse-fill': Activity,
+  'bi-buildings-fill': Building2,
+  'bi-person-badge-fill': Contact,
+  'person-plus': UserPlus,
+  activity: Activity,
+  buildings: Building2,
+  contact: Contact,
+}
+
+function iconoActividad(nombre) {
+  return MAPA_ACTIVIDAD[nombre] || Activity
+}
 
 function fechaValida(fecha) {
   return Number.isNaN(new Date(fecha).getTime()) ? null : fecha
@@ -25,7 +41,7 @@ function fechaValida(fecha) {
     <ol v-if="actividades.length" class="actividad__lista">
       <li v-for="actividad in actividades" :key="actividad.id">
         <span class="actividad__icono" aria-hidden="true">
-          <IconoSvg :nombre="actividad.icono" />
+          <component :is="iconoActividad(actividad.icono)" :size="18" aria-hidden="true" />
         </span>
         <div>
           <strong>{{ actividad.titulo }}</strong>
@@ -38,7 +54,7 @@ function fechaValida(fecha) {
     </ol>
 
     <div v-else class="actividad__vacio" role="status">
-      <IconoSvg nombre="clock-history" />
+      <History :size="24" aria-hidden="true" />
       <p>Aún no hay actividad registrada.</p>
     </div>
   </section>
@@ -151,9 +167,8 @@ function fechaValida(fecha) {
   text-align: center;
 }
 
-.actividad__vacio i {
+.actividad__vacio :deep(svg) {
   color: var(--gb-text-soft);
-  font-size: 1.5rem;
 }
 
 .actividad__vacio p {

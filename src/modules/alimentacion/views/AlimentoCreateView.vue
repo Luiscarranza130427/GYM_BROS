@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import AlimentoForm from '@/modules/alimentacion/components/AlimentoForm.vue'
-import { crearAlimento } from '@/services/alimentacion.service'
+import { crearAlimento } from '@/modules/alimentacion/services/alimentacion.service'
 
 const router = useRouter()
 const enviando = ref(false)

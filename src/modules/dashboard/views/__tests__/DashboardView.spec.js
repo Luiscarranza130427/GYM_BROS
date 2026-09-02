@@ -2,9 +2,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import DashboardView from '@/modules/dashboard/views/DashboardView.vue'
-import { obtenerDashboard } from '@/services/dashboard.service'
+import { obtenerDashboard } from '@/modules/dashboard/services/dashboard.service'
 
-vi.mock('@/services/dashboard.service', () => ({
+vi.mock('@/modules/dashboard/services/dashboard.service', () => ({
   obtenerDashboard: vi.fn(),
 }))
 

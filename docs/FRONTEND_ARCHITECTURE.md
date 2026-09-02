@@ -149,7 +149,7 @@ npm run dev
 
 ## 9. Cómo añadir un módulo nuevo
 
-Ejemplo con `ejercicios`, que hoy usa la pantalla «En construcción».
+Ejemplo con una sección que todavía usa la pantalla «En construcción».
 
 1. **Servicio** — `src/services/ejercicios.service.js`. Se apoya en
    `services/normalizacion.js` para la paginación de Laravel, los campos
@@ -216,11 +216,10 @@ componentes. Chart.js se usa directamente y se destruye al desmontar el gráfico
 
 Implementado en Fase 2:
 
-- **Rutas de los módulos que aún no existen** (usuarios, ejercicios,
-  alimentación, notificaciones, planes, pagos): cada uno mantiene su ruta real,
-  apuntando a una vista compartida de "En construcción". Empresas ya reemplazó
-  ese placeholder por sus cuatro rutas CRUD anidadas. Todas heredan
-  `requiresAuth` del registro padre.
+- **Rutas de los módulos.** Empresas, Usuarios, Ejercicios, Alimentación y
+  Planes comerciales tienen árboles propios. Notificaciones, Reportes de pagos
+  y Perfil mantienen su ruta real apuntando a la vista compartida de «En
+  construcción». Todas heredan `requiresAuth` del registro padre.
 - **Reflow (WCAG 2.1 AA, 1.4.10).** El shell actual usa un sidebar de 280 px
   fijos, así que por debajo de ~640 px de ancho equivalente —lo que produce un
   zoom del 400 % en una pantalla de 1280 px— el contenido deja de ser usable. No

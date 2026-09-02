@@ -101,10 +101,12 @@ trabajo de la fase siguiente**, aunque parezca trivial.
 - Fase 4 — Módulo de empresas (CRUD, filtros, paginación y estados). **Completada.**
 - Fase 5 — Módulo de usuarios (CRUD, filtros, historial y estados). **Completada.**
 - Fase 6 — Módulo de ejercicios (CRUD, filtros por catálogo y estados). **Completada.**
+- Fase 7 — Módulo de alimentación (planes alimentarios, comidas y alimentos). **Completada.**
+- Fase 8 — Módulo de planes comerciales (fichas, creación y edición). **Completada.**
 
-Los módulos CRUD restantes (alimentación, notificaciones, planes, pagos,
-perfil) pertenecen a fases posteriores y no deben implementarse hasta que
-se pidan. Hoy usan la pantalla compartida «En construcción».
+Los módulos restantes (notificaciones, reportes de pagos y perfil) pertenecen a
+fases posteriores y no deben implementarse hasta que se pidan. Hoy usan la
+pantalla compartida «En construcción».
 
 ## Reglas nacidas de errores reales
 

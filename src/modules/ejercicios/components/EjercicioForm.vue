@@ -1,8 +1,8 @@
 <script setup>
+import { Activity, Dumbbell, Power } from 'lucide-vue-next'
 import { useTemplateRef } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { useFormulario } from '@/composables/useFormulario'
+import { useFormulario } from '@/shared/composables/useFormulario'
 import { CATEGORIAS, EQUIPOS, NIVELES, valoresDe } from '@/modules/ejercicios/catalogos'
 
 const props = defineProps({
@@ -115,7 +115,7 @@ async function enviar() {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-ejercicio">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="person-arms-up" /></span>
+        <span aria-hidden="true"><Dumbbell :size="20" /></span>
         <div>
           <h2 id="titulo-ejercicio">Información del ejercicio</h2>
           <p>Cómo se identifica y se clasifica dentro del catálogo.</p>
@@ -243,7 +243,7 @@ async function enviar() {
     <div class="formulario__secundarias">
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-prescripcion">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="clipboard2-pulse-fill" /></span>
+          <span aria-hidden="true"><Activity :size="20" /></span>
           <div>
             <h2 id="titulo-prescripcion">Prescripción sugerida</h2>
             <p>Punto de partida para las rutinas. Cada plan puede ajustarlo.</p>
@@ -316,7 +316,7 @@ async function enviar() {
 
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-estado">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="power" /></span>
+          <span aria-hidden="true"><Power :size="20" /></span>
           <div>
             <h2 id="titulo-estado">Estado del ejercicio</h2>
             <p>Controla si puede asignarse en rutinas nuevas.</p>
@@ -358,7 +358,7 @@ async function enviar() {
     </div>
 
     <div class="formulario__acciones">
-      <button type="button" class="btn btn-ghost" :disabled="enviando" @click="emit('cancel')">
+      <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" :disabled="enviando">
@@ -372,11 +372,11 @@ async function enviar() {
 <style scoped>
 .formulario {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 
 .formulario__seccion {
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
 }
 
@@ -444,14 +444,27 @@ async function enviar() {
 
 .formulario__secundarias {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-  gap: var(--gb-gutter);
-  align-items: start;
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.75fr);
+  gap: var(--gb-gutter, 1.25rem);
+  align-items: stretch;
+}
+
+.formulario__secundarias .formulario__seccion {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.formulario__secundarias .formulario__seccion > header {
+  min-height: 3.5rem;
+  margin-bottom: 1rem;
 }
 
 .estado-opciones {
+  flex: 1;
   display: grid;
   gap: 0.75rem;
+  align-content: space-around;
   margin: 0;
   padding: 0;
   border: 0;

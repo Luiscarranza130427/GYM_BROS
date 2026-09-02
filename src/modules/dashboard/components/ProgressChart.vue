@@ -10,8 +10,8 @@ import {
   Tooltip,
 } from 'chart.js'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearNumero } from '@/utils/formato'
+import { TrendingUp } from 'lucide-vue-next'
+import { formatearNumero } from '@/shared/utils/formato'
 
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, LineController, Tooltip)
 
@@ -149,7 +149,7 @@ onBeforeUnmount(destruirGrafico)
     </div>
 
     <div v-else class="estado-vacio" role="status">
-      <IconoSvg nombre="graph-up" />
+      <TrendingUp :size="32" aria-hidden="true" />
       <p>Aún no hay progreso suficiente para construir la gráfica.</p>
     </div>
   </section>

@@ -1,11 +1,12 @@
 <script setup>
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
-import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
+import { Activity, CheckCircle2, CloudOff, Plus, RotateCw, Utensils } from 'lucide-vue-next'
+
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
 import { TIPOS_ALIMENTO, valoresDe } from '@/modules/alimentacion/catalogos'
 import AlimentoFilters from '@/modules/alimentacion/components/AlimentoFilters.vue'
 import AlimentoGrid from '@/modules/alimentacion/components/AlimentoGrid.vue'
-import { obtenerAlimentos } from '@/services/alimentacion.service'
+import { obtenerAlimentos } from '@/modules/alimentacion/services/alimentacion.service'
 
 const {
   estadoVista,
@@ -56,7 +57,7 @@ const {
     >
       <template #acciones>
         <RouterLink class="btn btn-primary alimentos__nuevo" :to="{ name: 'alimento-nuevo' }">
-          <IconoSvg nombre="plus-lg" />
+          <Plus :size="16" aria-hidden="true" />
           Nuevo alimento
         </RouterLink>
       </template>
@@ -69,7 +70,7 @@ const {
       role="status"
       tabindex="-1"
     >
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
 
@@ -83,7 +84,7 @@ const {
     />
 
     <p class="alimentos__referencia">
-      <IconoSvg nombre="activity" />
+      <Activity :size="16" aria-hidden="true" />
       Los valores nutricionales del catálogo se expresan por cada 100 g o 100 ml del alimento.
     </p>
 
@@ -100,17 +101,17 @@ const {
     />
 
     <section v-else-if="estadoVista === 'error'" class="alimentos__estado gb-tarjeta" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="48" aria-hidden="true" />
       <h2>No pudimos cargar el catálogo</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </section>
 
     <section v-else class="alimentos__estado gb-tarjeta" role="status">
-      <IconoSvg nombre="fork-knife" />
+      <Utensils :size="48" aria-hidden="true" />
       <h2>
         {{ hayFiltros ? 'No encontramos alimentos' : 'Aún no hay alimentos en el catálogo' }}
       </h2>
@@ -120,7 +121,7 @@ const {
         Limpiar filtros
       </button>
       <RouterLink v-else class="btn btn-primary" :to="{ name: 'alimento-nuevo' }">
-        <IconoSvg nombre="plus-lg" />
+        <Plus :size="16" aria-hidden="true" />
         Nuevo alimento
       </RouterLink>
     </section>
@@ -180,7 +181,7 @@ const {
   text-align: center;
 }
 
-.alimentos__estado > svg {
+.alimentos__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

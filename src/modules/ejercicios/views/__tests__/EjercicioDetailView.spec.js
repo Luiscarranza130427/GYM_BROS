@@ -3,13 +3,13 @@ import { reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import EjercicioDetailView from '@/modules/ejercicios/views/EjercicioDetailView.vue'
-import { desactivarEjercicio, obtenerEjercicio } from '@/services/ejercicios.service'
-import { HttpError } from '@/services/http-error'
+import {
+  desactivarEjercicio,
+  obtenerEjercicio,
+} from '@/modules/ejercicios/services/ejercicios.service'
+import { HttpError } from '@/core/api/http-error'
 
 const route = reactive({ params: { id: '1' }, query: {} })
-// El router real devuelve una promesa y las vistas encadenan `.catch()` sobre
-// ella (regla de CLAUDE.md). Un `vi.fn()` pelado devuelve undefined y reventaría
-// dentro del componente: el mock tiene que parecerse al original.
 const push = vi.fn(() => Promise.resolve())
 const replace = vi.fn(() => Promise.resolve())
 
@@ -20,7 +20,7 @@ vi.mock('vue-router', async (importOriginal) => {
   return { ...original, useRoute: () => route, useRouter: () => ({ push, replace }) }
 })
 
-vi.mock('@/services/ejercicios.service', () => ({
+vi.mock('@/modules/ejercicios/services/ejercicios.service', () => ({
   obtenerEjercicio: vi.fn(),
   desactivarEjercicio: vi.fn(),
 }))

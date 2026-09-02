@@ -1,11 +1,11 @@
 <script setup>
+import { Ban, Eye, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { CATEGORIAS, EQUIPOS, NIVELES, etiquetaDe } from '@/modules/ejercicios/catalogos'
 import EjercicioStatusBadge from '@/modules/ejercicios/components/EjercicioStatusBadge.vue'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   items: { type: Array, required: true },
@@ -95,7 +95,7 @@ function prescripcion({ seriesSugeridas, repeticionesSugeridas }) {
                   :aria-label="`Ver ${ejercicio.nombre}`"
                   title="Ver"
                 >
-                  <IconoSvg nombre="eye" />
+                  <Eye :size="16" aria-hidden="true" />
                 </RouterLink>
                 <RouterLink
                   class="gb-boton-icono"
@@ -103,7 +103,7 @@ function prescripcion({ seriesSugeridas, repeticionesSugeridas }) {
                   :aria-label="`Editar ${ejercicio.nombre}`"
                   title="Editar"
                 >
-                  <IconoSvg nombre="pencil" />
+                  <Pencil :size="16" aria-hidden="true" />
                 </RouterLink>
                 <button
                   type="button"
@@ -113,7 +113,7 @@ function prescripcion({ seriesSugeridas, repeticionesSugeridas }) {
                   :title="ejercicio.estado === 'inactive' ? 'Ejercicio inactivo' : 'Desactivar'"
                   @click="$emit('desactivar', ejercicio)"
                 >
-                  <IconoSvg nombre="slash-circle" />
+                  <Ban :size="16" aria-hidden="true" />
                 </button>
               </div>
             </td>

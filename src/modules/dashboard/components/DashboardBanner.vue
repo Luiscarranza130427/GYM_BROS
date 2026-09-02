@@ -1,8 +1,8 @@
 <script setup>
+import { Users } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
 import heroUrl from '@/assets/images/stitch/command-streams.jpg'
-import IconoSvg from '@/components/base/IconoSvg.vue'
 
 defineProps({
   banner: { type: Object, required: true },
@@ -21,7 +21,7 @@ defineProps({
         class="btn btn-primary banner__accion"
         :to="{ name: 'usuarios' }"
       >
-        <IconoSvg nombre="people" />
+        <Users :size="16" aria-hidden="true" />
         {{ banner.accion.texto }}
       </RouterLink>
     </div>

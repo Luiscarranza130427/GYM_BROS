@@ -25,9 +25,47 @@
   --bs-emphasis-color: var(--gb-text);
 }
 
-/* Los botones de Bootstrap 5.3 se tematizan con --bs-btn-*, no con --bs-primary.
-   El botón principal es "Gym Red" sólido, texto en mayúsculas y forma de píldora,
-   que es lo que el sistema usa para señalar la acción principal. */
+/* ==========================================================================
+   SISTEMA DE BOTONES ESTANDARIZADO GYM BROS
+   Todos los módulos comparten altura, bordes redondeados (pill),
+   alineación y tipografía unificada sin mayúsculas forzadas.
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.6rem;
+  padding: 0.55rem 1.25rem;
+  font-family: var(--gb-fuente-texto);
+  font-size: var(--gb-tipo-xs, 0.8125rem);
+  font-weight: 700;
+  line-height: 1.25;
+  border-radius: var(--gb-radius-pill);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Botón Primario: Rojo Gym Bros con relieve y resplandor sutil */
 .btn-primary {
   --bs-btn-bg: var(--gb-red);
   --bs-btn-border-color: var(--gb-red);
@@ -42,47 +80,73 @@
   --bs-btn-active-color: var(--gb-on-red);
   --bs-btn-disabled-color: var(--gb-on-red);
   --bs-btn-border-radius: var(--gb-radius-pill);
-  font-family: var(--gb-fuente-titulo);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  box-shadow: var(--gb-relieve-fuerte);
+  color: var(--gb-on-red, #ffffff);
+  background-color: var(--gb-red, #e11d48);
+  border: 1px solid var(--gb-red, #e11d48);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
 }
 
-/* Acción destructiva (desactivar, eliminar). Comparte el rojo del sistema en
-   lugar del `--bs-danger` de Bootstrap: era el único rojo del panel que no
-   salía de los tokens, y en un diálogo de confirmación el color es
-   precisamente la señal. Se distingue del principal por la forma, no por el
-   tono: sin mayúsculas forzadas ni relieve. */
+.btn-primary:hover:not(:disabled) {
+  color: #ffffff;
+  background-color: var(--gb-red-hover, #be123c);
+  border-color: var(--gb-red-hover, #be123c);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.5);
+}
+
+/* Botón Secundario y Ghost: Fondo oscuro elegante y borde metálico */
+.btn-secondary,
+.btn-ghost {
+  --bs-btn-color: var(--gb-text);
+  --bs-btn-border-color: var(--gb-border);
+  --bs-btn-hover-color: var(--gb-text);
+  --bs-btn-hover-bg: var(--gb-surface-highest);
+  --bs-btn-hover-border-color: var(--gb-text-soft);
+  --bs-btn-border-radius: var(--gb-radius-pill);
+  color: var(--gb-text, #ffffff);
+  background-color: var(--gb-surface-high, #262626);
+  border: 1px solid var(--gb-border, #404040);
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--gb-surface-highest, #333333);
+  border-color: var(--gb-text-soft, #a3a3a3);
+  color: #ffffff;
+}
+
+/* Botón Peligro / Destructivo */
 .btn-danger {
   --bs-btn-bg: var(--gb-red);
   --bs-btn-border-color: var(--gb-red);
   --bs-btn-hover-bg: var(--gb-red-hover);
   --bs-btn-hover-border-color: var(--gb-red-hover);
-  --bs-btn-active-bg: var(--gb-red-hover);
-  --bs-btn-active-border-color: var(--gb-red-hover);
-  --bs-btn-disabled-bg: var(--gb-red);
-  --bs-btn-disabled-border-color: var(--gb-red);
   --bs-btn-color: var(--gb-on-red);
-  --bs-btn-hover-color: var(--gb-on-red);
-  --bs-btn-active-color: var(--gb-on-red);
-  --bs-btn-disabled-color: var(--gb-on-red);
   --bs-btn-border-radius: var(--gb-radius-pill);
+  color: var(--gb-on-red, #ffffff);
+  background-color: var(--gb-red, #e11d48);
+  border: 1px solid var(--gb-red, #e11d48);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
 }
 
-/* Botón "fantasma": sin relleno, borde plateado. Controles secundarios. */
-.btn-ghost {
-  --bs-btn-color: var(--gb-text-muted);
-  --bs-btn-border-color: var(--gb-border);
-  --bs-btn-hover-color: var(--gb-text);
-  --bs-btn-hover-bg: var(--gb-surface-high);
-  --bs-btn-hover-border-color: var(--gb-text-muted);
-  --bs-btn-border-radius: var(--gb-radius-pill);
-  border: 1px solid var(--bs-btn-border-color);
-  font-family: var(--gb-fuente-titulo);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.btn-danger:hover:not(:disabled) {
+  color: #ffffff;
+  background-color: var(--gb-red-hover, #be123c);
+  border-color: var(--gb-red-hover, #be123c);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.5);
+}
+
+/* Botón Pequeño (.btn-sm) */
+.btn-sm {
+  min-height: 2.1rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+}
+
+/* Botón Grande (.btn-lg) */
+.btn-lg {
+  min-height: 3rem;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.9rem;
 }
 
 .form-control,

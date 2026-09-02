@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { useAuthStore } from '@/stores/auth.store'
+import { useAuthStore } from '@/core/auth/auth.store'
 
 const auth = useAuthStore()
 

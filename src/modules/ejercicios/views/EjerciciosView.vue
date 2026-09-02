@@ -1,14 +1,17 @@
 <script setup>
+import { CheckCircle2, CloudOff, Dumbbell, Plus, RotateCw } from 'lucide-vue-next'
 import { ref } from 'vue'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
-import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
 import { CATEGORIAS, EQUIPOS, NIVELES, valoresDe } from '@/modules/ejercicios/catalogos'
 import EjercicioFilters from '@/modules/ejercicios/components/EjercicioFilters.vue'
 import EjercicioTable from '@/modules/ejercicios/components/EjercicioTable.vue'
-import { desactivarEjercicio, obtenerEjercicios } from '@/services/ejercicios.service'
+import {
+  desactivarEjercicio,
+  obtenerEjercicios,
+} from '@/modules/ejercicios/services/ejercicios.service'
 
 const {
   estadoVista,
@@ -82,7 +85,7 @@ async function confirmarDesactivacion() {
     >
       <template #acciones>
         <RouterLink class="btn btn-primary ejercicios__nuevo" :to="{ name: 'ejercicio-nuevo' }">
-          <IconoSvg nombre="plus-lg" />
+          <Plus :size="16" aria-hidden="true" />
           Nuevo ejercicio
         </RouterLink>
       </template>
@@ -95,7 +98,7 @@ async function confirmarDesactivacion() {
       role="status"
       tabindex="-1"
     >
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
 
@@ -128,17 +131,17 @@ async function confirmarDesactivacion() {
     />
 
     <section v-else-if="estadoVista === 'error'" class="ejercicios__estado gb-tarjeta" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="48" aria-hidden="true" />
       <h2>No pudimos cargar los ejercicios</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </section>
 
     <section v-else class="ejercicios__estado gb-tarjeta" role="status">
-      <IconoSvg nombre="person-arms-up" />
+      <Dumbbell :size="48" aria-hidden="true" />
       <h2>
         {{ hayFiltros ? 'No encontramos ejercicios' : 'Aún no hay ejercicios en el catálogo' }}
       </h2>
@@ -148,7 +151,7 @@ async function confirmarDesactivacion() {
         Limpiar filtros
       </button>
       <RouterLink v-else class="btn btn-primary" :to="{ name: 'ejercicio-nuevo' }">
-        <IconoSvg nombre="plus-lg" />
+        <Plus :size="16" aria-hidden="true" />
         Nuevo ejercicio
       </RouterLink>
     </section>
@@ -208,7 +211,7 @@ async function confirmarDesactivacion() {
   text-align: center;
 }
 
-.ejercicios__estado > svg {
+.ejercicios__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

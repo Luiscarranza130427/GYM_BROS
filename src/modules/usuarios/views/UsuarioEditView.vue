@@ -1,15 +1,15 @@
 <script setup>
+import { UserX } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import UsuarioForm from '@/modules/usuarios/components/UsuarioForm.vue'
 import {
   actualizarUsuario,
   obtenerOpcionesEmpresas,
   obtenerUsuario,
-} from '@/services/usuarios.service'
+} from '@/modules/usuarios/services/usuarios.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +20,11 @@ const enviando = ref(false)
 const erroresServidor = ref({})
 const mensajeError = ref('')
 let solicitudActual = 0
+
+function nombreCompleto(datos) {
+  if (!datos) return ''
+  return [datos.nombre, datos.apellido].filter(Boolean).join(' ').trim()
+}
 
 async function cargar() {
   const idSolicitud = ++solicitudActual
@@ -80,16 +85,16 @@ onBeforeUnmount(() => {
 <template>
   <section class="usuario-editor">
     <PageHeader
-      :titulo="usuario ? `Editar a ${usuario.nombre}` : 'Editar usuario'"
+      :titulo="usuario ? `Editar a ${nombreCompleto(usuario) || 'usuario'}` : 'Editar usuario'"
       :descripcion="
         usuario
-          ? `Actualiza la información de ${usuario.nombre} ${usuario.apellido}.`
+          ? `Actualiza la información de ${nombreCompleto(usuario) || 'este usuario'}.`
           : 'Actualiza la información del usuario.'
       "
       seccion="Usuarios"
       :ruta-seccion="{ name: 'usuarios-listado' }"
       etiqueta="Gestión de usuarios"
-      :migas="[usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario', 'Editar']"
+      :migas="[usuario ? nombreCompleto(usuario) || 'Usuario' : 'Usuario', 'Editar']"
     />
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
       {{ mensajeError }}
@@ -101,7 +106,7 @@ onBeforeUnmount(() => {
     <UsuarioForm
       v-else-if="estado === 'success' && usuario"
       modo="edit"
-      :valores-iniciales="usuario"
+      :usuario-inicial="usuario"
       :empresas="empresas"
       :enviando="enviando"
       :errores-servidor="erroresServidor"
@@ -113,15 +118,16 @@ onBeforeUnmount(() => {
       class="usuario-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="person-x" />
+      <UserX :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Usuario no encontrado' : 'No pudimos cargar el usuario' }}
       </h2>
       <p>{{ mensajeError }}</p>
       <div>
         <button v-if="estado === 'error'" type="button" class="btn btn-primary" @click="cargar">
-          Reintentar</button
-        ><RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
+          Reintentar
+        </button>
+        <RouterLink class="btn btn-ghost" :to="{ name: 'usuarios-listado' }"
           >Volver a usuarios</RouterLink
         >
       </div>
@@ -147,7 +153,7 @@ onBeforeUnmount(() => {
   border-radius: var(--gb-radius-xl);
   text-align: center;
 }
-.usuario-editor__estado > i {
+.usuario-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

@@ -1,13 +1,16 @@
 <script setup>
+import { CloudOff, List, RotateCw, Utensils } from 'lucide-vue-next'
 import { ref } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
-import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
 import { SITUACIONES_PLAN, valoresDe } from '@/modules/alimentacion/catalogos'
 import PlanFilters from '@/modules/alimentacion/components/PlanFilters.vue'
 import PlanTable from '@/modules/alimentacion/components/PlanTable.vue'
-import { obtenerEmpresasConPlanes, obtenerPlanes } from '@/services/alimentacion.service'
+import {
+  obtenerEmpresasConPlanes,
+  obtenerPlanes,
+} from '@/modules/alimentacion/services/alimentacion.service'
 
 const {
   estadoVista,
@@ -69,7 +72,7 @@ cargarEmpresas()
     >
       <template #acciones>
         <RouterLink class="btn btn-ghost planes__catalogo" :to="{ name: 'alimentos-listado' }">
-          <IconoSvg nombre="list" />
+          <List :size="16" aria-hidden="true" />
           Catálogo de alimentos
         </RouterLink>
       </template>
@@ -100,17 +103,17 @@ cargarEmpresas()
     />
 
     <section v-else-if="estadoVista === 'error'" class="planes__estado gb-tarjeta" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="48" aria-hidden="true" />
       <h2>No pudimos cargar los planes</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </section>
 
     <section v-else class="planes__estado gb-tarjeta" role="status">
-      <IconoSvg nombre="fork-knife" />
+      <Utensils :size="48" aria-hidden="true" />
       <h2>
         {{ hayFiltros ? 'No encontramos planes' : 'Aún no hay planes de alimentación' }}
       </h2>
@@ -155,7 +158,7 @@ cargarEmpresas()
   text-align: center;
 }
 
-.planes__estado > svg {
+.planes__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

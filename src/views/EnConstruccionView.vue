@@ -1,8 +1,7 @@
 <script setup>
+import { Construction } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-
-import IconoSvg from '@/components/base/IconoSvg.vue'
 
 const route = useRoute()
 
@@ -16,7 +15,7 @@ const seccion = computed(() => route.meta.title ?? 'Esta sección')
 
     <div class="gb-tarjeta pendiente__aviso">
       <span class="pendiente__icono" aria-hidden="true">
-        <IconoSvg nombre="cone-striped" />
+        <Construction :size="24" />
       </span>
 
       <div>

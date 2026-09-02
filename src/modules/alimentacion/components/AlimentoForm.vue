@@ -1,8 +1,8 @@
 <script setup>
+import { Activity, Utensils } from 'lucide-vue-next'
 import { useTemplateRef } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { useFormulario } from '@/composables/useFormulario'
+import { useFormulario } from '@/shared/composables/useFormulario'
 import { TIPOS_ALIMENTO, valoresDe } from '@/modules/alimentacion/catalogos'
 
 const props = defineProps({
@@ -115,7 +115,7 @@ async function enviar() {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-alimento">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="fork-knife" /></span>
+        <span aria-hidden="true"><Utensils :size="20" /></span>
         <div>
           <h2 id="titulo-alimento">Identificación del alimento</h2>
           <p>Cómo se llama y en qué grupo entra dentro del catálogo.</p>
@@ -175,7 +175,7 @@ async function enviar() {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-nutricion">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="clipboard2-pulse-fill" /></span>
+        <span aria-hidden="true"><Activity :size="20" /></span>
         <div>
           <h2 id="titulo-nutricion">Información nutricional</h2>
           <p>
@@ -310,7 +310,7 @@ async function enviar() {
     </section>
 
     <div class="formulario__acciones">
-      <button type="button" class="btn btn-ghost" :disabled="enviando" @click="emit('cancel')">
+      <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" :disabled="enviando">

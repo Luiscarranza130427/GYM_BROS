@@ -1,8 +1,8 @@
 <script setup>
+import { Clock, Utensils } from 'lucide-vue-next'
 import { useTemplateRef } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { useFormulario } from '@/composables/useFormulario'
+import { useFormulario } from '@/shared/composables/useFormulario'
 import { TIPOS_COMIDA, UNIDADES, valoresDe } from '@/modules/alimentacion/catalogos'
 import SelectorDeAlimentos from '@/modules/alimentacion/components/SelectorDeAlimentos.vue'
 
@@ -119,7 +119,7 @@ async function enviar() {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-momento">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="clock" /></span>
+        <span aria-hidden="true"><Clock :size="20" /></span>
         <div>
           <h2 id="titulo-momento">Momento del día</h2>
           <p>Qué comida es y a qué hora toca. De aquí sale el orden del horario.</p>
@@ -178,7 +178,7 @@ async function enviar() {
 
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-alimentos">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="fork-knife" /></span>
+        <span aria-hidden="true"><Utensils :size="20" /></span>
         <div>
           <h2 id="titulo-alimentos">Alimentos de la comida</h2>
           <p>Los macros de la comida los calcula el backend a partir de estas cantidades.</p>
@@ -203,7 +203,7 @@ async function enviar() {
     </section>
 
     <div class="formulario__acciones">
-      <button type="button" class="btn btn-ghost" :disabled="enviando" @click="emit('cancel')">
+      <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" :disabled="enviando">

@@ -1,11 +1,11 @@
 <script setup>
+import { Ban, Eye, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import EmpresaLogo from '@/modules/empresas/components/EmpresaLogo.vue'
 import EmpresaStatusBadge from '@/modules/empresas/components/EmpresaStatusBadge.vue'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   items: { type: Array, required: true },
@@ -80,7 +80,7 @@ const paginas = computed(() => {
                   :aria-label="`Ver ${empresa.nombre}`"
                   title="Ver"
                 >
-                  <IconoSvg nombre="eye" />
+                  <Eye :size="16" aria-hidden="true" />
                 </RouterLink>
                 <RouterLink
                   class="gb-boton-icono"
@@ -88,7 +88,7 @@ const paginas = computed(() => {
                   :aria-label="`Editar ${empresa.nombre}`"
                   title="Editar"
                 >
-                  <IconoSvg nombre="pencil" />
+                  <Pencil :size="16" aria-hidden="true" />
                 </RouterLink>
                 <button
                   type="button"
@@ -98,7 +98,7 @@ const paginas = computed(() => {
                   :title="empresa.estado === 'inactive' ? 'Empresa inactiva' : 'Desactivar'"
                   @click="$emit('desactivar', empresa)"
                 >
-                  <IconoSvg nombre="slash-circle" />
+                  <Ban :size="16" aria-hidden="true" />
                 </button>
               </div>
             </td>

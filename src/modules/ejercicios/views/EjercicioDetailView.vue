@@ -1,14 +1,17 @@
 <script setup>
+import { Ban, CheckCircle2, Dumbbell, Pencil, XCircle } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import { CATEGORIAS, EQUIPOS, NIVELES, etiquetaDe } from '@/modules/ejercicios/catalogos'
 import EjercicioStatusBadge from '@/modules/ejercicios/components/EjercicioStatusBadge.vue'
-import { desactivarEjercicio, obtenerEjercicio } from '@/services/ejercicios.service'
-import { formatearFecha, formatearNumero } from '@/utils/formato'
+import {
+  desactivarEjercicio,
+  obtenerEjercicio,
+} from '@/modules/ejercicios/services/ejercicios.service'
+import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,26 +90,26 @@ onBeforeUnmount(() => {
     >
       <template v-if="estado === 'success' && ejercicio" #acciones>
         <RouterLink
-          class="btn btn-ghost ejercicio-detalle__accion"
+          class="btn btn-secondary"
           :to="{ name: 'ejercicio-editar', params: { id: ejercicio.id } }"
         >
-          <IconoSvg nombre="pencil" />
-          Editar
+          <Pencil :size="16" aria-hidden="true" />
+          <span>Editar</span>
         </RouterLink>
         <button
           v-if="ejercicio.estado === 'active'"
           type="button"
-          class="btn btn-outline-danger ejercicio-detalle__accion"
+          class="btn btn-danger"
           @click="dialogoAbierto = true"
         >
-          <IconoSvg nombre="slash-circle" />
-          Desactivar
+          <Ban :size="16" aria-hidden="true" />
+          <span>Desactivar</span>
         </button>
       </template>
     </PageHeader>
 
     <p v-if="mensajeExito" class="ejercicio-detalle__exito" role="status">
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
     <p v-if="mensajeError && estado === 'success'" class="alert alert-danger" role="alert">
@@ -124,7 +127,9 @@ onBeforeUnmount(() => {
 
     <div v-else-if="estado === 'success' && ejercicio" class="detalle">
       <section class="detalle__resumen gb-tarjeta">
-        <span class="detalle__icono" aria-hidden="true"><IconoSvg nombre="person-arms-up" /></span>
+        <span class="detalle__icono" aria-hidden="true"
+          ><Dumbbell :size="28" aria-hidden="true"
+        /></span>
         <div>
           <p>Ejercicio del catálogo</p>
           <h2>{{ ejercicio.nombre }}</h2>
@@ -193,7 +198,7 @@ onBeforeUnmount(() => {
       class="ejercicio-detalle__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Ejercicio no encontrado' : 'No pudimos cargar el ejercicio' }}
       </h2>
@@ -230,20 +235,6 @@ onBeforeUnmount(() => {
   padding-bottom: var(--gb-margen);
 }
 
-.ejercicio-detalle__accion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding-inline: 1rem;
-  font-family: var(--gb-fuente-titulo);
-  font-size: var(--gb-tipo-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
 .ejercicio-detalle__exito {
   display: flex;
   align-items: center;
@@ -266,7 +257,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.ejercicio-detalle__estado > svg {
+.ejercicio-detalle__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }
@@ -354,24 +345,34 @@ onBeforeUnmount(() => {
 
 .detalle__rejilla {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.8fr);
-  gap: var(--gb-gutter);
-  align-items: start;
+  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
+  gap: var(--gb-gutter, 1.25rem);
+  align-items: stretch;
 }
 
 .detalle__lateral {
   display: grid;
-  gap: var(--gb-gutter);
+  grid-template-rows: 1fr 1fr;
+  gap: var(--gb-gutter, 1.25rem);
+  height: 100%;
 }
 
 .detalle__panel {
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.detalle__panel--principal {
+  height: 100%;
 }
 
 .detalle__panel header {
+  min-height: 3.5rem;
   padding-bottom: 0.875rem;
   border-bottom: 1px solid var(--gb-border);
+  flex-shrink: 0;
 }
 
 .detalle__panel header p,
@@ -453,6 +454,11 @@ onBeforeUnmount(() => {
   .detalle__rejilla {
     grid-template-columns: 1fr;
   }
+
+  .detalle__lateral {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
 }
 
 @media (max-width: 52rem) {
@@ -465,6 +471,7 @@ onBeforeUnmount(() => {
     justify-self: start;
   }
 
+  .detalle__lateral,
   .detalle__panel dl {
     grid-template-columns: 1fr;
   }

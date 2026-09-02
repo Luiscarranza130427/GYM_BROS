@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AlimentosView from '@/modules/alimentacion/views/AlimentosView.vue'
-import { obtenerAlimentos } from '@/services/alimentacion.service'
+import { obtenerAlimentos } from '@/modules/alimentacion/services/alimentacion.service'
 
 const route = reactive({ query: {} })
 // El router real devuelve una promesa: `useListadoFiltrable` hace `await
@@ -18,7 +18,7 @@ vi.mock('vue-router', async (importOriginal) => {
   return { ...original, useRoute: () => route, useRouter: () => ({ replace, push }) }
 })
 
-vi.mock('@/services/alimentacion.service', () => ({
+vi.mock('@/modules/alimentacion/services/alimentacion.service', () => ({
   obtenerAlimentos: vi.fn(),
 }))
 

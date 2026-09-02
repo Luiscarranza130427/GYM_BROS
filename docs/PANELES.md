@@ -98,8 +98,8 @@ Tres secciones, no un listado único:
 ## Planes
 
 - Crear planes.
-- Ficha: **nombre, número de usuarios, días, beneficios**, botón «comprar
-  ahora» y botón de WhatsApp.
+- Ficha administrativa: **nombre, número de usuarios, días y beneficios**, con
+  acción principal para **editar** el plan y acceso al enlace de WhatsApp.
 
 > Corresponde exactamente a `planes.limite_usuarios`, `duracion_dias`,
 > `contenido` y `enlace_whatsapp`. La duración se cuenta en **días**, no en
@@ -122,17 +122,16 @@ Estado a fecha de recibir el esquema y este documento. Los módulos anteriores s
 construyeron con campos inventados y marcados como provisionales; ahora hay
 referencia y se puede medir cuánto se desvían.
 
-### Planes — todavía en pull request, se corrige antes de entrar
+### Planes — construido según el esquema
 
-| Frontend                         | Esquema                                                          |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `precio` único                   | `precio_original` **y** `precio_inicial`                         |
-| `duracionMeses` (1, 3, 6, 12)    | `duracion_dias` (entero libre)                                   |
-| `publico` (individual / empresa) | no existe → `limite_usuarios`                                    |
-| `caracteristicas` (array)        | `contenido` (TEXT)                                               |
-| `destacado`                      | no existe                                                        |
-| `suscriptores`                   | no está en `planes`; se cuenta desde `suscripciones`             |
-| —                                | falta `enlace_whatsapp` y los botones «comprar ahora» y WhatsApp |
+- Las fichas muestran `nombre`, `limite_usuarios`, `duracion_dias` y los
+  beneficios guardados como texto en `contenido`.
+- El formulario conserva por separado `precio_original` y `precio_inicial`; no
+  convierte la duración a meses ni inventa público, destacado o suscriptores.
+- «Editar plan» abre el formulario administrativo; «WhatsApp» permite comprobar
+  el `enlace_whatsapp` configurado incluso antes de activar la oferta.
+- El alcance actual incluye listado, creación y edición. No se añadieron borrado
+  ni checkout porque esos flujos no están definidos en este documento.
 
 ### Alimentación — construido según el esquema; el diseño pide más de lo que hay
 
@@ -195,5 +194,4 @@ sin fijarlo las cantidades de `comida_alimentos` no significan nada.
 
 ### Sin empezar
 
-Alimentación (cinco tablas), Notificaciones (tres secciones), Reportes de pagos,
-Perfil.
+Notificaciones (tres secciones), Reportes de pagos y Perfil.

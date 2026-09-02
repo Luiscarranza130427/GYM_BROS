@@ -3,8 +3,8 @@ import { reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AlimentoCreateView from '@/modules/alimentacion/views/AlimentoCreateView.vue'
-import { crearAlimento } from '@/services/alimentacion.service'
-import { HttpError } from '@/services/http-error'
+import { crearAlimento } from '@/modules/alimentacion/services/alimentacion.service'
+import { HttpError } from '@/core/api/http-error'
 
 const route = reactive({ params: {}, query: {} })
 // El router real devuelve una promesa y la vista encadena `.catch()` sobre ella.
@@ -18,7 +18,7 @@ vi.mock('vue-router', async (importOriginal) => {
   return { ...original, useRoute: () => route, useRouter: () => ({ push, replace }) }
 })
 
-vi.mock('@/services/alimentacion.service', () => ({
+vi.mock('@/modules/alimentacion/services/alimentacion.service', () => ({
   crearAlimento: vi.fn(),
 }))
 

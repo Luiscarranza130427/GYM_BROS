@@ -1,11 +1,14 @@
 <script setup>
+import { XCircle } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import AlimentoForm from '@/modules/alimentacion/components/AlimentoForm.vue'
-import { actualizarAlimento, obtenerAlimento } from '@/services/alimentacion.service'
+import {
+  actualizarAlimento,
+  obtenerAlimento,
+} from '@/modules/alimentacion/services/alimentacion.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -120,7 +123,7 @@ onBeforeUnmount(() => {
       class="alimento-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Alimento no encontrado' : 'No pudimos cargar el alimento' }}
       </h2>
@@ -158,7 +161,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.alimento-editor__estado > svg {
+.alimento-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

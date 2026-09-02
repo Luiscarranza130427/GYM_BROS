@@ -8,8 +8,8 @@ import {
   actualizarEjercicio,
   crearEjercicio,
   obtenerEjercicio,
-} from '@/services/ejercicios.service'
-import { HttpError } from '@/services/http-error'
+} from '@/modules/ejercicios/services/ejercicios.service'
+import { HttpError } from '@/core/api/http-error'
 
 const route = reactive({ params: { id: '1' }, query: {} })
 const push = vi.fn(() => Promise.resolve())
@@ -22,7 +22,7 @@ vi.mock('vue-router', async (importOriginal) => {
   return { ...original, useRoute: () => route, useRouter: () => ({ push, replace }) }
 })
 
-vi.mock('@/services/ejercicios.service', () => ({
+vi.mock('@/modules/ejercicios/services/ejercicios.service', () => ({
   crearEjercicio: vi.fn(),
   actualizarEjercicio: vi.fn(),
   obtenerEjercicio: vi.fn(),

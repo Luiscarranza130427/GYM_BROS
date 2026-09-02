@@ -1,147 +1,201 @@
 <script setup>
-import { useTemplateRef } from 'vue'
+import { Building2, Camera, User } from 'lucide-vue-next'
+import { computed, nextTick, ref, watch } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { useFormulario } from '@/composables/useFormulario'
-import { useVistaPreviaArchivo } from '@/composables/useVistaPreviaArchivo'
-import { esCorreoValido, esFechaPasada, esTelefonoValido } from '@/utils/validaciones'
+import { useVistaPreviaArchivo } from '@/shared/composables/useVistaPreviaArchivo'
 
 const props = defineProps({
-  valoresIniciales: { type: Object, default: () => ({}) },
+  usuarioInicial: { type: Object, default: () => ({}) },
+  // Alias usado por algunas vistas; se mantiene usuarioInicial por compatibilidad.
+  valoresIniciales: { type: Object, default: null },
   empresas: { type: Array, default: () => [] },
   enviando: { type: Boolean, default: false },
   erroresServidor: { type: Object, default: () => ({}) },
   modo: { type: String, default: 'create' },
 })
 
-const emit = defineEmits(['submit', 'cancel'])
+const emit = defineEmits({
+  submit: (payload) => Boolean(payload && typeof payload === 'object'),
+  cancel: null,
+})
 
-const MODELO_VACIO = {
-  nombre: '',
-  apellido: '',
-  correo: '',
-  telefono: '',
-  tipoDocumento: 'dni',
-  numeroDocumento: '',
-  fechaNacimiento: '',
-  direccion: '',
-  fotoPerfil: '',
-  empresaId: '',
-  rol: 'member',
-  estado: 'active',
+const formulario = ref(crearEstadoInicial())
+const erroresLocales = ref({})
+
+const empresaInput = ref(null)
+const rolInput = ref(null)
+const nombreInput = ref(null)
+const apellidoInput = ref(null)
+const apodoInput = ref(null)
+const correoInput = ref(null)
+const tipoDocumentoInput = ref(null)
+const numeroDocumentoInput = ref(null)
+const fechaNacimientoInput = ref(null)
+const estadoInput = ref(null)
+
+const refsCampos = {
+  empresaId: empresaInput,
+  rol: rolInput,
+  nombre: nombreInput,
+  apellido: apellidoInput,
+  apodo: apodoInput,
+  correo: correoInput,
+  tipoDocumento: tipoDocumentoInput,
+  numeroDocumento: numeroDocumentoInput,
+  fechaNacimiento: fechaNacimientoInput,
+  estado: estadoInput,
 }
 
-/** El DNI peruano son exactamente 8 dígitos. */
-const DNI_VALIDO = /^[0-9]{8}$/
-/** Pasaporte y otros documentos: alfanumérico con guiones, de 5 a 20. */
-const DOCUMENTO_VALIDO = /^[a-z0-9-]{5,20}$/i
+const foto = useVistaPreviaArchivo({ etiqueta: 'foto de perfil' })
 
-const nombreInput = useTemplateRef('nombreInput')
-const apellidoInput = useTemplateRef('apellidoInput')
-const correoInput = useTemplateRef('correoInput')
-const telefonoInput = useTemplateRef('telefonoInput')
-const documentoInput = useTemplateRef('documentoInput')
-const empresaInput = useTemplateRef('empresaInput')
-const rolInput = useTemplateRef('rolInput')
-const estadoInput = useTemplateRef('estadoInput')
+function crearEstadoInicial() {
+  const fuente = props.valoresIniciales ?? props.usuarioInicial ?? {}
+  const datosEmpresa = fuente.empresa
+  const idEmpresa =
+    typeof datosEmpresa === 'object' && datosEmpresa !== null
+      ? (datosEmpresa.id ?? '')
+      : (fuente.empresaId ?? fuente.company_id ?? '')
 
-const foto = useVistaPreviaArchivo({ etiqueta: 'foto' })
-
-/** Reglas propias de un usuario. Las de forma salen de `utils/validaciones`. */
-function validar(datos, errores) {
-  if (datos.nombre.trim().length < 2) {
-    errores.nombre = 'Introduce un nombre de al menos 2 caracteres.'
+  return {
+    empresaId: idEmpresa !== '' && idEmpresa !== null ? String(idEmpresa) : '',
+    rol: fuente.rol ?? fuente.role ?? 'member',
+    nombre: fuente.nombre ?? fuente.nombres ?? fuente.name ?? '',
+    apellido: fuente.apellido ?? fuente.last_name ?? '',
+    apodo: fuente.apodo ?? fuente.apodos ?? fuente.nickname ?? '',
+    correo: fuente.correo ?? fuente.email ?? '',
+    telefono: fuente.telefono ?? fuente.phone ?? '',
+    tipoDocumento: fuente.tipoDocumento ?? fuente.document_type ?? 'dni',
+    numeroDocumento: fuente.numeroDocumento ?? fuente.document_number ?? '',
+    fechaNacimiento: normalizarFecha(fuente.fechaNacimiento ?? fuente.birth_date),
+    direccion: fuente.direccion ?? fuente.address ?? '',
+    estado: normalizarEstado(fuente.estado ?? fuente.status),
   }
-  if (datos.apellido.trim().length < 2) {
-    errores.apellido = 'Introduce un apellido de al menos 2 caracteres.'
-  }
-  if (!esCorreoValido(datos.correo)) errores.correo = 'Introduce un correo válido.'
-  if (!esTelefonoValido(datos.telefono)) errores.telefono = 'Introduce un teléfono válido.'
+}
 
-  // A cada tipo de documento le toca su regla, y sólo la suya.
-  const documento = datos.numeroDocumento.trim()
-  if (!documento) {
-    errores.numeroDocumento = 'Introduce el número de documento.'
-  } else if (datos.tipoDocumento === 'dni') {
-    if (!DNI_VALIDO.test(documento)) {
-      errores.numeroDocumento = 'El DNI debe contener exactamente 8 dígitos.'
+function normalizarEstado(valor) {
+  if (valor === 'inactive' || valor === 'inactivo' || valor === 0 || valor === false) {
+    return 'inactive'
+  }
+  return 'active'
+}
+
+function normalizarFecha(valor) {
+  if (!valor) return ''
+  const cadena = String(valor)
+  return cadena.length >= 10 ? cadena.slice(0, 10) : ''
+}
+
+watch(
+  () => [props.usuarioInicial, props.valoresIniciales],
+  () => {
+    formulario.value = crearEstadoInicial()
+    erroresLocales.value = {}
+    const fuente = props.valoresIniciales ?? props.usuarioInicial ?? {}
+    foto.reiniciar(fuente.fotoPerfil || '')
+  },
+  { immediate: true },
+)
+
+const errores = computed(() => ({
+  ...props.erroresServidor,
+  ...erroresLocales.value,
+}))
+
+function errorDe(campo) {
+  const err = errores.value[campo]
+  if (!err) return ''
+  return Array.isArray(err) ? err[0] : String(err)
+}
+
+function limpiarError(campo) {
+  if (erroresLocales.value[campo]) {
+    const copia = { ...erroresLocales.value }
+    delete copia[campo]
+    erroresLocales.value = copia
+  }
+}
+
+function validar() {
+  const nuevos = {}
+  const f = formulario.value
+
+  if (!f.nombre.trim()) nuevos.nombre = ['Introduce un nombre.']
+  if (!f.apellido.trim()) nuevos.apellido = ['Introduce un apellido.']
+
+  const correo = f.correo.trim()
+  if (!correo) {
+    nuevos.correo = ['Introduce un correo válido.']
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    nuevos.correo = ['Introduce un correo válido.']
+  }
+
+  const numDoc = f.numeroDocumento.trim()
+  if (f.tipoDocumento === 'dni') {
+    if (numDoc && !/^\d{8}$/.test(numDoc)) {
+      nuevos.numeroDocumento = ['El DNI debe tener exactamente 8 dígitos.']
     }
-  } else if (!DOCUMENTO_VALIDO.test(documento)) {
-    errores.numeroDocumento = 'El documento debe contener entre 5 y 20 caracteres.'
+  } else if (numDoc && (numDoc.length < 5 || numDoc.length > 20)) {
+    nuevos.numeroDocumento = ['El documento debe tener entre 5 y 20 caracteres.']
   }
 
-  if (datos.fechaNacimiento && !esFechaPasada(datos.fechaNacimiento)) {
-    errores.fechaNacimiento = 'La fecha de nacimiento no puede ser futura.'
+  if (f.fechaNacimiento) {
+    const hoy = new Date().toISOString().slice(0, 10)
+    if (f.fechaNacimiento > hoy) {
+      nuevos.fechaNacimiento = ['La fecha de nacimiento no puede ser futura.']
+    }
   }
 
-  if (!datos.empresaId) errores.empresaId = 'Selecciona una empresa.'
-  if (!datos.rol) errores.rol = 'Selecciona un rol.'
-  if (!['active', 'inactive'].includes(datos.estado)) {
-    errores.estado = 'Selecciona un estado válido.'
-  }
+  if (!f.empresaId) nuevos.empresaId = ['Selecciona una empresa.']
+  if (!f.rol) nuevos.rol = ['Selecciona un rol.']
+
+  erroresLocales.value = nuevos
+  return Object.keys(nuevos).length === 0
 }
-
-const { formulario, erroresLocales, erroresRemotos, errorDe, limpiarError, validarParaEnviar } =
-  useFormulario({
-    modeloVacio: MODELO_VACIO,
-    valoresIniciales: () => props.valoresIniciales,
-    erroresServidor: () => props.erroresServidor,
-    referencias: {
-      nombre: nombreInput,
-      apellido: apellidoInput,
-      correo: correoInput,
-      telefono: telefonoInput,
-      numeroDocumento: documentoInput,
-      empresaId: empresaInput,
-      rol: rolInput,
-      estado: estadoInput,
-    },
-    validar,
-    alCargarValores: (datos, valores) => {
-      // La empresa llega anidada al editar y plana al crear.
-      datos.empresaId = valores.empresa?.id ?? valores.empresaId ?? ''
-      foto.reiniciar(valores.fotoPerfil)
-    },
-  })
 
 async function enviar() {
-  if (props.enviando) return
-  if (!(await validarParaEnviar())) return
+  if (!validar()) {
+    await nextTick()
+    enfocarPrimerError()
+    return
+  }
 
-  emit('submit', {
-    nombre: formulario.nombre.trim(),
-    apellido: formulario.apellido.trim(),
-    correo: formulario.correo.trim().toLowerCase(),
-    telefono: formulario.telefono.trim(),
-    tipoDocumento: formulario.tipoDocumento,
-    numeroDocumento: formulario.numeroDocumento.trim(),
-    fechaNacimiento: formulario.fechaNacimiento,
-    direccion: formulario.direccion.trim(),
-    fotoPerfil: formulario.fotoPerfil,
-    empresaId: Number(formulario.empresaId),
-    rol: formulario.rol,
-    estado: formulario.estado,
-  })
+  const f = formulario.value
+  const payload = {
+    empresaId: isNaN(Number(f.empresaId)) ? f.empresaId : Number(f.empresaId),
+    rol: f.rol,
+    nombre: f.nombre.trim(),
+    apellido: f.apellido.trim(),
+    apodo: f.apodo.trim(),
+    correo: f.correo.trim(),
+    telefono: f.telefono.trim(),
+    tipoDocumento: f.tipoDocumento,
+    numeroDocumento: f.numeroDocumento.trim(),
+    fechaNacimiento: f.fechaNacimiento || null,
+    direccion: f.direccion.trim(),
+    estado: f.estado,
+  }
+
+  emit('submit', payload)
+}
+
+function enfocarPrimerError() {
+  const primerCampoConError = Object.keys(errores.value)[0]
+  if (primerCampoConError && refsCampos[primerCampoConError]?.value) {
+    refsCampos[primerCampoConError].value.focus()
+  }
 }
 
 function seleccionarFoto(evento) {
-  foto.seleccionar(evento, formulario.fotoPerfil)
+  foto.seleccionar(evento)
 }
 </script>
 
 <template>
-  <form class="formulario" autocomplete="off" novalidate @submit.prevent="enviar">
-    <p class="visually-hidden" aria-live="polite">
-      {{
-        Object.keys(erroresLocales).length || Object.keys(erroresRemotos).length
-          ? 'Revisa los campos marcados en el formulario.'
-          : ''
-      }}
-    </p>
-
+  <form class="formulario" novalidate @submit.prevent="enviar">
+    <!-- Datos personales -->
     <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-personales">
       <header>
-        <span aria-hidden="true"><IconoSvg nombre="person-vcard" /></span>
+        <span aria-hidden="true"><User :size="20" /></span>
         <div>
           <h2 id="titulo-personales">Datos personales</h2>
           <p>Información de identificación y contacto del usuario.</p>
@@ -158,7 +212,8 @@ function seleccionarFoto(evento) {
             class="form-control"
             :class="{ 'is-invalid': errorDe('nombre') }"
             type="text"
-            maxlength="60"
+            name="nombre"
+            maxlength="80"
             autocomplete="given-name"
             required
             :aria-invalid="Boolean(errorDe('nombre'))"
@@ -179,7 +234,8 @@ function seleccionarFoto(evento) {
             class="form-control"
             :class="{ 'is-invalid': errorDe('apellido') }"
             type="text"
-            maxlength="60"
+            name="apellido"
+            maxlength="80"
             autocomplete="family-name"
             required
             :aria-invalid="Boolean(errorDe('apellido'))"
@@ -192,6 +248,24 @@ function seleccionarFoto(evento) {
         </div>
 
         <div class="campo">
+          <label class="form-label" for="usuario-apodo">Apodo</label>
+          <input
+            id="usuario-apodo"
+            ref="apodoInput"
+            v-model="formulario.apodo"
+            class="form-control"
+            type="text"
+            name="apodo"
+            maxlength="80"
+            autocomplete="nickname"
+            @input="limpiarError('apodo')"
+          />
+          <p v-if="errorDe('apodo')" id="error-apodo" class="campo__error">
+            {{ errorDe('apodo') }}
+          </p>
+        </div>
+
+        <div class="campo">
           <label class="form-label" for="usuario-correo">Correo *</label>
           <input
             id="usuario-correo"
@@ -200,7 +274,9 @@ function seleccionarFoto(evento) {
             class="form-control"
             :class="{ 'is-invalid': errorDe('correo') }"
             type="email"
-            autocomplete="email"
+            name="correo"
+            autocomplete="off"
+            spellcheck="false"
             required
             :aria-invalid="Boolean(errorDe('correo'))"
             :aria-describedby="errorDe('correo') ? 'error-correo' : null"
@@ -212,23 +288,15 @@ function seleccionarFoto(evento) {
         </div>
 
         <div class="campo">
-          <label class="form-label" for="usuario-telefono">Teléfono *</label>
+          <label class="form-label" for="usuario-telefono">Teléfono</label>
           <input
             id="usuario-telefono"
-            ref="telefonoInput"
             v-model="formulario.telefono"
             class="form-control"
-            :class="{ 'is-invalid': errorDe('telefono') }"
             type="tel"
+            name="telefono"
             autocomplete="tel"
-            required
-            :aria-invalid="Boolean(errorDe('telefono'))"
-            :aria-describedby="errorDe('telefono') ? 'error-telefono' : null"
-            @input="limpiarError('telefono')"
           />
-          <p v-if="errorDe('telefono')" id="error-telefono" class="campo__error">
-            {{ errorDe('telefono') }}
-          </p>
         </div>
 
         <div class="campo campo--documento">
@@ -236,9 +304,11 @@ function seleccionarFoto(evento) {
             <label class="form-label" for="usuario-tipo-documento">Tipo de documento *</label>
             <select
               id="usuario-tipo-documento"
+              ref="tipoDocumentoInput"
               v-model="formulario.tipoDocumento"
               class="form-select"
-              @change="limpiarError('numeroDocumento')"
+              name="tipoDocumento"
+              @change="limpiarError('tipoDocumento')"
             >
               <option value="dni">DNI</option>
               <option value="passport">Pasaporte</option>
@@ -249,14 +319,13 @@ function seleccionarFoto(evento) {
             <label class="form-label" for="usuario-documento">Número de documento *</label>
             <input
               id="usuario-documento"
-              ref="documentoInput"
+              ref="numeroDocumentoInput"
               v-model="formulario.numeroDocumento"
               class="form-control"
               :class="{ 'is-invalid': errorDe('numeroDocumento') }"
               type="text"
+              name="numeroDocumento"
               maxlength="20"
-              required
-              :inputmode="formulario.tipoDocumento === 'dni' ? 'numeric' : 'text'"
               :aria-invalid="Boolean(errorDe('numeroDocumento'))"
               :aria-describedby="errorDe('numeroDocumento') ? 'error-documento' : null"
               @input="limpiarError('numeroDocumento')"
@@ -271,11 +340,12 @@ function seleccionarFoto(evento) {
           <label class="form-label" for="usuario-nacimiento">Fecha de nacimiento</label>
           <input
             id="usuario-nacimiento"
+            ref="fechaNacimientoInput"
             v-model="formulario.fechaNacimiento"
             class="form-control"
             :class="{ 'is-invalid': errorDe('fechaNacimiento') }"
             type="date"
-            :max="new Date().toISOString().slice(0, 10)"
+            name="fechaNacimiento"
             :aria-invalid="Boolean(errorDe('fechaNacimiento'))"
             :aria-describedby="errorDe('fechaNacimiento') ? 'error-nacimiento' : null"
             @input="limpiarError('fechaNacimiento')"
@@ -298,10 +368,11 @@ function seleccionarFoto(evento) {
       </div>
     </section>
 
+    <!-- Secciones secundarias niveladas: Organización + Foto de perfil -->
     <div class="formulario__secundarias">
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-organizacion">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="buildings" /></span>
+          <span aria-hidden="true"><Building2 :size="20" /></span>
           <div>
             <h2 id="titulo-organizacion">Organización y acceso</h2>
             <p>Empresa, rol administrativo y estado operativo.</p>
@@ -392,7 +463,7 @@ function seleccionarFoto(evento) {
 
       <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-foto">
         <header>
-          <span aria-hidden="true"><IconoSvg nombre="camera" /></span>
+          <span aria-hidden="true"><Camera :size="20" /></span>
           <div>
             <h2 id="titulo-foto">Foto de perfil</h2>
             <p>Vista previa local. La imagen todavía no se guarda: falta el endpoint de subida.</p>
@@ -401,34 +472,36 @@ function seleccionarFoto(evento) {
         <div class="foto">
           <div
             class="foto__vista"
-            :style="{ backgroundImage: foto.url ? `url(${foto.url})` : null }"
+            :style="{ backgroundImage: foto.url.value ? `url(${foto.url.value})` : null }"
           >
-            <IconoSvg nombre="person" />
+            <User :size="24" />
           </div>
           <div class="campo">
             <label class="form-label" for="usuario-foto">Archivo de imagen</label>
             <input
               id="usuario-foto"
               class="form-control"
-              :class="{ 'is-invalid': foto.error }"
+              :class="{ 'is-invalid': foto.error.value }"
               type="file"
               accept="image/*"
-              :aria-invalid="Boolean(foto.error)"
-              :aria-describedby="foto.error ? 'error-foto' : 'ayuda-foto'"
+              :aria-invalid="Boolean(foto.error.value)"
+              :aria-describedby="foto.error.value ? 'error-foto' : 'ayuda-foto'"
               @change="seleccionarFoto"
             />
             <p id="ayuda-foto" class="campo__ayuda">
               PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
               <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
             </p>
-            <p v-if="foto.error" id="error-foto" class="campo__error">{{ foto.error }}</p>
+            <p v-if="foto.error.value" id="error-foto" class="campo__error">
+              {{ foto.error.value }}
+            </p>
           </div>
         </div>
       </section>
     </div>
 
     <div class="formulario__acciones">
-      <button type="button" class="btn btn-ghost" :disabled="enviando" @click="emit('cancel')">
+      <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" :disabled="enviando">
@@ -442,10 +515,10 @@ function seleccionarFoto(evento) {
 <style scoped>
 .formulario {
   display: grid;
-  gap: var(--gb-gutter);
+  gap: var(--gb-gutter, 1.25rem);
 }
 .formulario__seccion {
-  padding: 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--gb-radius-xl);
 }
 .formulario__seccion > header {
@@ -453,17 +526,20 @@ function seleccionarFoto(evento) {
   align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
+  min-height: 3.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--gb-border);
 }
 .formulario__seccion > header > span {
-  flex: none;
   display: grid;
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  background: var(--gb-surface-high);
+  background-color: var(--gb-surface-high);
   border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-lg);
   color: var(--gb-red-text);
+  flex-shrink: 0;
 }
 .formulario__seccion h2,
 .formulario__seccion p {
@@ -485,9 +561,14 @@ function seleccionarFoto(evento) {
 }
 .formulario__secundarias {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.65fr);
-  align-items: start;
-  gap: var(--gb-gutter);
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.75fr);
+  align-items: stretch;
+  gap: var(--gb-gutter, 1.25rem);
+}
+.formulario__secundarias .formulario__seccion {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .campo {
   min-width: 0;
@@ -552,19 +633,23 @@ function seleccionarFoto(evento) {
   font-size: var(--gb-tipo-xxs);
 }
 .foto {
+  flex: 1;
   display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
   gap: 1rem;
+  align-items: start;
 }
 .foto__vista {
   display: grid;
   place-items: center;
-  width: 6rem;
-  height: 6rem;
+  width: 5rem;
+  height: 5rem;
   background: var(--gb-surface-lowest) center/cover;
   border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius-pill);
+  border-radius: var(--gb-radius-lg);
   color: var(--gb-text-soft);
-  font-size: 2rem;
+  font-size: 1.5rem;
+  flex-shrink: 0;
 }
 .formulario__acciones {
   position: sticky;
@@ -589,7 +674,7 @@ function seleccionarFoto(evento) {
   pointer-events: none;
 }
 .formulario__acciones .btn {
-  min-height: 2.75rem;
+  min-height: 2.6rem;
   padding-inline: 1.25rem;
 }
 @media (max-width: 78rem) {
@@ -613,6 +698,9 @@ function seleccionarFoto(evento) {
 }
 @media (max-width: 36rem) {
   .campo--documento {
+    grid-template-columns: 1fr;
+  }
+  .foto {
     grid-template-columns: 1fr;
   }
 }

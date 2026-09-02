@@ -3,7 +3,10 @@ import { reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import PlanesView from '@/modules/alimentacion/views/PlanesView.vue'
-import { obtenerEmpresasConPlanes, obtenerPlanes } from '@/services/alimentacion.service'
+import {
+  obtenerEmpresasConPlanes,
+  obtenerPlanes,
+} from '@/modules/alimentacion/services/alimentacion.service'
 
 const route = reactive({ query: {} })
 const replace = vi.fn(() => Promise.resolve())
@@ -19,7 +22,7 @@ vi.mock('vue-router', async (importOriginal) => {
   }
 })
 
-vi.mock('@/services/alimentacion.service', () => ({
+vi.mock('@/modules/alimentacion/services/alimentacion.service', () => ({
   obtenerPlanes: vi.fn(),
   obtenerEmpresasConPlanes: vi.fn(),
 }))

@@ -1,7 +1,7 @@
 <script setup>
+import { Search, XCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import { TIPOS_ALIMENTO } from '@/modules/alimentacion/catalogos'
 
 const props = defineProps({
@@ -19,7 +19,7 @@ const filtrosActivos = computed(() => props.busqueda.trim() || props.tipo !== 'a
   <section class="filtros gb-tarjeta" aria-label="Filtros del catálogo" :aria-busy="cargando">
     <div class="filtros__busqueda">
       <label class="visually-hidden" for="buscar-alimento">Buscar alimento</label>
-      <IconoSvg nombre="search" />
+      <Search class="filtros__icono" :size="16" aria-hidden="true" />
       <input
         id="buscar-alimento"
         :value="busqueda"
@@ -53,7 +53,7 @@ const filtrosActivos = computed(() => props.busqueda.trim() || props.tipo !== 'a
       class="btn btn-ghost filtros__limpiar"
       @click="$emit('limpiar')"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="16" aria-hidden="true" />
       Limpiar filtros
     </button>
   </section>
@@ -73,13 +73,15 @@ const filtrosActivos = computed(() => props.busqueda.trim() || props.tipo !== 'a
   position: relative;
 }
 
-.filtros__busqueda > svg {
+.filtros__busqueda :deep(svg),
+.filtros__icono {
   position: absolute;
   top: 50%;
   left: 0.875rem;
   z-index: 1;
   color: var(--gb-text-muted);
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .filtros__busqueda .form-control {

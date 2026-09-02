@@ -1,11 +1,14 @@
 <script setup>
+import { XCircle } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import EjercicioForm from '@/modules/ejercicios/components/EjercicioForm.vue'
-import { actualizarEjercicio, obtenerEjercicio } from '@/services/ejercicios.service'
+import {
+  actualizarEjercicio,
+  obtenerEjercicio,
+} from '@/modules/ejercicios/services/ejercicios.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -117,7 +120,7 @@ onBeforeUnmount(() => {
       class="ejercicio-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="x-circle" />
+      <XCircle :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Ejercicio no encontrado' : 'No pudimos cargar el ejercicio' }}
       </h2>
@@ -155,7 +158,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.ejercicio-editor__estado > svg {
+.ejercicio-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

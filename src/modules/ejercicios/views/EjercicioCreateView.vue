@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PageHeader from '@/components/base/PageHeader.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import EjercicioForm from '@/modules/ejercicios/components/EjercicioForm.vue'
-import { crearEjercicio } from '@/services/ejercicios.service'
+import { crearEjercicio } from '@/modules/ejercicios/services/ejercicios.service'
 
 const router = useRouter()
 const enviando = ref(false)

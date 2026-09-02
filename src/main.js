@@ -10,9 +10,9 @@ import '@/assets/styles/bootstrap.scss'
 import '@/assets/styles/main.css'
 
 import App from '@/App.vue'
-import router from '@/router'
-import { registrarManejadorNoAutorizado, registrarProveedorDeToken } from '@/services/api'
-import { useAuthStore } from '@/stores/auth.store'
+import router from '@/app/router'
+import { registrarManejadorNoAutorizado, registrarProveedorDeToken } from '@/core/api/api'
+import { useAuthStore } from '@/core/auth/auth.store'
 
 const app = createApp(App)
 

@@ -1,13 +1,13 @@
 <script setup>
+import { Building2, CheckCircle2, CloudOff, Plus, RotateCw } from 'lucide-vue-next'
 import { ref } from 'vue'
 
-import ConfirmDialog from '@/components/base/ConfirmDialog.vue'
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
-import { useListadoFiltrable } from '@/composables/useListadoFiltrable'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import PageHeader from '@/shared/components/PageHeader.vue'
+import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
 import EmpresaFilters from '@/modules/empresas/components/EmpresaFilters.vue'
 import EmpresaTable from '@/modules/empresas/components/EmpresaTable.vue'
-import { desactivarEmpresa, obtenerEmpresas } from '@/services/empresas.service'
+import { desactivarEmpresa, obtenerEmpresas } from '@/modules/empresas/services/empresas.service'
 
 const {
   estadoVista,
@@ -73,7 +73,7 @@ async function confirmarDesactivacion() {
     >
       <template #acciones>
         <RouterLink class="btn btn-primary empresas__nueva" :to="{ name: 'empresa-nueva' }">
-          <IconoSvg nombre="plus-lg" />
+          <Plus :size="16" aria-hidden="true" />
           Nueva empresa
         </RouterLink>
       </template>
@@ -86,7 +86,7 @@ async function confirmarDesactivacion() {
       role="status"
       tabindex="-1"
     >
-      <IconoSvg nombre="check-circle-fill" />
+      <CheckCircle2 :size="18" aria-hidden="true" />
       {{ mensajeExito }}
     </p>
 
@@ -112,17 +112,17 @@ async function confirmarDesactivacion() {
     />
 
     <section v-else-if="estadoVista === 'error'" class="empresas__estado gb-tarjeta" role="alert">
-      <IconoSvg nombre="cloud-slash" />
+      <CloudOff :size="48" aria-hidden="true" />
       <h2>No pudimos cargar las empresas</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarListado">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </section>
 
     <section v-else class="empresas__estado gb-tarjeta" role="status">
-      <IconoSvg nombre="buildings" />
+      <Building2 :size="48" aria-hidden="true" />
       <h2>{{ hayFiltros ? 'No encontramos resultados' : 'Aún no hay empresas registradas' }}</h2>
       <p v-if="hayFiltros">Prueba con otra búsqueda o limpia los filtros seleccionados.</p>
       <p v-else>Registra tu primera empresa para comenzar.</p>
@@ -130,7 +130,7 @@ async function confirmarDesactivacion() {
         Limpiar filtros
       </button>
       <RouterLink v-else class="btn btn-primary" :to="{ name: 'empresa-nueva' }">
-        <IconoSvg nombre="plus-lg" />
+        <Plus :size="16" aria-hidden="true" />
         Nueva empresa
       </RouterLink>
     </section>
@@ -189,7 +189,7 @@ async function confirmarDesactivacion() {
   text-align: center;
 }
 
-.empresas__estado > i {
+.empresas__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }

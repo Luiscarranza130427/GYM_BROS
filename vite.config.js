@@ -27,7 +27,7 @@ function descartarMocksHuerfanos() {
       // inverso y la comprobación fallaría en silencio.
       const esMock = (salida) =>
         salida.type === 'chunk' &&
-        salida.facadeModuleId?.split(sep).join('/').includes('/src/mocks/')
+        Boolean(salida.facadeModuleId?.split(sep).join('/').includes('/mocks/'))
 
       const candidatos = Object.entries(bundle).filter(([, salida]) => esMock(salida))
       if (!candidatos.length) return

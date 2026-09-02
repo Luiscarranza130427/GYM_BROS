@@ -1,16 +1,40 @@
 <script setup>
+import {
+  Activity,
+  Building2,
+  Dumbbell,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  UserCheck,
+  Users,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import { formatearNumero } from '@/utils/formato'
+import { formatearNumero } from '@/shared/utils/formato'
 
 const props = defineProps({
   metrica: { type: Object, required: true },
 })
 
+const MAPA_ICONOS = {
+  'bi-buildings-fill': Building2,
+  'bi-people-fill': Users,
+  'bi-person-arms-up': Dumbbell,
+  'bi-clipboard2-pulse-fill': Activity,
+  buildings: Building2,
+  people: Users,
+  dumbbell: Dumbbell,
+  activity: Activity,
+  users: Users,
+  user: UserCheck,
+}
+
+const iconoComponente = computed(() => MAPA_ICONOS[props.metrica.icono] || Activity)
+
 const iconoTendencia = computed(() => {
-  if (props.metrica.tendencia.tono === 'neutro') return 'bi-dash'
-  return props.metrica.tendencia.tono === 'negativo' ? 'bi-graph-down-arrow' : 'bi-graph-up-arrow'
+  if (props.metrica.tendencia.tono === 'neutro') return Minus
+  return props.metrica.tendencia.tono === 'negativo' ? TrendingDown : TrendingUp
 })
 
 const valorFormateado = computed(() => formatearNumero(props.metrica.valor))
@@ -26,13 +50,13 @@ const tendenciaFormateada = computed(() => {
   <article class="metrica gb-tarjeta" :class="`metrica--${metrica.tendencia.tono}`">
     <div class="metrica__cabecera">
       <span>{{ metrica.etiqueta }}</span>
-      <IconoSvg :nombre="metrica.icono" />
+      <component :is="iconoComponente" :size="20" aria-hidden="true" />
     </div>
 
     <strong>{{ valorFormateado }}</strong>
 
     <p class="metrica__tendencia" :class="`metrica__tendencia--${metrica.tendencia.tono}`">
-      <IconoSvg :nombre="iconoTendencia" />
+      <component :is="iconoTendencia" :size="16" aria-hidden="true" />
       <b>{{ tendenciaFormateada }}</b>
       <span>{{ metrica.tendencia.detalle }}</span>
     </p>
@@ -85,9 +109,8 @@ const tendenciaFormateada = computed(() => {
   text-transform: uppercase;
 }
 
-.metrica__cabecera i {
+.metrica__cabecera :deep(svg) {
   color: var(--gb-text-soft);
-  font-size: 1.125rem;
 }
 
 .metrica > strong {

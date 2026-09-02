@@ -64,8 +64,17 @@
  * componente concreto viven en su propio <style scoped>.
  */
 
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
-  min-height: 100vh;
   background-color: var(--gb-bg);
   color: var(--gb-text);
   font-family: var(--gb-fuente-texto);
@@ -100,10 +109,6 @@ a {
 ::-webkit-scrollbar-thumb {
   background-color: var(--gb-border);
   border-radius: var(--gb-radius-pill);
-}
-
-#app {
-  min-height: 100vh;
 }
 
 /* Los títulos son la "voz de mando" del sistema: Montserrat y trazo pesado. */

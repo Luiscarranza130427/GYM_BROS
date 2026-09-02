@@ -1,15 +1,15 @@
 <script setup>
+import { AlertTriangle, History, RotateCw } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
 import DashboardBanner from '@/modules/dashboard/components/DashboardBanner.vue'
 import DashboardSkeleton from '@/modules/dashboard/components/DashboardSkeleton.vue'
 import MetricCard from '@/modules/dashboard/components/MetricCard.vue'
 import PopularExercises from '@/modules/dashboard/components/PopularExercises.vue'
 import ProgressChart from '@/modules/dashboard/components/ProgressChart.vue'
 import RecentActivity from '@/modules/dashboard/components/RecentActivity.vue'
-import { obtenerDashboard } from '@/services/dashboard.service'
-import { formatearTiempoRelativo } from '@/utils/formato'
+import { obtenerDashboard } from '@/modules/dashboard/services/dashboard.service'
+import { formatearTiempoRelativo } from '@/shared/utils/formato'
 
 const estado = ref('idle')
 const datos = ref(null)
@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
         <span>Supervisa la operación de Gym Bros desde un único lugar.</span>
       </div>
       <p v-if="estado === 'success'" class="dashboard__actualizacion">
-        <IconoSvg nombre="clock-history" />
+        <History :size="16" aria-hidden="true" />
         Última actualización: {{ etiquetaActualizacion.toLowerCase() }}
       </p>
     </header>
@@ -80,12 +80,12 @@ onBeforeUnmount(() => {
       aria-live="assertive"
     >
       <span class="dashboard__error-icono" aria-hidden="true">
-        <IconoSvg nombre="exclamation-triangle" />
+        <AlertTriangle :size="24" aria-hidden="true" />
       </span>
       <h2>No pudimos cargar el dashboard</h2>
       <p>{{ mensajeError }}</p>
       <button type="button" class="btn btn-primary" @click="cargarDashboard">
-        <IconoSvg nombre="arrow-clockwise" />
+        <RotateCw :size="16" aria-hidden="true" />
         Reintentar
       </button>
     </section>
@@ -187,7 +187,7 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.dashboard__actualizacion i {
+.dashboard__actualizacion :deep(svg) {
   color: var(--gb-text-soft);
 }
 

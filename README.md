@@ -83,25 +83,28 @@ Todo lo que cuelga de `/` requiere sesión: `requiresAuth` va en el registro
 padre y Vue Router lo hereda, de modo que una ruta nueva no puede quedarse
 pública por olvido.
 
-| Ruta                                                    | Acceso                            |
-| ------------------------------------------------------- | --------------------------------- |
-| `/login`                                                | Sólo sin sesión                   |
-| `/dashboard`                                            | Requiere sesión                   |
-| `/empresas`                                             | Requiere sesión                   |
-| `/empresas/nueva`                                       | Requiere sesión                   |
-| `/empresas/:id`                                         | Requiere sesión                   |
-| `/empresas/:id/editar`                                  | Requiere sesión                   |
-| `/usuarios`                                             | Requiere sesión                   |
-| `/usuarios/nuevo`                                       | Requiere sesión                   |
-| `/usuarios/:id`                                         | Requiere sesión                   |
-| `/usuarios/:id/editar`                                  | Requiere sesión                   |
-| `/ejercicios`                                           | Requiere sesión                   |
-| `/ejercicios/nuevo`                                     | Requiere sesión                   |
-| `/ejercicios/:id`                                       | Requiere sesión                   |
-| `/ejercicios/:id/editar`                                | Requiere sesión                   |
-| `/perfil`                                               | Requiere sesión · en construcción |
-| `/alimentacion`, `/notificaciones`, `/planes`, `/pagos` | Requiere sesión · en construcción |
-| `/404` y cualquier otra                                 | Pública                           |
+| Ruta                                   | Acceso                            |
+| -------------------------------------- | --------------------------------- |
+| `/login`                               | Sólo sin sesión                   |
+| `/dashboard`                           | Requiere sesión                   |
+| `/empresas`                            | Requiere sesión                   |
+| `/empresas/nueva`                      | Requiere sesión                   |
+| `/empresas/:id`                        | Requiere sesión                   |
+| `/empresas/:id/editar`                 | Requiere sesión                   |
+| `/usuarios`                            | Requiere sesión                   |
+| `/usuarios/nuevo`                      | Requiere sesión                   |
+| `/usuarios/:id`                        | Requiere sesión                   |
+| `/usuarios/:id/editar`                 | Requiere sesión                   |
+| `/ejercicios`                          | Requiere sesión                   |
+| `/ejercicios/nuevo`                    | Requiere sesión                   |
+| `/ejercicios/:id`                      | Requiere sesión                   |
+| `/ejercicios/:id/editar`               | Requiere sesión                   |
+| `/alimentacion`                        | Requiere sesión                   |
+| `/planes`                              | Requiere sesión                   |
+| `/planes/nuevo`                        | Requiere sesión                   |
+| `/planes/:id/editar`                   | Requiere sesión                   |
+| `/perfil`, `/notificaciones`, `/pagos` | Requiere sesión · en construcción |
+| `/404` y cualquier otra                | Pública                           |
 
 ## Documentación
 
@@ -123,9 +126,11 @@ pública por olvido.
 | 4    | Módulo de Empresas (CRUD, filtros, paginación)  | Completada |
 | 5    | Módulo de Usuarios (CRUD, filtros, historial)   | Completada |
 | 6    | Módulo de Ejercicios (CRUD, catálogo y filtros) | Completada |
+| 7    | Módulo de Alimentación                          | Completada |
+| 8    | Módulo de Planes comerciales                    | Completada |
 
-Los módulos restantes —alimentación, notificaciones, planes, pagos y perfil— usan la pantalla compartida «En construcción» y pertenecen a fases
-posteriores.
+Los módulos restantes —notificaciones, reportes de pagos y perfil— usan la
+pantalla compartida «En construcción» y pertenecen a fases posteriores.
 
 Nada de esto habla todavía con Laravel: el backend está en desarrollo y la
 aplicación funciona íntegramente contra `src/mocks/`.

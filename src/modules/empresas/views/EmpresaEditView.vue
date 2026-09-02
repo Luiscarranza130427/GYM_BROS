@@ -1,14 +1,16 @@
 <script setup>
+import { Building2 } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import IconoSvg from '@/components/base/IconoSvg.vue'
-import PageHeader from '@/components/base/PageHeader.vue'
+import { useTenantStore } from '@/core/tenant/tenant.store'
+import PageHeader from '@/shared/components/PageHeader.vue'
 import EmpresaForm from '@/modules/empresas/components/EmpresaForm.vue'
-import { actualizarEmpresa, obtenerEmpresa } from '@/services/empresas.service'
+import { actualizarEmpresa, obtenerEmpresa } from '@/modules/empresas/services/empresas.service'
 
 const route = useRoute()
 const router = useRouter()
+const tenant = useTenantStore()
 const estado = ref('loading')
 const empresa = ref(null)
 const enviando = ref(false)
@@ -43,6 +45,7 @@ async function guardar(datos) {
 
   try {
     const actualizada = await actualizarEmpresa(route.params.id, datos)
+    if (Number(actualizada.id) === Number(tenant.tenantId)) tenant.fijarTenant(actualizada)
     await router.push({
       name: 'empresa-detalle',
       params: { id: actualizada.id },
@@ -109,7 +112,7 @@ onBeforeUnmount(() => {
       class="empresa-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
-      <IconoSvg nombre="building-x" />
+      <Building2 :size="48" aria-hidden="true" />
       <h2>
         {{ estado === 'not-found' ? 'Empresa no encontrada' : 'No pudimos cargar la empresa' }}
       </h2>
@@ -147,7 +150,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.empresa-editor__estado > i {
+.empresa-editor__estado > :deep(svg) {
   color: var(--gb-text-soft);
   font-size: 2rem;
 }
