@@ -5,7 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { SECCIONES_DE_USUARIO } from '@/app/navigation/navegacion'
 import { useAuthStore } from '@/core/auth/auth.store'
-import api from '@/core/api/api'
+import { obtenerUsuario } from '@/modules/usuarios/services/usuarios.service'
 import { inicialesDe } from '@/shared/utils/iniciales'
 import { resolverUrlStorage } from '@/shared/utils/storage'
 
@@ -22,9 +22,9 @@ const fotoRemota = ref('')
 
 const rol = computed(() => auth.usuario?.rol || 'Administrador')
 const iniciales = computed(() => inicialesDe(auth.usuario?.nombre))
-const fotoUrl = computed(() =>
-  resolverUrlStorage(fotoRemota.value || auth.usuario?.fotoPerfil || auth.usuario?.foto || ''),
-)
+// No usamos la foto persistida en la sesión: puede estar obsoleta y producir
+// un destello antes de que el API confirme el valor actual.
+const fotoUrl = computed(() => resolverUrlStorage(fotoRemota.value))
 
 watch(fotoUrl, () => {
   imagenFallida.value = false
@@ -35,14 +35,10 @@ onMounted(async () => {
   if (!idSesion) return
 
   try {
-    const { data } = await api.get('/usuarios')
-    const usuarios = Array.isArray(data) ? data : (data?.data ?? [])
-    const usuarioActual = usuarios.find((usuario) => Number(usuario.id) === Number(idSesion))
-    if (usuarioActual?.foto_perfil) {
-      fotoRemota.value = usuarioActual.foto_perfil
-    }
+    const usuarioActual = await obtenerUsuario(idSesion)
+    fotoRemota.value = usuarioActual.fotoPerfil || ''
   } catch {
-    // El menú conserva la foto de sesión si el API no está disponible.
+    // Sin confirmación actual del API se mantienen las iniciales.
   }
 })
 

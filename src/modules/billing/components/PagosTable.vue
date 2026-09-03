@@ -34,11 +34,12 @@ defineProps({
 const emit = defineEmits(['verDetalle', 'cambiarPagina'])
 
 const formatearMonto = (monto) => {
+  if (monto == null) return '—'
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency: 'PEN',
     minimumFractionDigits: 2,
-  }).format(monto || 0)
+  }).format(monto)
 }
 
 const formatearFecha = (fechaStr) => {
@@ -104,7 +105,7 @@ const formatearFecha = (fechaStr) => {
             <td class="pagos-tabla__codigo">
               <span class="badge-codigo">
                 <FileText :size="13" aria-hidden="true" />
-                {{ pago.codigo }}
+                {{ pago.codigo || '—' }}
               </span>
             </td>
             <td class="pagos-tabla__fecha">{{ formatearFecha(pago.fecha) }}</td>
@@ -119,17 +120,26 @@ const formatearFecha = (fechaStr) => {
             <td class="pagos-tabla__plan">
               <span class="plan-nombre">{{ pago.plan.nombre }}</span>
               <span class="plan-meses"
-                >({{ pago.cantidadMeses }} {{ pago.cantidadMeses === 1 ? 'mes' : 'meses' }})</span
+                >({{
+                  pago.cantidadMeses == null
+                    ? 'Sin información'
+                    : `${pago.cantidadMeses} ${pago.cantidadMeses === 1 ? 'mes' : 'meses'}`
+                }})</span
               >
             </td>
             <td class="pagos-tabla__monto text-end font-monospace">
               {{ formatearMonto(pago.precio) }}
             </td>
-            <td class="pagos-tabla__metodo">{{ pago.metodoPago }}</td>
+            <td class="pagos-tabla__metodo">{{ pago.metodoPago || '—' }}</td>
             <td class="text-center">
-              <span class="badge-estado badge-estado--completado">
+              <span
+                class="badge-estado"
+                :class="{
+                  'badge-estado--completado': ['completado', 'aprobado'].includes(pago.estado),
+                }"
+              >
                 <CheckCircle2 :size="12" aria-hidden="true" />
-                Pagado
+                {{ pago.estado || 'Sin información' }}
               </span>
             </td>
             <td class="text-end">

@@ -16,6 +16,27 @@ async function completarFormulario(wrapper) {
 }
 
 describe('UsuarioForm', () => {
+  it('ofrece la sección de foto de perfil y permite manipularla', async () => {
+    const wrapper = mount(UsuarioForm, { props: { empresas: EMPRESAS } })
+
+    expect(wrapper.find('input[type="file"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Foto de perfil')
+    expect(wrapper.find('.foto__btn-quitar').exists()).toBe(false)
+
+    const wrapperConFoto = mount(UsuarioForm, {
+      props: {
+        empresas: EMPRESAS,
+        valoresIniciales: { fotoPerfil: 'https://example.com/avatar.jpg' },
+      },
+    })
+    expect(wrapperConFoto.find('.foto__btn-quitar').exists()).toBe(true)
+    expect(wrapperConFoto.find('img').attributes('src')).toBe('https://example.com/avatar.jpg')
+
+    await wrapperConFoto.find('.foto__btn-quitar').trigger('click')
+    expect(wrapperConFoto.find('.foto__btn-quitar').exists()).toBe(false)
+    expect(wrapperConFoto.find('img').exists()).toBe(false)
+  })
+
   it('muestra validaciones requeridas y no envía datos incompletos', async () => {
     const wrapper = mount(UsuarioForm, { props: { empresas: EMPRESAS } })
 
@@ -99,5 +120,34 @@ describe('UsuarioForm', () => {
     expect(wrapper.emitted('submit')).toBeUndefined()
     expect(wrapper.text()).toContain('exactamente 8 dígitos')
     expect(wrapper.text()).toContain('no puede ser futura')
+  })
+
+  it('en modo edición no muestra la sección de Organización y acceso ni exige empresa', async () => {
+    const wrapper = mount(UsuarioForm, {
+      props: {
+        modo: 'edit',
+        valoresIniciales: {
+          nombre: 'Carlos',
+          apellido: 'Ramírez',
+          correo: 'carlos@test.com',
+          tipoDocumento: 'dni',
+          numeroDocumento: '76543210',
+        },
+      },
+    })
+
+    expect(wrapper.find('#usuario-empresa').exists()).toBe(false)
+    expect(wrapper.find('#usuario-rol').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Organización y acceso')
+
+    await wrapper.get('form').trigger('submit')
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+    expect(wrapper.emitted('submit')[0][0]).toEqual(
+      expect.objectContaining({
+        nombre: 'Carlos',
+        apellido: 'Ramírez',
+        correo: 'carlos@test.com',
+      }),
+    )
   })
 })

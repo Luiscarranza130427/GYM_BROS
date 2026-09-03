@@ -16,6 +16,7 @@ const mensajeError = ref('')
 const mensajeExito = ref('')
 const dialogoAbierto = ref(false)
 const desactivando = ref(false)
+
 let solicitudActual = 0
 
 async function cargar() {
@@ -61,7 +62,7 @@ watch(
     if (notice === 'created') mensajeExito.value = 'Empresa creada correctamente.'
     if (notice === 'updated') mensajeExito.value = 'Empresa actualizada correctamente.'
     if (notice === 'created' || notice === 'updated') {
-      router.replace({ name: 'empresa-detalle', params: { id: route.params.id } })
+      router.replace({ name: 'empresa-detalle', params: { id: route.params.id } }).catch(() => {})
     }
     cargar()
   },
@@ -120,7 +121,9 @@ onBeforeUnmount(() => {
       <p>Cargando información de la empresa…</p>
     </section>
 
-    <EmpresaDetails v-else-if="estado === 'success' && empresa" :empresa="empresa" />
+    <template v-else-if="estado === 'success' && empresa">
+      <EmpresaDetails :empresa="empresa" />
+    </template>
 
     <section
       v-else

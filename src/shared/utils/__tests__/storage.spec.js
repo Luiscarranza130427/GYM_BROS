@@ -28,4 +28,12 @@ describe('storage utils - resolverUrlStorage', () => {
     const res = resolverUrlStorage('empresas/titan_gym.webp')
     expect(res).toContain('/storage/empresas/titan_gym.webp')
   })
+
+  it('no duplica el prefijo storage cuando la ruta viene de public/storage', () => {
+    const res = resolverUrlStorage(
+      '\\laragon\\www\\gym-bros\\public\\storage\\usuario\\prueba-gym.png',
+    )
+    expect(res).not.toContain('/storage/storage/')
+    expect(res).toContain('/storage/usuario/prueba-gym.png')
+  })
 })

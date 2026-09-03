@@ -1,4 +1,5 @@
 import api from '@/core/api/api'
+import { HttpError } from '@/core/api/http-error'
 import { USE_MOCKS } from '@/core/config/env'
 import { leerSesion } from '@/core/storage/session.storage'
 
@@ -31,27 +32,29 @@ export async function obtenerTenantActual() {
   // 2. Extraer la empresa vinculada desde la API en vivo de Laravel (/api/empresas)
   const sesion = leerSesion()
   const usuarioSesion = sesion?.usuario
-  const tenantId = usuarioSesion?.tenantId || usuarioSesion?.id_empresas || 1
+  const tenantId = usuarioSesion?.tenantId ?? usuarioSesion?.id_empresas ?? null
+  if (!tenantId) throw new HttpError(401, 'Tu sesión no identifica una empresa.')
 
   const { data: respEmpresas } = await api.get('/empresas')
   const empresas = Array.isArray(respEmpresas) ? respEmpresas : respEmpresas?.data || []
-  const empresa = empresas.find((e) => e.id === tenantId) || empresas[0] || {}
+  const empresa = empresas.find((e) => Number(e.id) === Number(tenantId))
+  if (!empresa) throw new HttpError(404, 'La empresa de tu sesión no existe en la API.')
 
   return {
-    id: empresa.id || 1,
-    nombre: empresa.nombre || 'Gym Bros',
-    slug: (empresa.nombre || 'gym-bros').toLowerCase().replace(/\s+/g, '-'),
+    id: empresa.id,
+    nombre: empresa.nombre ?? '',
+    slug: empresa.nombre ? empresa.nombre.toLowerCase().replace(/\s+/g, '-') : '',
     logo: empresa.logo || '',
-    color1: empresa.color_1 || '#2563EB',
-    color2: empresa.color_2 || '#111827',
+    color1: empresa.color_1 ?? '',
+    color2: empresa.color_2 ?? '',
     banner1: empresa.banner_1 || '',
-    region: empresa.region || 'Cajamarca',
+    region: empresa.region ?? '',
     direccion: empresa.direccion || '',
     telefono: empresa.telefono || '',
     correo: empresa.correo || '',
     enlaceWeb: empresa.enlace_web || '',
     activo: empresa.estado === 1 || empresa.estado === true,
-    planSaaS: 'Enterprise',
-    limiteUsuarios: 1000,
+    planSaaS: null,
+    limiteUsuarios: null,
   }
 }

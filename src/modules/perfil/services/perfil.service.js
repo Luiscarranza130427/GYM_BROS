@@ -5,6 +5,19 @@ import { leerSesion } from '@/core/storage/session.storage'
 
 const cargarMock = () => import('@/modules/perfil/mocks/perfil.mock')
 
+/** Los días tal como los nombran las columnas de `empresas`, sin tildes. */
+const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+
+/** Los 14 campos de horario de la empresa, con su nombre exacto del esquema. */
+function horariosDeLaSemana(empresa = {}) {
+  return Object.fromEntries(
+    DIAS.flatMap((dia) => [
+      [`horario_inicio_${dia}`, empresa[`horario_inicio_${dia}`] ?? ''],
+      [`horario_fin_${dia}`, empresa[`horario_fin_${dia}`] ?? ''],
+    ]),
+  )
+}
+
 export async function obtenerPerfil() {
   if (USE_MOCKS) {
     const { obtenerPerfilMock } = await cargarMock()
@@ -22,93 +35,107 @@ export async function obtenerPerfil() {
     }
   }
 
-  // 2. Extraer datos de la Empresa autenticada desde la API real de Laravel (/api/empresas)
+  /*
+   * 2. Componer el perfil desde /empresas y /usuarios.
+   *
+   * Aquí NO se inventa nada. Antes esta función rellenaba cada campo vacío con
+   * un literal —'Titan Gym', el RUC 20609876541, una dirección de Cajamarca,
+   * 340 accesos, una IP— de modo que con la API caída la pantalla mostraba una
+   * ficha completa y falsa, sin distinguirse en nada de una real. Un error es
+   * preferible: se ve.
+   *
+   * `/empresas` es obligatorio y su fallo se propaga. `/usuarios` sólo aporta el
+   * recuento de miembros, así que su caída deja ese dato en nulo en vez de
+   * tumbar la pantalla entera.
+   */
+  const sesion = leerSesion()
+  const usuarioSesion = sesion?.usuario
+  const tenantId = usuarioSesion?.tenantId ?? usuarioSesion?.id_empresas ?? null
+
   try {
-    const sesion = leerSesion()
-    const usuarioSesion = sesion?.usuario
-    const tenantId = usuarioSesion?.tenantId || usuarioSesion?.id_empresas || 1
-    const correoSesion = usuarioSesion?.correo || 'contacto@gymbros.pe'
+    const respEmpresas = await api.get('/empresas')
+    const listaEmpresas = Array.isArray(respEmpresas.data)
+      ? respEmpresas.data
+      : (respEmpresas.data?.data ?? [])
 
-    const [respEmpresas, respUsuarios] = await Promise.allSettled([
-      api.get('/empresas'),
-      api.get('/usuarios'),
-    ])
+    const empresaDb = tenantId
+      ? listaEmpresas.find((e) => Number(e.id) === Number(tenantId))
+      : listaEmpresas[0]
 
-    const listaEmpresas =
-      respEmpresas.status === 'fulfilled'
-        ? Array.isArray(respEmpresas.value.data)
-          ? respEmpresas.value.data
-          : respEmpresas.value.data?.data || []
-        : []
+    if (!empresaDb) {
+      throw new HttpError(404, 'La empresa de tu sesión no existe en la API.')
+    }
 
-    const listaUsuarios =
-      respUsuarios.status === 'fulfilled'
-        ? Array.isArray(respUsuarios.value.data)
-          ? respUsuarios.value.data
-          : respUsuarios.value.data?.data || []
-        : []
-
-    const empresaDb = listaEmpresas.find((e) => e.id === tenantId) || listaEmpresas[0] || {}
-
-    const totalMiembros = listaUsuarios.filter((u) => u.id_empresas === empresaDb.id).length || 8
-
-    const fotoGuardada =
-      (typeof localStorage !== 'undefined' &&
-        localStorage.getItem(`gym_bros_foto_empresa_${empresaDb.id || 1}`)) ||
-      empresaDb.logo ||
-      ''
+    let totalMiembros = null
+    try {
+      const respUsuarios = await api.get('/usuarios')
+      const listaUsuarios = Array.isArray(respUsuarios.data)
+        ? respUsuarios.data
+        : (respUsuarios.data?.data ?? [])
+      totalMiembros = listaUsuarios.filter((u) => u.id_empresas === empresaDb.id).length
+    } catch {
+      // Sin recuento: la ficha se muestra igual y ese dato queda vacío.
+    }
 
     return {
-      id: empresaDb.id || 1,
-      nombre: empresaDb.nombre || 'Titan Gym',
-      nombre_gerente: empresaDb.nombre_gerente || 'Carlos Mendoza',
-      gerente: empresaDb.nombre_gerente || 'Carlos Mendoza',
-      correo: empresaDb.correo || correoSesion,
-      telefono: empresaDb.telefono || '+51 976 123 456',
-      ruc: empresaDb.ruc || '20609876541',
-      region: empresaDb.region || 'Cajamarca',
-      direccion: empresaDb.direccion || 'Av. Hoyos Rubio 123, Cajamarca',
-      enlace_web: empresaDb.enlace_web || 'https://gymbros.pe',
-      logo: fotoGuardada,
-      fotoPerfil: fotoGuardada,
-      color_1: empresaDb.color_1 || '#2563EB',
-      color_2: empresaDb.color_2 || '#111827',
-      banner_1: empresaDb.banner_1 || '',
-      banner_2: empresaDb.banner_2 || '',
-      banner_3: empresaDb.banner_3 || '',
-      horario_inicio_lunes: empresaDb.horario_inicio_lunes || '6.00',
-      horario_fin_lunes: empresaDb.horario_fin_lunes || '22.00',
-      horario_inicio_sabado: empresaDb.horario_inicio_sabado || '8.00',
-      horario_fin_sabado: empresaDb.horario_fin_sabado || '20.00',
-      horario_inicio_domingo: empresaDb.horario_inicio_domingo || '9.00',
-      horario_fin_domingo: empresaDb.horario_fin_domingo || '13.00',
-      rol: 'empresa',
-      rolEtiqueta: 'Sede Corporativa',
-      plan: 'Titanio Enterprise',
-      planSaaS: 'Titanio Enterprise',
-      estado: empresaDb.estado === 1 ? 'activo' : 'inactivo',
+      id: empresaDb.id ?? null,
+      nombre: empresaDb.nombre ?? '',
+      nombre_gerente: empresaDb.nombre_gerente ?? '',
+      gerente: empresaDb.nombre_gerente ?? '',
+      correo: empresaDb.correo ?? '',
+      telefono: empresaDb.telefono ?? '',
+      ruc: empresaDb.ruc ?? '',
+      region: empresaDb.region ?? '',
+      direccion: empresaDb.direccion ?? '',
+      enlace_web: empresaDb.enlace_web ?? '',
+      logo: empresaDb.logo ?? '',
+      fotoPerfil: empresaDb.logo ?? '',
+      color_1: empresaDb.color_1 ?? '',
+      color_2: empresaDb.color_2 ?? '',
+      banner_1: empresaDb.banner_1 ?? '',
+      banner_2: empresaDb.banner_2 ?? '',
+      banner_3: empresaDb.banner_3 ?? '',
+      /*
+       * Los CATORCE horarios, uno de apertura y uno de cierre por día.
+       *
+       * Antes sólo se pasaban lunes, sábado y domingo, así que de martes a
+       * viernes la cabecera decía «Sin datos» aunque la API los tuviera. Se
+       * derivan de `DIAS` para que no se pueda volver a olvidar uno.
+       */
+      ...horariosDeLaSemana(empresaDb),
+      rol: usuarioSesion?.rol ?? usuarioSesion?.tipo_usuario ?? '',
+      rolEtiqueta: usuarioSesion?.rol ?? usuarioSesion?.tipo_usuario ?? '',
+      /*
+       * El plan sale de `suscripciones`, no de `empresas`, y ese cruce todavía
+       * no está resuelto. Va nulo en vez de «Titanio Enterprise», que era un
+       * literal: mostrar un plan inventado en una pantalla de facturación es
+       * justo donde más caro sale equivocarse.
+       */
+      plan: null,
+      planSaaS: null,
+      estado:
+        empresaDb.estado === 1 || empresaDb.estado === true
+          ? 'activo'
+          : empresaDb.estado === 0 || empresaDb.estado === false
+            ? 'inactivo'
+            : '',
       estadisticas: {
-        accesosTotales: 340,
+        // `accesosTotales`, `sesionesActivas` y `ultimoAcceso` no existen en la
+        // API. Antes eran 340, 1 y «Hoy a las 16:40», fijos en el código.
+        accesosTotales: null,
         miembrosActivos: totalMiembros,
-        sesionesActivas: 1,
+        sesionesActivas: null,
         miembroDesde: empresaDb.fecha_registro
           ? new Date(empresaDb.fecha_registro).toLocaleDateString('es-PE', {
               month: 'long',
               year: 'numeric',
             })
-          : 'Enero 2026',
-        ultimoAcceso: 'Hoy a las 16:40',
+          : '',
+        ultimoAcceso: '',
       },
-      sesiones: [
-        {
-          id: 'sess-01',
-          dispositivo: 'Navegador Web (Chrome 128 / Windows 11)',
-          ubicacion: empresaDb.region ? `${empresaDb.region}, Perú` : 'Lima, Perú',
-          ip: '190.237.45.112',
-          esActual: true,
-          ultimoAcceso: 'Activo ahora',
-        },
-      ],
+      // El backend no registra las sesiones abiertas. La única que había era
+      // inventada, con su IP y su navegador.
+      sesiones: [],
       preferencias: {
         idioma: 'es',
         tema: 'oscuro',
@@ -129,19 +156,10 @@ export async function actualizarPerfil(datos) {
     return actualizarPerfilMock(datos)
   }
 
-  if (datos.logo && typeof localStorage !== 'undefined') {
-    localStorage.setItem(`gym_bros_foto_empresa_${datos.id || 1}`, datos.logo)
-  }
+  if (!datos.id) throw new HttpError(422, 'No se identificó la empresa que se debe actualizar.')
 
-  try {
-    const { data } = await api.put(`/empresas/${datos.id || 1}`, datos)
-    return data
-  } catch {
-    return {
-      ...datos,
-      id: datos.id || 1,
-    }
-  }
+  const { data } = await api.put(`/empresas/${datos.id}`, datos)
+  return data.data ?? data
 }
 
 export async function cambiarContrasena({ actual, nueva, confirmacion }) {
@@ -150,22 +168,12 @@ export async function cambiarContrasena({ actual, nueva, confirmacion }) {
     return cambiarContrasenaMock({ actual, nueva, confirmacion })
   }
 
-  try {
-    const { data } = await api.post('/perfil/cambiar-contrasena', {
-      password_actual: actual,
-      password_nuevo: nueva,
-      password_confirmacion: confirmacion,
-    })
-    return data
-  } catch {
-    if (!actual || !nueva || !confirmacion) {
-      throw new HttpError(422, 'Completa todos los campos de contraseña.')
-    }
-    if (nueva !== confirmacion) {
-      throw new HttpError(422, 'La confirmación de la contraseña no coincide.')
-    }
-    return { exito: true, mensaje: 'Contraseña actualizada correctamente.' }
-  }
+  const { data } = await api.post('/perfil/cambiar-contrasena', {
+    password_actual: actual,
+    password_nuevo: nueva,
+    password_confirmacion: confirmacion,
+  })
+  return data.data ?? data
 }
 
 export async function actualizarPreferencias(preferencias) {
@@ -174,12 +182,8 @@ export async function actualizarPreferencias(preferencias) {
     return actualizarPreferenciasMock(preferencias)
   }
 
-  try {
-    const { data } = await api.put('/perfil/preferencias', preferencias)
-    return data
-  } catch {
-    return preferencias
-  }
+  const { data } = await api.put('/perfil/preferencias', preferencias)
+  return data.data ?? data
 }
 
 export async function cerrarOtrasSesiones() {
@@ -188,10 +192,6 @@ export async function cerrarOtrasSesiones() {
     return cerrarOtrasSesionesMock()
   }
 
-  try {
-    const { data } = await api.post('/perfil/cerrar-otras-sesiones')
-    return data
-  } catch {
-    return { exito: true, mensaje: 'Se cerraron las demás sesiones activas.' }
-  }
+  const { data } = await api.post('/perfil/cerrar-otras-sesiones')
+  return data.data ?? data
 }

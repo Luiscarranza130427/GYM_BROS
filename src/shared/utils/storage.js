@@ -40,10 +40,16 @@ export function resolverUrlStorage(ruta) {
   // Normalizar separadores de ruta en Windows
   const normalizada = limpia.replace(/\\/g, '/')
 
-  // Manejar rutas internas tipo storage/app/public/...
+  // Manejar rutas internas tipo storage/app/public/... o .../public/storage/...
   const indicePublic = normalizada.indexOf('public/')
   if (indicePublic !== -1) {
     const relativo = normalizada.substring(indicePublic + 'public/'.length)
+    if (relativo.startsWith('storage/')) {
+      return `${origen}/${relativo}`
+    }
+    if (relativo.startsWith('/storage/')) {
+      return `${origen}${relativo}`
+    }
     return `${origen}/storage/${relativo}`
   }
 

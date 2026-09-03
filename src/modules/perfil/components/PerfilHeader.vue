@@ -29,7 +29,7 @@ const procesandoLogo = ref(false)
 const errorLogo = ref('')
 
 const iniciales = computed(() => {
-  return inicialesDe(props.perfil.nombre || 'Gym Bros')
+  return inicialesDe(props.perfil.nombre ?? '')
 })
 
 const avatarUrl = computed(() => {
@@ -123,7 +123,7 @@ async function alCambiarArchivo(evento) {
           </span>
           <span class="perfil-hero__badge perfil-hero__badge--estado">
             <Zap :size="14" aria-hidden="true" />
-            <span>{{ perfil.plan || 'Titanio Enterprise' }}</span>
+            <span>{{ perfil.plan ?? 'Sin plan informado' }}</span>
           </span>
         </div>
 
@@ -131,7 +131,9 @@ async function alCambiarArchivo(evento) {
         <p class="perfil-hero__gerente">
           <span
             >Gerente / Admin:
-            <strong>{{ perfil.nombre_gerente || perfil.gerente || 'Carlos Mendoza' }}</strong></span
+            <strong>{{
+              perfil.nombre_gerente ?? perfil.gerente ?? 'Sin información'
+            }}</strong></span
           >
           <span class="perfil-hero__separador">·</span>
           <span>{{ perfil.correo }}</span>
@@ -140,7 +142,7 @@ async function alCambiarArchivo(evento) {
         <div class="perfil-hero__ubicacion">
           <MapPin :size="14" aria-hidden="true" />
           <span
-            >{{ perfil.direccion || 'Av. Hoyos Rubio 123' }} ({{ perfil.region || 'Cajamarca' }},
+            >{{ perfil.direccion ?? 'Sin dirección' }} ({{ perfil.region ?? 'Sin región' }},
             Perú)</span
           >
         </div>
@@ -153,21 +155,25 @@ async function alCambiarArchivo(evento) {
         <span class="perfil-hero__metrica-label">
           <Users :size="13" aria-hidden="true" /> Atletas de tu sede
         </span>
-        <strong class="perfil-hero__metrica-valor"
-          >{{ perfil.estadisticas?.miembrosActivos || 8 }} miembros</strong
-        >
+        <strong class="perfil-hero__metrica-valor">
+          {{
+            perfil.estadisticas?.miembrosActivos == null
+              ? 'Sin datos'
+              : `${perfil.estadisticas.miembrosActivos} miembros`
+          }}
+        </strong>
       </div>
       <div class="perfil-hero__metrica">
         <span class="perfil-hero__metrica-label">
           <Clock :size="13" aria-hidden="true" /> Horario hoy
         </span>
-        <strong class="perfil-hero__metrica-valor">6:00 - 22:00</strong>
+        <strong class="perfil-hero__metrica-valor">Sin datos</strong>
       </div>
       <div class="perfil-hero__metrica">
         <span class="perfil-hero__metrica-label">
           <Building2 :size="13" aria-hidden="true" /> RUC Sede
         </span>
-        <strong class="perfil-hero__metrica-valor">{{ perfil.ruc || '20609876541' }}</strong>
+        <strong class="perfil-hero__metrica-valor">{{ perfil.ruc ?? 'Sin datos' }}</strong>
       </div>
     </div>
   </header>

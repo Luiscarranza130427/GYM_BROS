@@ -17,7 +17,11 @@ const route = useRoute()
 const router = useRouter()
 const estado = ref('loading')
 const usuario = ref(null)
-const historial = ref([])
+/*
+ * `null` mientras no se sepa, y también cuando la API no tenga el endpoint:
+ * en ese caso la sección se oculta en lugar de afirmar que no hay cambios.
+ */
+const historial = ref(null)
 const historialCargando = ref(false)
 const historialError = ref('')
 const mensajeError = ref('')
@@ -157,7 +161,13 @@ onBeforeUnmount(() => {
 
     <template v-else-if="estado === 'success' && usuario">
       <UsuarioProfileSummary :usuario="usuario" />
+      <!--
+        Oculta mientras la API no tenga `GET /usuarios/:id/historial`. Un panel
+        que dice «Sin cambios registrados» para siempre se lee como que el
+        usuario no tiene actividad, no como que falta el backend.
+      -->
       <UsuarioHistory
+        v-if="historial !== null"
         :items="historial"
         :loading="historialCargando"
         :error="historialError"

@@ -178,6 +178,23 @@ describe('empresas.service en modo mock', () => {
     await vi.advanceTimersByTimeAsync(250)
     await rechazoNoEncontrada
   })
+
+  it('mantiene el contrato de banners también en modo mock', async () => {
+    const servicio = await cargarServicioMock()
+
+    const peticion = servicio.obtenerBannersEmpresa(1)
+    const banners = await completarPeticion(peticion)
+
+    expect(banners).toHaveLength(3)
+    expect(banners[0]).toEqual(
+      expect.objectContaining({
+        numero: 1,
+        imagen: expect.any(String),
+        imagenUrl: expect.any(String),
+        enlace: expect.any(String),
+      }),
+    )
+  })
 })
 
 describe('empresas.service con API Laravel', () => {
@@ -202,13 +219,15 @@ describe('empresas.service con API Laravel', () => {
             telefono: '+51 910000001',
             region: 'Lima',
             direccion: 'Av. Arequipa 1840',
-            sitio_web: 'https://powergym.example',
+            enlace_web: 'https://powergym.example',
             estado: 'active',
             usuarios_count: 86,
             fecha_registro: '2024-01-15',
             logo_url: '/logos/power.svg',
             color_primario: '#e50914',
             color_secundario: '#111111',
+            horario_inicio_lunes: '6.00',
+            horario_fin_lunes: '22.00',
           },
         ],
         current_page: 2,
@@ -240,6 +259,8 @@ describe('empresas.service con API Laravel', () => {
         usuarios: 86,
         fechaRegistro: '2024-01-15',
         colorPrimario: '#e50914',
+        horario_inicio_lunes: '06:00',
+        horario_fin_lunes: '22:00',
       }),
     )
     expect(resultado.paginacion).toEqual({
@@ -280,6 +301,8 @@ describe('empresas.service con API Laravel', () => {
       gerente: 'Nueva Gerente',
       sitioWeb: 'https://nova.example',
       estado: 'inactive',
+      horario_inicio_lunes: '06:00',
+      horario_fin_lunes: '22:00',
       usuarios: 999,
       fechaRegistro: '2020-01-01',
     })
@@ -289,14 +312,17 @@ describe('empresas.service con API Laravel', () => {
     expect(post).toHaveBeenCalledWith(
       '/empresas',
       expect.objectContaining({
-        sitio_web: EMPRESA_NUEVA.sitioWeb,
-        color_primario: EMPRESA_NUEVA.colorPrimario,
+        enlace_web: EMPRESA_NUEVA.sitioWeb,
+        color_1: EMPRESA_NUEVA.colorPrimario,
+        nombre_gerente: EMPRESA_NUEVA.gerente,
       }),
     )
     expect(put).toHaveBeenCalledWith('/empresas/30', {
-      gerente: 'Nueva Gerente',
-      sitio_web: 'https://nova.example',
-      estado: 'inactive',
+      nombre_gerente: 'Nueva Gerente',
+      enlace_web: 'https://nova.example',
+      estado: 0,
+      horario_inicio_lunes: '06.00',
+      horario_fin_lunes: '22.00',
     })
     expect(eliminar).toHaveBeenCalledWith('/empresas/30')
     expect(desactivada).toEqual(expect.objectContaining({ id: 30, estado: 'inactive' }))
@@ -327,5 +353,97 @@ describe('empresas.service con API Laravel', () => {
         colorPrimario: ['El color no es válido.'],
       },
     })
+  })
+})
+
+describe('banners de la empresa', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  /*
+   * LA PRUEBA QUE IMPORTA.
+   *
+   * `updateBanners` de Laravel asigna `$request->banner_1` y sus cinco hermanos
+   * sin comprobar si vinieron en la petición: lo que no se envía se guarda como
+   * `null`. Un envío parcial no actualiza un banner —borra los otros dos y sus
+   * tres enlaces—. Ya ocurrió una vez contra datos reales.
+   */
+  it('envía SIEMPRE los seis campos, aunque sólo cambie uno', async () => {
+    const put = vi.fn().mockResolvedValue({ data: {} })
+    vi.doMock('@/core/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/core/api/api', () => ({ default: { put } }))
+    const { guardarBannersEmpresa } = await import('@/modules/empresas/services/empresas.service')
+
+    // Sólo se toca el enlace del segundo banner.
+    await guardarBannersEmpresa(7, [
+      { numero: 1, imagen: 'data:image/webp;base64,AAA', enlace: 'https://uno.test' },
+      { numero: 2, imagen: 'data:image/webp;base64,BBB', enlace: 'https://dos.test' },
+      { numero: 3, imagen: '', enlace: '' },
+    ])
+
+    const enviado = put.mock.calls[0][1]
+    expect(put).toHaveBeenCalledWith('/empresa/banners/7', expect.any(Object))
+    expect(Object.keys(enviado).sort()).toEqual([
+      'banner_1',
+      'banner_2',
+      'banner_3',
+      'link_boton_1',
+      'link_boton_2',
+      'link_boton_3',
+    ])
+    expect(enviado.banner_1).toBe('data:image/webp;base64,AAA')
+    expect(enviado.link_boton_2).toBe('https://dos.test')
+    // El hueco vacío viaja como null explícito, no ausente.
+    expect(enviado.banner_3).toBeNull()
+    expect(enviado.link_boton_3).toBeNull()
+  })
+
+  it('normaliza los tres huecos aunque el backend devuelva nulos', async () => {
+    const get = vi.fn().mockResolvedValue({
+      data: {
+        banner_1: 'banners/promo.webp',
+        banner_2: null,
+        banner_3: null,
+        link_boton_1: 'https://gymbros.pe/promo',
+        link_boton_2: null,
+        link_boton_3: null,
+      },
+    })
+    vi.doMock('@/core/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/core/api/api', () => ({ default: { get } }))
+    const { obtenerBannersEmpresa } = await import('@/modules/empresas/services/empresas.service')
+
+    const banners = await obtenerBannersEmpresa(1)
+
+    // Siempre tres huecos: la interfaz pinta tres marcos pase lo que pase.
+    expect(banners).toHaveLength(3)
+    expect(banners.map((b) => b.numero)).toEqual([1, 2, 3])
+    expect(banners[0].enlace).toBe('https://gymbros.pe/promo')
+    // Un nulo se convierte en cadena vacía: un `null` en un `value` de input
+    // pinta la palabra «null» en el campo.
+    expect(banners[1].imagen).toBe('')
+    expect(banners[1].enlace).toBe('')
+  })
+
+  it('recorta los espacios del enlace y guarda null si queda vacío', async () => {
+    const put = vi.fn().mockResolvedValue({ data: {} })
+    vi.doMock('@/core/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/core/api/api', () => ({ default: { put } }))
+    const { guardarBannersEmpresa } = await import('@/modules/empresas/services/empresas.service')
+
+    await guardarBannersEmpresa(1, [
+      { numero: 1, imagen: 'x', enlace: '  https://gymbros.pe  ' },
+      { numero: 2, imagen: 'y', enlace: '   ' },
+      { numero: 3, imagen: '', enlace: '' },
+    ])
+
+    const enviado = put.mock.calls[0][1]
+    expect(enviado.link_boton_1).toBe('https://gymbros.pe')
+    expect(enviado.link_boton_2).toBeNull()
   })
 })

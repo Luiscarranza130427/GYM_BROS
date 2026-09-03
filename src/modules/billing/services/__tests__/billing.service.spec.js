@@ -94,6 +94,10 @@ describe('billing.service con API real', () => {
             fecha_pago: '2026-08-01',
             monto: 349,
             moneda: 'PEN',
+            // `pagos` tiene `referencia`; NO tiene `codigo`. Comprobado contra
+            // la API real: id, id_empresas, id_suscripciones, monto, moneda,
+            // metodo_pago, referencia, estado, fecha_pago.
+            referencia: 'OP-99120',
             suscripcion: {
               empresa: { id: 1, razon_social: 'Power Gym' },
               plan: { id: 2, nombre: 'Fuerza' },
@@ -116,7 +120,6 @@ describe('billing.service con API real', () => {
 
     expect(items[0]).toMatchObject({
       id: 10,
-      codigo: 'PAG-0010',
       fecha: '2026-08-01',
       precio: 349,
       moneda: 'PEN',
@@ -124,5 +127,12 @@ describe('billing.service con API real', () => {
       plan: { id: 2, nombre: 'Fuerza' },
       cantidadMeses: 1,
     })
+
+    /*
+     * `codigo` va vacío porque la API no lo manda. Antes se fabricaba como
+     * `PAG-0010` a partir del id: un identificador que no existe en ninguna
+     * parte y que, impreso en un recibo, nadie podría buscar después.
+     */
+    expect(items[0].codigo).toBe('')
   })
 })

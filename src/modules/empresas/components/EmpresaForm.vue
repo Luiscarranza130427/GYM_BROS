@@ -1,9 +1,8 @@
 <script setup>
-import { Building2, Palette, Power } from 'lucide-vue-next'
-import { onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+import { Building2, Clock3, Palette, Power } from 'lucide-vue-next'
+import { computed, ref, useTemplateRef } from 'vue'
 
 import { useFormulario } from '@/shared/composables/useFormulario'
-import api from '@/core/api/api'
 import { useVistaPreviaArchivo } from '@/shared/composables/useVistaPreviaArchivo'
 import { REGIONES_PERU } from '@/shared/constants/regionesPeru'
 import { normalizarLogoEmpresa } from '@/shared/utils/logoEmpresa'
@@ -23,6 +22,23 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
+const DIAS = [
+  { valor: 'lunes', etiqueta: 'Lunes' },
+  { valor: 'martes', etiqueta: 'Martes' },
+  { valor: 'miercoles', etiqueta: 'Miércoles' },
+  { valor: 'jueves', etiqueta: 'Jueves' },
+  { valor: 'viernes', etiqueta: 'Viernes' },
+  { valor: 'sabado', etiqueta: 'Sábado' },
+  { valor: 'domingo', etiqueta: 'Domingo' },
+]
+
+const MODELO_HORARIOS = Object.fromEntries(
+  DIAS.flatMap(({ valor }) => [
+    [`horario_inicio_${valor}`, ''],
+    [`horario_fin_${valor}`, ''],
+  ]),
+)
+
 const MODELO_VACIO = {
   nombre: '',
   gerente: '',
@@ -36,10 +52,8 @@ const MODELO_VACIO = {
   logoUrl: '',
   colorPrimario: '#e50914',
   colorSecundario: '#1c1b1b',
+  ...MODELO_HORARIOS,
 }
-
-/** El RUC es opcional; si viene, debe tener entre 8 y 11 dígitos. */
-const RUC_VALIDO = /^[0-9]{8,11}$/
 
 const nombreInput = useTemplateRef('nombreInput')
 const gerenteInput = useTemplateRef('gerenteInput')
@@ -53,43 +67,16 @@ const logoInput = useTemplateRef('logoInput')
 const colorPrimarioInput = useTemplateRef('colorPrimarioInput')
 const colorSecundarioInput = useTemplateRef('colorSecundarioInput')
 const estadoInput = useTemplateRef('estadoInput')
+const primerHorarioInput = ref(null)
+
+function registrarPrimerHorario(elemento, indice) {
+  if (indice === 0) primerHorarioInput.value = elemento
+}
 
 const logo = useVistaPreviaArchivo({ etiqueta: 'logo', procesarImagen: normalizarLogoEmpresa })
 const logoImagenFallida = ref(false)
-const logoRenderUrl = ref('')
-let logoObjectUrl = ''
-
-function liberarLogoObjectUrl() {
-  if (!logoObjectUrl) return
-  URL.revokeObjectURL(logoObjectUrl)
-  logoObjectUrl = ''
-}
-
-watch(
-  () => logo.url.value,
-  async (url, _anterior, onCleanup) => {
-    liberarLogoObjectUrl()
-    logoRenderUrl.value = url || ''
-    logoImagenFallida.value = false
-    if (!url || url.startsWith('data:') || url.startsWith('blob:')) return
-
-    let cancelado = false
-    onCleanup(() => {
-      cancelado = true
-    })
-    try {
-      const respuesta = await api.get(url, { responseType: 'blob' })
-      if (cancelado) return
-      logoObjectUrl = URL.createObjectURL(respuesta.data)
-      logoRenderUrl.value = logoObjectUrl
-    } catch {
-      // Se conserva la URL directa como último intento.
-    }
-  },
-  { immediate: true },
-)
-
-onBeforeUnmount(liberarLogoObjectUrl)
+const logoRenderUrl = computed(() => logo.url.value || '')
+const mensajeHorarios = ref('')
 
 /** Reglas propias de una empresa. Las de forma salen de `utils/validaciones`. */
 function validar(datos, errores) {
@@ -101,10 +88,6 @@ function validar(datos, errores) {
   if (!esCorreoValido(datos.correo)) errores.correo = 'Introduce un correo válido.'
   if (!esTelefonoValido(datos.telefono)) errores.telefono = 'Introduce un teléfono válido.'
 
-  if (datos.ruc && !RUC_VALIDO.test(datos.ruc.trim())) {
-    errores.ruc = 'El RUC debe contener entre 8 y 11 dígitos.'
-  }
-
   if (datos.sitioWeb && !esUrlValida(datos.sitioWeb)) {
     errores.sitioWeb = 'Introduce una URL completa que empiece por http:// o https://.'
   }
@@ -114,6 +97,19 @@ function validar(datos, errores) {
   }
   if (!esColorValido(datos.colorSecundario)) {
     errores.colorSecundario = 'Introduce un color hexadecimal válido.'
+  }
+
+  for (const { valor, etiqueta } of DIAS) {
+    const inicio = datos[`horario_inicio_${valor}`]
+    const fin = datos[`horario_fin_${valor}`]
+    if (!inicio || !fin) {
+      errores.horarios = `Completa el horario de ${etiqueta.toLowerCase()}.`
+      break
+    }
+    if (inicio >= fin) {
+      errores.horarios = `En ${etiqueta}, la hora de cierre debe ser posterior a la apertura.`
+      break
+    }
   }
 }
 
@@ -135,14 +131,30 @@ const { formulario, erroresLocales, erroresRemotos, errorDe, limpiarError, valid
       colorPrimario: colorPrimarioInput,
       colorSecundario: colorSecundarioInput,
       estado: estadoInput,
+      horarios: primerHorarioInput,
     },
     validar,
     alCargarValores: (_datos, valores) =>
       (() => {
         logoImagenFallida.value = false
-        logo.reiniciar(valores.logoUrl || valores.logo_url || valores.logo || '')
+        logo.reiniciar(valores.logoUrl || '')
       })(),
   })
+
+const horarioLunesCompleto = computed(
+  () => Boolean(formulario.horario_inicio_lunes) && Boolean(formulario.horario_fin_lunes),
+)
+
+function copiarHorarioLunes() {
+  if (!horarioLunesCompleto.value) return
+
+  for (const { valor } of DIAS.slice(1)) {
+    formulario[`horario_inicio_${valor}`] = formulario.horario_inicio_lunes
+    formulario[`horario_fin_${valor}`] = formulario.horario_fin_lunes
+  }
+  limpiarError('horarios')
+  mensajeHorarios.value = 'Horario del lunes aplicado de martes a domingo.'
+}
 
 async function enviar() {
   if (props.enviando) return
@@ -160,9 +172,10 @@ async function enviar() {
   })
 }
 
-function seleccionarLogo(evento) {
+async function seleccionarLogo(evento) {
   limpiarError('logoUrl')
-  logo.seleccionar(evento, formulario.logoUrl)
+  await logo.seleccionar(evento, formulario.logoUrl)
+  if (!logo.error.value) formulario.logoUrl = logo.url.value
 }
 </script>
 
@@ -281,14 +294,13 @@ function seleccionarLogo(evento) {
             :class="{ 'is-invalid': errorDe('ruc') }"
             type="text"
             name="ruc"
-            inputmode="numeric"
-            maxlength="11"
+            maxlength="12"
             :aria-invalid="Boolean(errorDe('ruc'))"
             :aria-describedby="errorDe('ruc') ? 'error-ruc' : 'ayuda-ruc'"
             @input="limpiarError('ruc')"
           />
           <p id="ayuda-ruc" class="campo__ayuda">
-            Dato provisional hasta cerrar reglas con Laravel.
+            El API admite hasta 12 caracteres. Laravel aplica la validación definitiva.
           </p>
           <p v-if="errorDe('ruc')" id="error-ruc" class="campo__error">{{ errorDe('ruc') }}</p>
         </div>
@@ -357,6 +369,72 @@ function seleccionarLogo(evento) {
           </p>
         </div>
       </div>
+    </section>
+
+    <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-horarios">
+      <header class="horarios-encabezado">
+        <span aria-hidden="true"><Clock3 :size="20" /></span>
+        <div class="horarios-encabezado__texto">
+          <h2 id="titulo-horarios">Horarios de atención</h2>
+          <p>Configura la apertura y el cierre que utilizará la aplicación móvil.</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm horarios-encabezado__accion"
+          :disabled="!horarioLunesCompleto || enviando"
+          @click="copiarHorarioLunes"
+        >
+          Copiar lunes al resto
+        </button>
+      </header>
+
+      <div class="horarios" :class="{ 'horarios--invalidos': errorDe('horarios') }">
+        <div class="horarios__cabecera" aria-hidden="true">
+          <span>Día</span>
+          <span>Apertura</span>
+          <span>Cierre</span>
+        </div>
+        <div v-for="(dia, indice) in DIAS" :key="dia.valor" class="horario">
+          <strong>{{ dia.etiqueta }}</strong>
+          <div class="campo">
+            <label class="visually-hidden" :for="`horario-inicio-${dia.valor}`">
+              Apertura del {{ dia.etiqueta.toLowerCase() }}
+            </label>
+            <input
+              :id="`horario-inicio-${dia.valor}`"
+              :ref="(elemento) => registrarPrimerHorario(elemento, indice)"
+              v-model="formulario[`horario_inicio_${dia.valor}`]"
+              class="form-control"
+              type="time"
+              :name="`horario_inicio_${dia.valor}`"
+              required
+              :aria-invalid="Boolean(errorDe('horarios'))"
+              :aria-describedby="errorDe('horarios') ? 'error-horarios' : null"
+              @input="limpiarError('horarios')"
+            />
+          </div>
+          <div class="campo">
+            <label class="visually-hidden" :for="`horario-fin-${dia.valor}`">
+              Cierre del {{ dia.etiqueta.toLowerCase() }}
+            </label>
+            <input
+              :id="`horario-fin-${dia.valor}`"
+              v-model="formulario[`horario_fin_${dia.valor}`]"
+              class="form-control"
+              type="time"
+              :name="`horario_fin_${dia.valor}`"
+              required
+              :aria-invalid="Boolean(errorDe('horarios'))"
+              :aria-describedby="errorDe('horarios') ? 'error-horarios' : null"
+              @input="limpiarError('horarios')"
+            />
+          </div>
+        </div>
+      </div>
+      <p v-if="errorDe('horarios')" id="error-horarios" class="campo__error" role="alert">
+        {{ errorDe('horarios') }}
+      </p>
+      <p class="visually-hidden" aria-live="polite">{{ mensajeHorarios }}</p>
     </section>
 
     <div class="formulario__secundarias">
@@ -594,6 +672,67 @@ function seleccionarLogo(evento) {
   color: var(--gb-error);
 }
 
+.horarios {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--gb-border);
+  border-radius: var(--gb-radius-lg);
+  overflow: hidden;
+}
+
+.horarios-encabezado__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.horarios-encabezado__accion {
+  flex: none;
+  align-self: center;
+}
+
+.horarios__cabecera,
+.horario {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) repeat(2, minmax(8rem, 0.75fr));
+  gap: 1rem;
+}
+
+.horarios__cabecera {
+  padding: 0.625rem 1rem;
+  background-color: var(--gb-surface-high);
+  border-bottom: 1px solid var(--gb-border);
+  color: var(--gb-text-muted);
+  font-size: var(--gb-tipo-xxs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.horario {
+  align-items: center;
+  padding: 0.625rem 1rem;
+  background-color: var(--gb-surface-lowest);
+  border-bottom: 1px solid var(--gb-border);
+}
+
+.horario:last-child {
+  border-bottom: 0;
+}
+
+.horario > strong {
+  align-self: center;
+  font-size: var(--gb-tipo-sm);
+}
+
+.horario .form-control {
+  width: 100%;
+  min-width: 0;
+}
+
+.horarios--invalidos {
+  border-color: var(--gb-error);
+}
+
 .formulario__secundarias {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.75fr);
@@ -765,6 +904,20 @@ function seleccionarLogo(evento) {
 
   .campo--completo {
     grid-column: auto;
+  }
+
+  .horarios-encabezado {
+    flex-wrap: wrap;
+  }
+
+  .horarios-encabezado__accion {
+    width: 100%;
+  }
+
+  .horarios__cabecera,
+  .horario {
+    grid-template-columns: minmax(5rem, 0.65fr) repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
   }
 }
 </style>

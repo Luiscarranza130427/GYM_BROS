@@ -1,12 +1,18 @@
 <script setup>
-import { Building2 } from 'lucide-vue-next'
+import { Building2, CheckCircle2 } from 'lucide-vue-next'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useTenantStore } from '@/core/tenant/tenant.store'
 import PageHeader from '@/shared/components/PageHeader.vue'
+import EmpresaBanners from '@/modules/empresas/components/EmpresaBanners.vue'
 import EmpresaForm from '@/modules/empresas/components/EmpresaForm.vue'
-import { actualizarEmpresa, obtenerEmpresa } from '@/modules/empresas/services/empresas.service'
+import {
+  actualizarEmpresa,
+  guardarBannersEmpresa,
+  obtenerBannersEmpresa,
+  obtenerEmpresa,
+} from '@/modules/empresas/services/empresas.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,6 +22,11 @@ const empresa = ref(null)
 const enviando = ref(false)
 const erroresServidor = ref({})
 const mensajeError = ref('')
+const banners = ref([])
+const estadoBanners = ref('loading')
+const guardandoBanners = ref(false)
+const mensajeBanners = ref('')
+const errorBanners = ref('')
 let solicitudActual = 0
 
 async function cargar() {
@@ -30,11 +41,50 @@ async function cargar() {
     if (idSolicitud !== solicitudActual) return
     empresa.value = respuesta
     estado.value = 'success'
+    cargarBanners(respuesta.id, idSolicitud)
   } catch (error) {
     if (idSolicitud !== solicitudActual) return
     mensajeError.value = error?.message || 'No pudimos cargar la empresa.'
     estado.value = error?.status === 404 ? 'not-found' : 'error'
   }
+}
+
+async function cargarBanners(idEmpresa, idSolicitud = solicitudActual) {
+  estadoBanners.value = 'loading'
+  errorBanners.value = ''
+  mensajeBanners.value = ''
+
+  try {
+    const respuesta = await obtenerBannersEmpresa(idEmpresa)
+    if (idSolicitud !== solicitudActual) return
+    banners.value = respuesta
+    estadoBanners.value = 'success'
+  } catch (error) {
+    if (idSolicitud !== solicitudActual) return
+    banners.value = []
+    estadoBanners.value = 'error'
+    errorBanners.value = error?.message || 'No pudimos cargar los banners.'
+  }
+}
+
+async function guardarBanners(valores) {
+  if (!empresa.value || guardandoBanners.value) return
+  guardandoBanners.value = true
+  mensajeBanners.value = ''
+  errorBanners.value = ''
+
+  try {
+    banners.value = await guardarBannersEmpresa(empresa.value.id, valores)
+    mensajeBanners.value = 'Banners actualizados correctamente.'
+  } catch (error) {
+    errorBanners.value = error?.message || 'No pudimos guardar los banners.'
+  } finally {
+    guardandoBanners.value = false
+  }
+}
+
+function cancelar() {
+  router.push({ name: 'empresas-listado' }).catch(() => {})
 }
 
 async function guardar(datos) {
@@ -104,11 +154,40 @@ onBeforeUnmount(() => {
       :enviando="enviando"
       :errores-servidor="erroresServidor"
       @submit="guardar"
-      @cancel="router.push({ name: 'empresas-listado' })"
+      @cancel="cancelar"
     />
 
+    <template v-if="estado === 'success' && empresa">
+      <p v-if="mensajeBanners" class="empresa-editor__exito" role="status">
+        <CheckCircle2 :size="18" aria-hidden="true" />
+        {{ mensajeBanners }}
+      </p>
+      <p v-if="errorBanners" class="alert alert-danger" role="alert">{{ errorBanners }}</p>
+
+      <EmpresaBanners
+        v-if="estadoBanners === 'success'"
+        :banners="banners"
+        :guardando="guardandoBanners"
+        @guardar="guardarBanners"
+      />
+      <section
+        v-else-if="estadoBanners === 'loading'"
+        class="empresa-editor__banners-estado gb-tarjeta"
+        aria-busy="true"
+      >
+        <span class="spinner-border" aria-hidden="true"></span>
+        <p>Cargando banners de la aplicación móvil…</p>
+      </section>
+      <section v-else class="empresa-editor__banners-estado gb-tarjeta" role="alert">
+        <p>No pudimos cargar los banners de la aplicación móvil.</p>
+        <button type="button" class="btn btn-secondary" @click="cargarBanners(empresa.id)">
+          Reintentar
+        </button>
+      </section>
+    </template>
+
     <section
-      v-else
+      v-if="estado !== 'loading' && estado !== 'success'"
       class="empresa-editor__estado gb-tarjeta"
       :role="estado === 'error' ? 'alert' : 'status'"
     >
@@ -139,6 +218,33 @@ onBeforeUnmount(() => {
 
 .empresa-editor .alert {
   margin: 0;
+}
+
+.empresa-editor__exito {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background-color: rgba(var(--gb-green-rgb), 0.08);
+  border: 1px solid rgba(var(--gb-green-rgb), 0.28);
+  border-radius: var(--gb-radius-lg);
+  color: var(--gb-green);
+  font-size: var(--gb-tipo-sm);
+}
+
+.empresa-editor__banners-estado {
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  border-radius: var(--gb-radius-xl);
+  text-align: center;
+}
+
+.empresa-editor__banners-estado p {
+  margin: 0;
+  color: var(--gb-text-muted);
 }
 
 .empresa-editor__estado {

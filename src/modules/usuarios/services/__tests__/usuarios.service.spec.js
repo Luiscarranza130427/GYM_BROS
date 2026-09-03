@@ -201,7 +201,7 @@ describe('usuarios.service con API Laravel', () => {
     })
   })
 
-  it('traduce errores 422 y trata historial ausente como una colección vacía', async () => {
+  it('traduce errores 422 y distingue el historial ausente del vacío', async () => {
     const post = vi.fn().mockRejectedValue({
       status: 422,
       message: 'Datos inválidos.',
@@ -220,6 +220,20 @@ describe('usuarios.service con API Laravel', () => {
         rol: ['Selecciona un rol válido.'],
       },
     })
+    /*
+     * `null`, no `[]`. Devolviendo una colección vacía la ficha no puede
+     * distinguir «este usuario no tiene cambios» de «la API no tiene el
+     * endpoint», y acaba afirmando lo primero para siempre.
+     */
+    await expect(servicio.obtenerHistorialUsuario(1)).resolves.toBeNull()
+  })
+
+  it('un historial vacío de verdad sí es una colección vacía', async () => {
+    // El endpoint existe y responde sin eventos: eso SÍ es «sin cambios», y la
+    // ficha debe mostrarlo en lugar de esconder la sección.
+    const get = vi.fn().mockResolvedValue({ data: [] })
+    const { servicio } = await cargarServicio({ get })
+
     await expect(servicio.obtenerHistorialUsuario(1)).resolves.toEqual([])
   })
 })

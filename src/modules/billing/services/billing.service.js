@@ -36,22 +36,26 @@ export function normalizarPago(datos = {}) {
     suscripcion.fecha_inicio ?? suscripcion.fechaInicio ?? suscripcion.start_date ?? ''
   const fechaFin = suscripcion.fecha_fin ?? suscripcion.fechaFin ?? suscripcion.end_date ?? ''
 
+  const cantidadMesesApi = datos.cantidad_meses ?? datos.cantidadMeses ?? datos.months
+  const monto = datos.monto ?? datos.precio ?? datos.amount ?? null
+
   return {
     id: datos.id,
-    codigo: datos.codigo ?? `PAG-${String(datos.id).padStart(4, '0')}`,
+    codigo: datos.codigo ?? '',
     fecha: datos.fecha_pago ?? datos.fecha ?? datos.paid_at ?? '',
     empresa: normalizarEmpresa(empresa),
     plan: normalizarPlan(plan),
-    precio: Number(datos.monto ?? datos.precio ?? datos.amount ?? 0),
-    moneda: datos.moneda ?? datos.currency ?? 'PEN',
-    cantidadMeses: Number(
-      datos.cantidad_meses ??
-        datos.cantidadMeses ??
-        datos.months ??
-        mesesEntre(fechaInicio, fechaFin),
-    ),
-    metodoPago: datos.metodo_pago ?? datos.metodoPago ?? 'Tarjeta de crédito',
-    estado: datos.estado ?? datos.status ?? 'completado',
+    precio: monto == null ? null : Number(monto),
+    moneda: datos.moneda ?? datos.currency ?? '',
+    cantidadMeses:
+      cantidadMesesApi != null
+        ? Number(cantidadMesesApi)
+        : fechaInicio && fechaFin
+          ? mesesEntre(fechaInicio, fechaFin)
+          : null,
+    // Un método de pago inventado en un recibo es un dato contable falso.
+    metodoPago: datos.metodo_pago ?? datos.metodoPago ?? '',
+    estado: datos.estado ?? datos.status ?? '',
   }
 }
 

@@ -29,15 +29,14 @@ const formulario = reactive({
 const errores = reactive({})
 
 function sincronizarFormulario() {
-  formulario.nombre = props.perfil.nombre || 'Titan Gym'
-  formulario.nombre_gerente =
-    props.perfil.nombre_gerente || props.perfil.gerente || 'Carlos Mendoza'
-  formulario.ruc = props.perfil.ruc || '20609876541'
-  formulario.telefono = props.perfil.telefono || '976123456'
-  formulario.correo = props.perfil.correo || 'contacto@gymbros.pe'
-  formulario.region = props.perfil.region || 'Cajamarca'
-  formulario.direccion = props.perfil.direccion || 'Av. Hoyos Rubio 123, Cajamarca'
-  formulario.enlace_web = props.perfil.enlace_web || 'https://gymbros.pe'
+  formulario.nombre = props.perfil.nombre ?? ''
+  formulario.nombre_gerente = props.perfil.nombre_gerente ?? props.perfil.gerente ?? ''
+  formulario.ruc = props.perfil.ruc ?? ''
+  formulario.telefono = props.perfil.telefono ?? ''
+  formulario.correo = props.perfil.correo ?? ''
+  formulario.region = props.perfil.region ?? ''
+  formulario.direccion = props.perfil.direccion ?? ''
+  formulario.enlace_web = props.perfil.enlace_web ?? ''
   limpiarErrores()
 }
 
@@ -145,7 +144,7 @@ function enviar() {
             v-model="formulario.ruc"
             type="text"
             class="form-control"
-            placeholder="20609876541"
+            placeholder="RUC de 11 dígitos"
           />
         </div>
 
@@ -212,7 +211,7 @@ function enviar() {
               v-model="formulario.direccion"
               type="text"
               class="form-control form-control--con-icono"
-              placeholder="Av. Hoyos Rubio 123, Cajamarca"
+              placeholder="Calle, número, distrito"
             />
           </div>
         </div>

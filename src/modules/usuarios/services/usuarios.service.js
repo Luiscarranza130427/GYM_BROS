@@ -408,6 +408,15 @@ export async function desactivarUsuario(id) {
   }
 }
 
+/**
+ * Historial de cambios del usuario (tabla `historial_cambios` del esquema).
+ *
+ * Devuelve `null` cuando el endpoint NO EXISTE todavía, y un array —vacío o
+ * no— cuando sí existe. La diferencia importa: devolviendo `[]` en ambos casos,
+ * la ficha mostraba «Sin cambios registrados» de forma permanente, como si el
+ * usuario no tuviera actividad, cuando en realidad no hay a quién preguntarle.
+ * Con `null`, la vista puede ocultar la sección en lugar de mentir.
+ */
 export async function obtenerHistorialUsuario(id) {
   try {
     return await ejecutarPeticion(async () => {
@@ -416,7 +425,7 @@ export async function obtenerHistorialUsuario(id) {
       return Array.isArray(eventos) ? eventos.map(normalizarEventoHistorial) : []
     })
   } catch (error) {
-    if (error?.status === 404 || error?.status === 405) return []
+    if (error?.status === 404 || error?.status === 405) return null
     throw error
   }
 }

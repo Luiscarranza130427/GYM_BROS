@@ -1,8 +1,8 @@
 <script setup>
-import { Building2, Camera, User } from 'lucide-vue-next'
-import { computed, nextTick, ref, watch } from 'vue'
+import { Building2, Camera, Trash2, User, UserRound } from 'lucide-vue-next'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
-import { useVistaPreviaArchivo } from '@/shared/composables/useVistaPreviaArchivo'
+import { FOTO_USUARIO_LADO, normalizarFotoUsuario } from '@/shared/utils/fotoUsuario'
 
 const props = defineProps({
   usuarioInicial: { type: Object, default: () => ({}) },
@@ -32,6 +32,7 @@ const tipoDocumentoInput = ref(null)
 const numeroDocumentoInput = ref(null)
 const fechaNacimientoInput = ref(null)
 const estadoInput = ref(null)
+const entradaFoto = ref(null)
 
 const refsCampos = {
   empresaId: empresaInput,
@@ -44,9 +45,66 @@ const refsCampos = {
   numeroDocumento: numeroDocumentoInput,
   fechaNacimiento: fechaNacimientoInput,
   estado: estadoInput,
+  fotoPerfil: entradaFoto,
 }
 
-const foto = useVistaPreviaArchivo({ etiqueta: 'foto de perfil' })
+/*
+ * La foto viaja como texto en `foto_perfil`, igual que el logo de empresa: no
+ * hay endpoint de subida de archivos. `vistaPrevia` guarda un objectURL sólo
+ * para enseñarla mientras se edita, y se libera al salir para no dejar memoria
+ * retenida.
+ */
+const errorFoto = ref('')
+const procesandoFoto = ref(false)
+const imagenFallida = ref(false)
+let vistaPrevia = ''
+
+function liberarVistaPrevia() {
+  if (vistaPrevia) URL.revokeObjectURL(vistaPrevia)
+  vistaPrevia = ''
+}
+
+const fotoVisible = computed(() => formulario.value.fotoPerfil || '')
+
+watch(
+  fotoVisible,
+  () => {
+    imagenFallida.value = false
+  },
+  { immediate: true },
+)
+
+async function elegirFoto(evento) {
+  const archivo = evento.target.files?.[0]
+  evento.target.value = ''
+  if (!archivo) return
+
+  errorFoto.value = ''
+  procesandoFoto.value = true
+
+  try {
+    formulario.value.fotoPerfil = await normalizarFotoUsuario(archivo)
+    limpiarError('fotoPerfil')
+  } catch (error) {
+    errorFoto.value = error.message
+  } finally {
+    procesandoFoto.value = false
+  }
+}
+
+function quitarFoto() {
+  liberarVistaPrevia()
+  formulario.value.fotoPerfil = ''
+  errorFoto.value = ''
+  if (entradaFoto.value) entradaFoto.value.value = ''
+  limpiarError('fotoPerfil')
+}
+
+function abrirSelectorFoto() {
+  entradaFoto.value?.click()
+}
+
+onBeforeUnmount(liberarVistaPrevia)
 
 function crearEstadoInicial() {
   const fuente = props.valoresIniciales ?? props.usuarioInicial ?? {}
@@ -68,6 +126,7 @@ function crearEstadoInicial() {
     numeroDocumento: fuente.numeroDocumento ?? fuente.document_number ?? '',
     fechaNacimiento: normalizarFecha(fuente.fechaNacimiento ?? fuente.birth_date),
     direccion: fuente.direccion ?? fuente.address ?? '',
+    fotoPerfil: fuente.fotoPerfil ?? fuente.foto_perfil ?? fuente.profile_photo ?? '',
     estado: normalizarEstado(fuente.estado ?? fuente.status),
   }
 }
@@ -90,8 +149,6 @@ watch(
   () => {
     formulario.value = crearEstadoInicial()
     erroresLocales.value = {}
-    const fuente = props.valoresIniciales ?? props.usuarioInicial ?? {}
-    foto.reiniciar(fuente.fotoPerfil || '')
   },
   { immediate: true },
 )
@@ -145,8 +202,10 @@ function validar() {
     }
   }
 
-  if (!f.empresaId) nuevos.empresaId = ['Selecciona una empresa.']
-  if (!f.rol) nuevos.rol = ['Selecciona un rol.']
+  if (props.modo === 'create') {
+    if (!f.empresaId) nuevos.empresaId = ['Selecciona una empresa.']
+    if (!f.rol) nuevos.rol = ['Selecciona un rol.']
+  }
 
   erroresLocales.value = nuevos
   return Object.keys(nuevos).length === 0
@@ -161,8 +220,6 @@ async function enviar() {
 
   const f = formulario.value
   const payload = {
-    empresaId: isNaN(Number(f.empresaId)) ? f.empresaId : Number(f.empresaId),
-    rol: f.rol,
     nombre: f.nombre.trim(),
     apellido: f.apellido.trim(),
     apodo: f.apodo.trim(),
@@ -172,7 +229,17 @@ async function enviar() {
     numeroDocumento: f.numeroDocumento.trim(),
     fechaNacimiento: f.fechaNacimiento || null,
     direccion: f.direccion.trim(),
-    estado: f.estado,
+    fotoPerfil: f.fotoPerfil,
+  }
+
+  if (props.modo === 'create' || f.empresaId) {
+    payload.empresaId = isNaN(Number(f.empresaId)) ? f.empresaId : Number(f.empresaId)
+  }
+  if (props.modo === 'create' || f.rol) {
+    payload.rol = f.rol
+  }
+  if (props.modo === 'create' || f.estado) {
+    payload.estado = f.estado
   }
 
   emit('submit', payload)
@@ -183,10 +250,6 @@ function enfocarPrimerError() {
   if (primerCampoConError && refsCampos[primerCampoConError]?.value) {
     refsCampos[primerCampoConError].value.focus()
   }
-}
-
-function seleccionarFoto(evento) {
-  foto.seleccionar(evento)
 }
 </script>
 
@@ -201,6 +264,105 @@ function seleccionarFoto(evento) {
           <p>Información de identificación y contacto del usuario.</p>
         </div>
       </header>
+
+      <!-- Bloque de Foto de Perfil & Identidad -->
+      <div class="usuario-avatar-bloque">
+        <div class="usuario-avatar-marco">
+          <div
+            class="usuario-avatar-vista"
+            :class="{ 'usuario-avatar-vista--con-imagen': fotoVisible && !imagenFallida }"
+            role="button"
+            tabindex="0"
+            title="Haz clic para seleccionar o cambiar foto"
+            @click="abrirSelectorFoto"
+            @keydown.enter="abrirSelectorFoto"
+            @keydown.space.prevent="abrirSelectorFoto"
+          >
+            <img
+              v-if="fotoVisible && !imagenFallida"
+              :src="fotoVisible"
+              :alt="formulario.nombre ? `Foto de perfil de ${formulario.nombre}` : 'Foto de perfil'"
+              class="usuario-avatar-img"
+              @error="imagenFallida = true"
+            />
+            <UserRound v-else :size="40" class="usuario-avatar-icono" aria-hidden="true" />
+          </div>
+
+          <button
+            type="button"
+            class="usuario-avatar-camara"
+            title="Seleccionar foto de perfil"
+            aria-label="Seleccionar foto de perfil"
+            :disabled="procesandoFoto"
+            @click="abrirSelectorFoto"
+          >
+            <Camera :size="15" aria-hidden="true" />
+          </button>
+
+          <label class="visually-hidden" for="usuario-foto">Foto de perfil</label>
+          <input
+            id="usuario-foto"
+            ref="entradaFoto"
+            type="file"
+            name="fotoPerfil"
+            accept="image/png,image/jpeg,image/webp"
+            class="visually-hidden"
+            :disabled="procesandoFoto"
+            :aria-invalid="Boolean(errorFoto || errorDe('fotoPerfil'))"
+            :aria-describedby="errorFoto || errorDe('fotoPerfil') ? 'error-foto' : 'ayuda-foto'"
+            @change="elegirFoto"
+          />
+        </div>
+
+        <div class="usuario-avatar-info">
+          <div class="usuario-avatar-cabecera">
+            <span class="usuario-avatar-titulo">Foto de perfil</span>
+            <span
+              v-if="formulario.nombre || formulario.apellido"
+              class="usuario-avatar-nombre-vista"
+            >
+              {{ [formulario.nombre, formulario.apellido].filter(Boolean).join(' ') }}
+            </span>
+          </div>
+
+          <div class="usuario-avatar-acciones">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="procesandoFoto"
+              @click="abrirSelectorFoto"
+            >
+              <Camera :size="14" aria-hidden="true" />
+              <span>{{ fotoVisible ? 'Cambiar foto' : 'Subir foto' }}</span>
+            </button>
+
+            <button
+              v-if="fotoVisible"
+              type="button"
+              class="btn btn-outline-danger btn-sm foto__btn-quitar"
+              title="Quitar foto de perfil"
+              aria-label="Quitar foto de perfil"
+              :disabled="procesandoFoto"
+              @click="quitarFoto"
+            >
+              <Trash2 :size="14" aria-hidden="true" />
+              <span>Quitar foto</span>
+            </button>
+          </div>
+
+          <p id="ayuda-foto" class="usuario-avatar-ayuda">
+            PNG, JPG o WebP. Máximo 3 MB. Se optimiza y recorta automáticamente a
+            {{ FOTO_USUARIO_LADO }} × {{ FOTO_USUARIO_LADO }} px.
+          </p>
+          <p v-if="errorFoto || errorDe('fotoPerfil')" id="error-foto" class="campo__error">
+            {{ errorFoto || errorDe('fotoPerfil') }}
+          </p>
+          <p v-if="procesandoFoto" class="usuario-avatar-estado">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span>Optimizando imagen…</span>
+          </p>
+        </div>
+      </div>
 
       <div class="formulario__rejilla">
         <div class="campo">
@@ -368,137 +530,101 @@ function seleccionarFoto(evento) {
       </div>
     </section>
 
-    <!-- Secciones secundarias niveladas: Organización + Foto de perfil -->
-    <div class="formulario__secundarias">
-      <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-organizacion">
-        <header>
-          <span aria-hidden="true"><Building2 :size="20" /></span>
-          <div>
-            <h2 id="titulo-organizacion">Organización y acceso</h2>
-            <p>Empresa, rol administrativo y estado operativo.</p>
-          </div>
-        </header>
-
-        <div class="formulario__rejilla formulario__rejilla--organizacion">
-          <div class="campo">
-            <label class="form-label" for="usuario-empresa">Empresa *</label>
-            <select
-              id="usuario-empresa"
-              ref="empresaInput"
-              v-model="formulario.empresaId"
-              class="form-select"
-              :class="{ 'is-invalid': errorDe('empresaId') }"
-              required
-              :aria-invalid="Boolean(errorDe('empresaId'))"
-              :aria-describedby="errorDe('empresaId') ? 'error-empresa' : null"
-              @change="limpiarError('empresaId')"
-            >
-              <option value="">Selecciona una empresa</option>
-              <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
-                {{ empresa.nombre }}
-              </option>
-            </select>
-            <p v-if="errorDe('empresaId')" id="error-empresa" class="campo__error">
-              {{ errorDe('empresaId') }}
-            </p>
-          </div>
-
-          <div class="campo">
-            <label class="form-label" for="usuario-rol">Rol *</label>
-            <select
-              id="usuario-rol"
-              ref="rolInput"
-              v-model="formulario.rol"
-              class="form-select"
-              :class="{ 'is-invalid': errorDe('rol') }"
-              required
-              :aria-invalid="Boolean(errorDe('rol'))"
-              :aria-describedby="errorDe('rol') ? 'error-rol' : 'ayuda-rol'"
-              @change="limpiarError('rol')"
-            >
-              <option value="admin">Administrador</option>
-              <option value="manager">Empresa</option>
-              <option value="trainer">Entrenador</option>
-              <option value="member">Usuario</option>
-            </select>
-            <p id="ayuda-rol" class="campo__ayuda">
-              Roles provisionales hasta cerrar permisos con Laravel.
-            </p>
-            <p v-if="errorDe('rol')" id="error-rol" class="campo__error">{{ errorDe('rol') }}</p>
-          </div>
+    <!-- Organización y acceso (solo en modo creación) -->
+    <section
+      v-if="modo === 'create'"
+      class="formulario__seccion gb-tarjeta"
+      aria-labelledby="titulo-organizacion"
+    >
+      <header>
+        <span aria-hidden="true"><Building2 :size="20" /></span>
+        <div>
+          <h2 id="titulo-organizacion">Organización y acceso</h2>
+          <p>Empresa, rol administrativo y estado operativo.</p>
         </div>
+      </header>
 
-        <fieldset
-          class="estado-opciones"
-          aria-labelledby="titulo-estado"
-          :aria-describedby="errorDe('estado') ? 'error-estado' : null"
-        >
-          <span id="titulo-estado" class="form-label">Estado *</span>
-          <div>
-            <label
-              ><input
-                ref="estadoInput"
-                v-model="formulario.estado"
-                type="radio"
-                name="estado"
-                value="active"
-                @change="limpiarError('estado')"
-              /><span><b>Activo</b><small>Puede acceder normalmente.</small></span></label
-            >
-            <label
-              ><input
-                v-model="formulario.estado"
-                type="radio"
-                name="estado"
-                value="inactive"
-                @change="limpiarError('estado')"
-              /><span><b>Inactivo</b><small>Acceso suspendido.</small></span></label
-            >
-          </div>
-        </fieldset>
-        <p v-if="errorDe('estado')" id="error-estado" class="campo__error">
-          {{ errorDe('estado') }}
-        </p>
-      </section>
-
-      <section class="formulario__seccion gb-tarjeta" aria-labelledby="titulo-foto">
-        <header>
-          <span aria-hidden="true"><Camera :size="20" /></span>
-          <div>
-            <h2 id="titulo-foto">Foto de perfil</h2>
-            <p>Vista previa local. La imagen todavía no se guarda: falta el endpoint de subida.</p>
-          </div>
-        </header>
-        <div class="foto">
-          <div
-            class="foto__vista"
-            :style="{ backgroundImage: foto.url.value ? `url(${foto.url.value})` : null }"
+      <div class="formulario__rejilla formulario__rejilla--organizacion">
+        <div class="campo">
+          <label class="form-label" for="usuario-empresa">Empresa *</label>
+          <select
+            id="usuario-empresa"
+            ref="empresaInput"
+            v-model="formulario.empresaId"
+            class="form-select"
+            :class="{ 'is-invalid': errorDe('empresaId') }"
+            required
+            :aria-invalid="Boolean(errorDe('empresaId'))"
+            :aria-describedby="errorDe('empresaId') ? 'error-empresa' : null"
+            @change="limpiarError('empresaId')"
           >
-            <User :size="24" />
-          </div>
-          <div class="campo">
-            <label class="form-label" for="usuario-foto">Archivo de imagen</label>
-            <input
-              id="usuario-foto"
-              class="form-control"
-              :class="{ 'is-invalid': foto.error.value }"
-              type="file"
-              accept="image/*"
-              :aria-invalid="Boolean(foto.error.value)"
-              :aria-describedby="foto.error.value ? 'error-foto' : 'ayuda-foto'"
-              @change="seleccionarFoto"
-            />
-            <p id="ayuda-foto" class="campo__ayuda">
-              PNG, JPG o WebP. Máximo 2 MB. Sólo vista previa: al guardar, el archivo
-              <strong>no</strong> se envía todavía, porque la API aún no expone dónde subirlo.
-            </p>
-            <p v-if="foto.error.value" id="error-foto" class="campo__error">
-              {{ foto.error.value }}
-            </p>
-          </div>
+            <option value="">Selecciona una empresa</option>
+            <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id">
+              {{ empresa.nombre }}
+            </option>
+          </select>
+          <p v-if="errorDe('empresaId')" id="error-empresa" class="campo__error">
+            {{ errorDe('empresaId') }}
+          </p>
         </div>
-      </section>
-    </div>
+
+        <div class="campo">
+          <label class="form-label" for="usuario-rol">Rol *</label>
+          <select
+            id="usuario-rol"
+            ref="rolInput"
+            v-model="formulario.rol"
+            class="form-select"
+            :class="{ 'is-invalid': errorDe('rol') }"
+            required
+            :aria-invalid="Boolean(errorDe('rol'))"
+            :aria-describedby="errorDe('rol') ? 'error-rol' : 'ayuda-rol'"
+            @change="limpiarError('rol')"
+          >
+            <option value="admin">Administrador</option>
+            <option value="manager">Empresa</option>
+            <option value="trainer">Entrenador</option>
+            <option value="member">Usuario</option>
+          </select>
+          <p id="ayuda-rol" class="campo__ayuda">
+            Roles provisionales hasta cerrar permisos con Laravel.
+          </p>
+          <p v-if="errorDe('rol')" id="error-rol" class="campo__error">{{ errorDe('rol') }}</p>
+        </div>
+      </div>
+
+      <fieldset
+        class="estado-opciones"
+        aria-labelledby="titulo-estado"
+        :aria-describedby="errorDe('estado') ? 'error-estado' : null"
+      >
+        <span id="titulo-estado" class="form-label">Estado *</span>
+        <div>
+          <label
+            ><input
+              ref="estadoInput"
+              v-model="formulario.estado"
+              type="radio"
+              name="estado"
+              value="active"
+              @change="limpiarError('estado')"
+            /><span><b>Activo</b><small>Puede acceder normalmente.</small></span></label
+          >
+          <label
+            ><input
+              v-model="formulario.estado"
+              type="radio"
+              name="estado"
+              value="inactive"
+              @change="limpiarError('estado')"
+            /><span><b>Inactivo</b><small>Acceso suspendido.</small></span></label
+          >
+        </div>
+      </fieldset>
+      <p v-if="errorDe('estado')" id="error-estado" class="campo__error">
+        {{ errorDe('estado') }}
+      </p>
+    </section>
 
     <div class="formulario__acciones">
       <button type="button" class="btn btn-secondary" :disabled="enviando" @click="emit('cancel')">
@@ -558,17 +684,6 @@ function seleccionarFoto(evento) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-}
-.formulario__secundarias {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.75fr);
-  align-items: stretch;
-  gap: var(--gb-gutter, 1.25rem);
-}
-.formulario__secundarias .formulario__seccion {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 }
 .campo {
   min-width: 0;
@@ -632,25 +747,6 @@ function seleccionarFoto(evento) {
   color: var(--gb-text-muted);
   font-size: var(--gb-tipo-xxs);
 }
-.foto {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-.foto__vista {
-  display: grid;
-  place-items: center;
-  width: 5rem;
-  height: 5rem;
-  background: var(--gb-surface-lowest) center/cover;
-  border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius-lg);
-  color: var(--gb-text-soft);
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
 .formulario__acciones {
   position: sticky;
   bottom: 0;
@@ -677,10 +773,120 @@ function seleccionarFoto(evento) {
   min-height: 2.6rem;
   padding-inline: 1.25rem;
 }
-@media (max-width: 78rem) {
-  .formulario__secundarias {
-    grid-template-columns: 1fr;
-  }
+.usuario-avatar-bloque {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid var(--gb-border);
+  border-radius: var(--gb-radius-xl);
+}
+.usuario-avatar-marco {
+  position: relative;
+  flex-shrink: 0;
+}
+.usuario-avatar-vista {
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: var(--gb-radius-full, 9999px);
+  border: 2px dashed var(--gb-border);
+  background-color: var(--gb-surface-lowest);
+  color: var(--gb-text-soft);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--gb-transicion, 0.2s ease);
+}
+.usuario-avatar-vista:hover {
+  border-color: var(--gb-red);
+  transform: scale(1.02);
+}
+.usuario-avatar-vista--con-imagen {
+  border: 2px solid var(--gb-red);
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.25);
+}
+.usuario-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.usuario-avatar-icono {
+  color: var(--gb-text-soft);
+}
+.usuario-avatar-camara {
+  position: absolute;
+  bottom: -0.15rem;
+  right: -0.15rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--gb-radius-full, 9999px);
+  border: 2px solid var(--gb-surface-highest, #1a1a1a);
+  background-color: var(--gb-red);
+  color: var(--gb-on-red, #ffffff);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transition: all var(--gb-transicion, 0.2s ease);
+}
+.usuario-avatar-camara:hover {
+  transform: scale(1.1);
+  background-color: var(--gb-red-hover, #ff1a26);
+}
+.usuario-avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.usuario-avatar-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.usuario-avatar-titulo {
+  font-size: var(--gb-tipo-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gb-text-soft);
+}
+.usuario-avatar-nombre-vista {
+  font-size: var(--gb-tipo-xs);
+  font-weight: 600;
+  color: var(--gb-text);
+}
+.usuario-avatar-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+.usuario-avatar-acciones .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: var(--gb-tipo-xs);
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--gb-radius-md);
+}
+.usuario-avatar-ayuda {
+  margin: 0;
+  color: var(--gb-text-muted);
+  font-size: var(--gb-tipo-xxs);
+  line-height: 1.4;
+}
+.usuario-avatar-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--gb-red-text, #ff6b72);
+  font-size: var(--gb-tipo-xs);
 }
 @media (max-width: 64rem) {
   .formulario__acciones::after {
@@ -697,10 +903,13 @@ function seleccionarFoto(evento) {
   }
 }
 @media (max-width: 36rem) {
-  .campo--documento {
-    grid-template-columns: 1fr;
+  .usuario-avatar-bloque {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
   }
-  .foto {
+  .campo--documento {
     grid-template-columns: 1fr;
   }
 }

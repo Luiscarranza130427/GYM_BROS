@@ -1,5 +1,5 @@
 <script setup>
-import { ExternalLink } from 'lucide-vue-next'
+import { Clock3, ExternalLink } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import EmpresaLogo from '@/modules/empresas/components/EmpresaLogo.vue'
@@ -9,6 +9,16 @@ import { formatearFecha, formatearNumero } from '@/shared/utils/formato'
 const props = defineProps({
   empresa: { type: Object, required: true },
 })
+
+const DIAS = [
+  { valor: 'lunes', etiqueta: 'Lunes' },
+  { valor: 'martes', etiqueta: 'Martes' },
+  { valor: 'miercoles', etiqueta: 'Miércoles' },
+  { valor: 'jueves', etiqueta: 'Jueves' },
+  { valor: 'viernes', etiqueta: 'Viernes' },
+  { valor: 'sabado', etiqueta: 'Sábado' },
+  { valor: 'domingo', etiqueta: 'Domingo' },
+]
 
 const sitioSeguro = computed(() => {
   try {
@@ -91,7 +101,9 @@ const sitioSeguro = computed(() => {
           <dl class="detalle__metricas">
             <div>
               <dt>Usuarios</dt>
-              <dd>{{ formatearNumero(empresa.usuarios) }}</dd>
+              <dd>
+                {{ empresa.usuarios == null ? 'Sin datos' : formatearNumero(empresa.usuarios) }}
+              </dd>
             </div>
             <div>
               <dt>Fecha de registro</dt>
@@ -124,6 +136,26 @@ const sitioSeguro = computed(() => {
         </section>
       </aside>
     </div>
+
+    <section class="detalle__panel gb-tarjeta" aria-labelledby="titulo-horarios">
+      <header>
+        <p>Atención al público</p>
+        <h2 id="titulo-horarios"><Clock3 :size="17" aria-hidden="true" /> Horarios semanales</h2>
+      </header>
+      <dl class="detalle__horarios">
+        <div v-for="dia in DIAS" :key="dia.valor">
+          <dt>{{ dia.etiqueta }}</dt>
+          <dd>
+            <template
+              v-if="empresa[`horario_inicio_${dia.valor}`] && empresa[`horario_fin_${dia.valor}`]"
+            >
+              {{ empresa[`horario_inicio_${dia.valor}`] }}–{{ empresa[`horario_fin_${dia.valor}`] }}
+            </template>
+            <span v-else>Sin información</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
   </div>
 </template>
 
@@ -210,6 +242,9 @@ const sitioSeguro = computed(() => {
 }
 
 .detalle__panel header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0.125rem;
   font-size: var(--gb-tipo-md);
   text-transform: uppercase;
@@ -316,6 +351,24 @@ const sitioSeguro = computed(() => {
   flex-shrink: 0;
 }
 
+.detalle__horarios {
+  grid-template-columns: repeat(7, minmax(7rem, 1fr)) !important;
+  gap: 0.75rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.detalle__horarios > div {
+  padding: 0.75rem !important;
+  background-color: var(--gb-surface-lowest);
+  border: 1px solid var(--gb-border) !important;
+  border-radius: var(--gb-radius-lg);
+}
+
+.detalle__horarios dd {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }
@@ -328,6 +381,10 @@ const sitioSeguro = computed(() => {
   .detalle__lateral {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto;
+  }
+
+  .detalle__horarios {
+    grid-template-columns: repeat(4, minmax(7rem, 1fr)) !important;
   }
 }
 
@@ -350,6 +407,10 @@ const sitioSeguro = computed(() => {
     grid-column: auto;
     padding-right: 0 !important;
     padding-left: 0 !important;
+  }
+
+  .detalle__horarios {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 </style>

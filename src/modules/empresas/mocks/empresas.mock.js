@@ -3,9 +3,20 @@ import { HttpError } from '@/core/api/http-error'
 const LATENCIA_MINIMA = 250
 const LATENCIA_MAXIMA = 600
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const RUC_VALIDO = /^\d{8,11}$/
 const TELEFONO_VALIDO = /^\+?[0-9\s-]+$/
 const COLOR_VALIDO = /^#[0-9a-f]{6}$/i
+const MODELO_HORARIOS_MOCK = {
+  ...Object.fromEntries(
+    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'].flatMap((dia) => [
+      [`horario_inicio_${dia}`, '06:00'],
+      [`horario_fin_${dia}`, '22:00'],
+    ]),
+  ),
+  horario_inicio_sabado: '08:00',
+  horario_fin_sabado: '20:00',
+  horario_inicio_domingo: '09:00',
+  horario_fin_domingo: '13:00',
+}
 
 const DATOS_INICIALES = [
   ['Power Gym', 'Mariana Torres', 'Lima', 'Av. Arequipa 1840, Lince', 86, '2024-01-15'],
@@ -91,6 +102,7 @@ const EMPRESAS_INICIALES = DATOS_INICIALES.map(
       logoUrl: '',
       colorPrimario,
       colorSecundario,
+      ...MODELO_HORARIOS_MOCK,
     }
   },
 )
@@ -133,8 +145,8 @@ function validarEmpresa(payload, idIgnorado = null) {
     errores.correo = ['Ingresa un correo válido.']
   }
 
-  if (ruc && !RUC_VALIDO.test(ruc)) {
-    errores.ruc = ['El RUC debe contener entre 8 y 11 dígitos.']
+  if (ruc.length > 12) {
+    errores.ruc = ['El RUC no puede superar 12 caracteres.']
   }
 
   if (
@@ -243,6 +255,9 @@ export async function crearEmpresaMock(payload) {
     logoUrl: texto(datos.logoUrl),
     colorPrimario: texto(datos.colorPrimario) || '#e50914',
     colorSecundario: texto(datos.colorSecundario) || '#111111',
+    ...Object.fromEntries(
+      Object.keys(MODELO_HORARIOS_MOCK).map((campo) => [campo, texto(datos[campo])]),
+    ),
   }
 
   empresas = [nuevaEmpresa, ...empresas]
@@ -283,4 +298,73 @@ export async function desactivarEmpresaMock(id) {
   const desactivada = { ...empresa, estado: 'inactive' }
   empresas = empresas.map((item) => (item.id === empresa.id ? desactivada : item))
   return clonar(desactivada)
+}
+
+/**
+ * Banners de la empresa, en la misma forma que devuelve el backend.
+ *
+ * Se guardan como columnas planas —`banner_1..3` y `link_boton_1..3`— porque es
+ * literalmente lo que hace `updateBanners` en Laravel, y el mock tiene que
+ * hablar el mismo contrato que el servicio normaliza.
+ */
+const BANNERS_INICIALES = {
+  1: {
+    banner_1: 'banners/promo-verano.webp',
+    banner_2: 'banners/nueva-sede.webp',
+    banner_3: '',
+    link_boton_1: 'https://gymbros.pe/promociones',
+    link_boton_2: 'https://gymbros.pe/sedes',
+    link_boton_3: '',
+  },
+}
+
+let bannersPorEmpresa = structuredClone(BANNERS_INICIALES)
+
+const bannersVacios = () => ({
+  banner_1: '',
+  banner_2: '',
+  banner_3: '',
+  link_boton_1: '',
+  link_boton_2: '',
+  link_boton_3: '',
+})
+
+const presentarBanners = (datos) =>
+  [1, 2, 3].map((numero) => ({
+    numero,
+    imagen: datos[`banner_${numero}`] ?? '',
+    imagenUrl: datos[`banner_${numero}`] ?? '',
+    enlace: datos[`link_boton_${numero}`] ?? '',
+  }))
+
+/** Simula GET /empresa/banners/:id */
+export async function obtenerBannersEmpresaMock(id) {
+  await esperar(calcularLatencia())
+  buscarEmpresa(id)
+  return clonar(presentarBanners(bannersPorEmpresa[Number(id)] ?? bannersVacios()))
+}
+
+/**
+ * Simula PUT /empresa/banners/:id
+ *
+ * Reemplaza el registro entero, igual que el controlador real: lo que no llega
+ * se guarda como nulo. Que el mock no perdone esto es a propósito —si aquí
+ * fuese indulgente, un envío parcial parecería correcto en desarrollo y borraría
+ * datos en producción—.
+ */
+export async function guardarBannersEmpresaMock(id, payload) {
+  await esperar(calcularLatencia())
+  buscarEmpresa(id)
+
+  const guardado = {
+    banner_1: payload.banner_1 ?? null,
+    banner_2: payload.banner_2 ?? null,
+    banner_3: payload.banner_3 ?? null,
+    link_boton_1: payload.link_boton_1 ?? null,
+    link_boton_2: payload.link_boton_2 ?? null,
+    link_boton_3: payload.link_boton_3 ?? null,
+  }
+
+  bannersPorEmpresa = { ...bannersPorEmpresa, [Number(id)]: guardado }
+  return clonar(presentarBanners(guardado))
 }

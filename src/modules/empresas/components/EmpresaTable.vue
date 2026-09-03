@@ -69,7 +69,9 @@ const paginas = computed(() => {
             </td>
             <td>{{ empresa.gerente }}</td>
             <td class="tabla__tabular">{{ empresa.ruc || '—' }}</td>
-            <td class="tabla__numero tabla__tabular">{{ formatearNumero(empresa.usuarios) }}</td>
+            <td class="tabla__numero tabla__tabular">
+              {{ empresa.usuarios == null ? '—' : formatearNumero(empresa.usuarios) }}
+            </td>
             <td><EmpresaStatusBadge :estado="empresa.estado" /></td>
             <td class="tabla__fecha">{{ formatearFecha(empresa.fechaRegistro) }}</td>
             <td>

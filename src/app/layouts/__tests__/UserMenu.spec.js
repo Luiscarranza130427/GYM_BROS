@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import UserMenu from '@/app/layouts/UserMenu.vue'
 import { useAuthStore } from '@/core/auth/auth.store'
+import { obtenerUsuario } from '@/modules/usuarios/services/usuarios.service'
 
 enableAutoUnmount(afterEach)
 
@@ -11,6 +12,10 @@ vi.mock('vue-router', async (importOriginal) => {
   const original = await importOriginal()
   return { ...original, useRouter: () => ({ replace: vi.fn() }) }
 })
+
+vi.mock('@/modules/usuarios/services/usuarios.service', () => ({
+  obtenerUsuario: vi.fn(),
+}))
 
 const RouterLinkStub = {
   props: ['to'],
@@ -44,6 +49,7 @@ describe('UserMenu', () => {
       rol: 'admin',
     }
     auth.token = 'token-de-prueba'
+    obtenerUsuario.mockResolvedValue({ fotoPerfil: '' })
   })
 
   it('da al disparador un nombre accesible propio', () => {
@@ -56,6 +62,29 @@ describe('UserMenu', () => {
     montar()
     expect(document.querySelector('.menu__avatar').textContent.trim()).toBe('AD')
     expect(document.querySelector('.menu__avatar').tagName).not.toBe('IMG')
+  })
+
+  it('descarta una foto antigua de sesión cuando el API confirma foto_perfil nulo', async () => {
+    const auth = useAuthStore()
+    auth.usuario.foto = 'usuarios/foto-antigua.webp'
+
+    montar()
+    await flushPromises()
+
+    expect(obtenerUsuario).toHaveBeenCalledWith(1)
+    expect(document.querySelector('.menu__avatar-img')).toBeNull()
+    expect(document.querySelector('.menu__avatar').textContent.trim()).toBe('AD')
+  })
+
+  it('no muestra una foto antigua ni mientras espera la respuesta del API', () => {
+    const auth = useAuthStore()
+    auth.usuario.foto = 'usuarios/foto-antigua.webp'
+    obtenerUsuario.mockReturnValue(new Promise(() => {}))
+
+    montar()
+
+    expect(document.querySelector('.menu__avatar-img')).toBeNull()
+    expect(document.querySelector('.menu__avatar').textContent.trim()).toBe('AD')
   })
 
   it('deja la cabecera de identidad FUERA del contenedor con role="menu"', async () => {

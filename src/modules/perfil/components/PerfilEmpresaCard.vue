@@ -20,19 +20,7 @@ import { resolverUrlStorage } from '@/shared/utils/storage'
 defineProps({
   empresa: {
     type: Object,
-    default: () => ({
-      id: 1,
-      nombre: 'titan gym',
-      logo: '',
-      nombre_gerente: 'Carlos Mendoza',
-      region: 'Cajamarca',
-      ruc: '20609876541',
-      plan: 'Titanio Enterprise',
-      direccion: 'Av. Hoyos Rubio 123, Cajamarca',
-      telefono: '976123456',
-      correo: 'contacto@gymbros.pe',
-      enlace_web: 'https://gymbros.pe',
-    }),
+    default: () => ({}),
   },
 })
 </script>
@@ -70,14 +58,14 @@ defineProps({
             <h3 class="empresa-hero__nombre">{{ empresa.nombre }}</h3>
             <p class="empresa-hero__ruc">
               {{ empresa.region ? `${empresa.region}, Perú · ` : '' }}RUC:
-              {{ empresa.ruc || '20609876541' }}
+              {{ empresa.ruc ?? 'Sin información' }}
             </p>
           </div>
         </div>
 
         <div class="empresa-hero__plan-tag">
           <Zap :size="16" aria-hidden="true" />
-          <span>{{ empresa.plan || 'Titanio Enterprise' }}</span>
+          <span>{{ empresa.plan ?? 'Sin plan informado' }}</span>
         </div>
       </div>
 
@@ -90,7 +78,7 @@ defineProps({
 
         <div class="empresa-detalles__fila">
           <dt><MapPin :size="15" aria-hidden="true" /> Dirección física</dt>
-          <dd>{{ empresa.direccion || 'Av. Hoyos Rubio 123, Cajamarca' }}</dd>
+          <dd>{{ empresa.direccion ?? 'Sin información' }}</dd>
         </div>
 
         <div v-if="empresa.telefono" class="empresa-detalles__fila">
@@ -129,8 +117,7 @@ defineProps({
         <div class="empresa-detalles__fila">
           <dt><FileBadge :size="15" aria-hidden="true" /> Plan SaaS activo</dt>
           <dd>
-            <strong>{{ empresa.plan || 'Titanio Enterprise' }}</strong> · Miembros y sedes
-            ilimitadas
+            {{ empresa.plan ?? 'Sin plan informado' }}
           </dd>
         </div>
 
@@ -143,7 +130,7 @@ defineProps({
       <!-- Enlace a gestión de empresa -->
       <div class="perfil-empresa__pie">
         <RouterLink
-          :to="{ name: 'empresa-detalle', params: { id: empresa.id || 1 } }"
+          :to="{ name: 'empresa-detalle', params: { id: empresa.id } }"
           class="btn btn-secondary"
         >
           <span>Ver ficha completa de la empresa</span>

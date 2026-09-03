@@ -38,21 +38,21 @@ const cerrandoSesiones = ref(false)
 const errorCarga = ref(null)
 
 const perfil = ref({
-  id: 1,
-  nombre: 'Titan Gym',
-  nombre_gerente: 'Carlos Mendoza',
-  gerente: 'Carlos Mendoza',
-  correo: 'contacto@gymbros.pe',
-  telefono: '976123456',
-  ruc: '20609876541',
-  region: 'Cajamarca',
-  direccion: 'Av. Hoyos Rubio 123, Cajamarca',
-  enlace_web: 'https://gymbros.pe',
+  id: null,
+  nombre: '',
+  nombre_gerente: '',
+  gerente: '',
+  correo: '',
+  telefono: '',
+  ruc: '',
+  region: '',
+  direccion: '',
+  enlace_web: '',
   logo: '',
   fotoPerfil: '',
-  rol: 'empresa',
-  rolEtiqueta: 'Sede Principal',
-  plan: 'Titanio Enterprise',
+  rol: '',
+  rolEtiqueta: '',
+  plan: null,
   empresa: null,
   estadisticas: null,
   sesiones: [],
@@ -88,7 +88,7 @@ async function cargarDatos() {
 async function guardarDatosPersonales(datos) {
   guardando.value = true
   try {
-    const actualizado = await perfilService.actualizarPerfil(datos)
+    const actualizado = await perfilService.actualizarPerfil({ ...datos, id: perfil.value.id })
     perfil.value = { ...perfil.value, ...actualizado }
 
     // Sincronizar nombre en auth store para que AppHeader y UserMenu se actualicen
@@ -231,8 +231,7 @@ onMounted(() => {
           type="button"
           class="perfil-tab"
           :class="{ 'perfil-tab--activa': pestanaActiva === pestana.id }"
-          :aria-selected="pestanaActiva === pestana.id"
-          role="tab"
+          :aria-pressed="pestanaActiva === pestana.id"
           @click="pestanaActiva = pestana.id"
         >
           <component :is="pestana.icono" :size="16" aria-hidden="true" />
