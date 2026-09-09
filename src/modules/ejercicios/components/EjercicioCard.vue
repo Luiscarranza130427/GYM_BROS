@@ -30,12 +30,6 @@ function etiqueta(valor) {
 
 <template>
   <article class="tarjeta">
-    <header class="tarjeta__badges">
-      <span v-if="ejercicio.tipo" class="tarjeta__tipo">{{ etiqueta(ejercicio.tipo) }}</span>
-      <span v-else class="tarjeta__tipo tarjeta__tipo--vacio">Tipo sin especificar</span>
-      <EjercicioStatusBadge :estado="ejercicio.estado" />
-    </header>
-
     <RouterLink
       class="tarjeta__media"
       :to="{ name: 'ejercicio-detalle', params: { id: ejercicio.id } }"
@@ -52,6 +46,10 @@ function etiqueta(valor) {
       <span v-else class="tarjeta__sin-imagen">
         <Dumbbell :size="42" aria-hidden="true" />
         <span>Imagen no disponible</span>
+      </span>
+      <span class="tarjeta__badges">
+        <span v-if="ejercicio.tipo" class="tarjeta__tipo">{{ etiqueta(ejercicio.tipo) }}</span>
+        <EjercicioStatusBadge class="tarjeta__estado" :estado="ejercicio.estado" />
       </span>
     </RouterLink>
 
@@ -79,36 +77,46 @@ function etiqueta(valor) {
       <footer class="tarjeta__acciones">
         <RouterLink
           class="tarjeta__accion"
+          :aria-label="`Ver ${ejercicio.nombre}`"
           :to="{ name: 'ejercicio-detalle', params: { id: ejercicio.id } }"
         >
           <Eye :size="16" aria-hidden="true" />
-          Ver
+          <span class="tarjeta__tooltip" aria-hidden="true">Ver detalles</span>
         </RouterLink>
         <RouterLink
           class="tarjeta__accion"
+          :aria-label="`Editar ${ejercicio.nombre}`"
           :to="{ name: 'ejercicio-editar', params: { id: ejercicio.id } }"
         >
           <Pencil :size="16" aria-hidden="true" />
-          Editar
+          <span class="tarjeta__tooltip" aria-hidden="true">Editar</span>
         </RouterLink>
         <a
           v-if="ejercicio.enlaceVideo"
           class="tarjeta__accion"
           :href="ejercicio.enlaceVideo"
+          :aria-label="`Ver video de ${ejercicio.nombre} (abre otra pestaña)`"
           target="_blank"
           rel="noopener noreferrer"
         >
           <ExternalLink :size="16" aria-hidden="true" />
-          Video
+          <span class="tarjeta__tooltip" aria-hidden="true">Ver video</span>
         </a>
         <button
           type="button"
           class="tarjeta__accion tarjeta__accion--peligro"
           :disabled="ejercicio.estado === 'inactive'"
+          :aria-label="
+            ejercicio.estado === 'inactive'
+              ? `${ejercicio.nombre} inactivo`
+              : `Desactivar ${ejercicio.nombre}`
+          "
           @click="$emit('desactivar', ejercicio)"
         >
           <Ban :size="16" aria-hidden="true" />
-          {{ ejercicio.estado === 'inactive' ? 'Inactivo' : 'Desactivar' }}
+          <span class="tarjeta__tooltip" aria-hidden="true">
+            {{ ejercicio.estado === 'inactive' ? 'Inactivo' : 'Desactivar' }}
+          </span>
         </button>
       </footer>
     </div>
@@ -134,14 +142,14 @@ function etiqueta(valor) {
 }
 
 .tarjeta__badges {
+  position: absolute;
+  inset: 0.5rem 0.5rem auto;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  min-height: 2.75rem;
-  padding: 0.55rem 0.75rem;
-  background: var(--gb-surface-lowest);
-  border-bottom: 1px solid var(--gb-border);
+  pointer-events: none;
 }
 
 .tarjeta__media {
@@ -156,7 +164,7 @@ function etiqueta(valor) {
 .tarjeta__media::after {
   position: absolute;
   inset: auto 0 0;
-  height: 42%;
+  height: 18%;
   background: linear-gradient(transparent, var(--gb-overlay-strong));
   content: '';
   pointer-events: none;
@@ -185,8 +193,8 @@ function etiqueta(valor) {
 }
 
 .tarjeta__tipo {
-  padding: 0.3rem 0.625rem;
-  background: var(--gb-surface-high);
+  padding: 0.2rem 0.45rem;
+  background: var(--gb-overlay-strong);
   border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-pill);
   color: var(--gb-text);
@@ -196,12 +204,17 @@ function etiqueta(valor) {
   text-transform: uppercase;
 }
 
-.tarjeta__tipo--vacio {
-  color: var(--gb-text-muted);
+.tarjeta__estado {
+  margin-left: auto;
+  padding: 0.2rem 0.45rem;
+  background: var(--gb-overlay-strong);
+  border-radius: var(--gb-radius-pill);
 }
 
 .tarjeta__contenido {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 0.875rem;
   padding: 1rem;
 }
@@ -216,6 +229,7 @@ function etiqueta(valor) {
 }
 
 .tarjeta h3 {
+  overflow-wrap: anywhere;
   margin: 0;
   font-family: var(--gb-fuente-titulo);
   font-size: var(--gb-tipo-md);
@@ -266,20 +280,23 @@ function etiqueta(valor) {
 .tarjeta__acciones {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   padding-top: 0.75rem;
   border-top: 1px solid var(--gb-border);
 }
 
 .tarjeta__accion {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.55rem;
-  background: transparent;
-  border: 0;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  background: var(--gb-surface-lowest);
+  border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-md);
   color: var(--gb-text-muted);
   font-family: inherit;
@@ -292,6 +309,36 @@ function etiqueta(valor) {
 .tarjeta__accion:hover {
   background: var(--gb-surface-high);
   color: var(--gb-text);
+}
+
+.tarjeta__accion:focus-visible {
+  outline: 2px solid var(--gb-focus);
+  outline-offset: 2px;
+}
+
+.tarjeta__tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 2;
+  width: max-content;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--gb-border);
+  border-radius: var(--gb-radius-md);
+  background: var(--gb-surface-lowest);
+  color: var(--gb-text);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tarjeta__accion:hover .tarjeta__tooltip,
+.tarjeta__accion:focus-visible .tarjeta__tooltip {
+  visibility: visible;
+}
+
+.tarjeta__accion--peligro .tarjeta__tooltip {
+  right: 0;
+  left: auto;
 }
 
 .tarjeta__accion--peligro {
