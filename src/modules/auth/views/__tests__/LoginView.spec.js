@@ -1,9 +1,21 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import LoginView from '@/modules/auth/views/LoginView.vue'
+
+const alertas = vi.hoisted(() => {
+  const fire = vi.fn(() => Promise.resolve())
+  return {
+    fire,
+    mixin: vi.fn(() => ({ fire })),
+  }
+})
+
+vi.mock('sweetalert2', () => ({
+  default: { mixin: alertas.mixin },
+}))
 
 const vacia = { template: '<div />' }
 
@@ -30,6 +42,7 @@ async function montarLogin() {
 describe('LoginView', () => {
   beforeEach(() => {
     localStorage.clear()
+    alertas.fire.mockClear()
   })
 
   it('muestra el formulario con etiquetas asociadas a sus campos', async () => {
@@ -58,5 +71,26 @@ describe('LoginView', () => {
 
     expect(wrapper.get('[role="alert"]').text()).toBe('Introduce tu correo y tu contraseña.')
     expect(wrapper.get('input#correo').attributes('aria-invalid')).toBe('true')
+    expect(alertas.fire).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: 'warning',
+        title: 'Completa tu acceso',
+        confirmButtonText: 'Entendido',
+      }),
+    )
+  })
+
+  it('configura la alerta con la identidad visual de Gym Bros', () => {
+    expect(alertas.mixin).toHaveBeenCalledWith(
+      expect.objectContaining({
+        background: 'var(--gb-surface)',
+        buttonsStyling: false,
+        customClass: expect.objectContaining({
+          container: 'login-swal',
+          popup: 'login-swal__popup',
+          confirmButton: 'btn btn-primary login-swal__confirmar',
+        }),
+      }),
+    )
   })
 })

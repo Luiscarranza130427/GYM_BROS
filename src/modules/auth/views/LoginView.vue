@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
 import { useAuthStore } from '@/core/auth/auth.store'
+import marcaGymBros from '@/assets/images/brand/gym-bros-mark.webp'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -35,11 +36,25 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
 }
 
 const swalGymBros = Swal.mixin({
-  background: '#1c1b1b',
-  color: '#e5e2e1',
-  confirmButtonColor: '#e50914',
+  background: 'var(--gb-surface)',
+  color: 'var(--gb-text)',
+  buttonsStyling: false,
+  heightAuto: false,
   customClass: {
-    popup: 'login-swal-popup',
+    container: 'login-swal',
+    popup: 'login-swal__popup',
+    image: 'login-swal__marca',
+    icon: 'login-swal__icono',
+    title: 'login-swal__titulo',
+    htmlContainer: 'login-swal__mensaje',
+    confirmButton: 'btn btn-primary login-swal__confirmar',
+    timerProgressBar: 'login-swal__progreso',
+  },
+  showClass: {
+    popup: 'login-swal--entrada',
+  },
+  hideClass: {
+    popup: 'login-swal--salida',
   },
 })
 
@@ -67,9 +82,9 @@ async function enviar() {
   if (!correo.value || !contrasena.value) {
     const error = 'Introduce tu correo y tu contraseña.'
     mensajeError.value = error
-    swalGymBros.fire({
+    await swalGymBros.fire({
       icon: 'warning',
-      title: 'Campos obligatorios',
+      title: 'Completa tu acceso',
       text: error,
       confirmButtonText: 'Entendido',
     })
@@ -79,21 +94,27 @@ async function enviar() {
   try {
     await auth.iniciarSesion({ correo: correo.value, contrasena: contrasena.value })
     await swalGymBros.fire({
-      icon: 'success',
-      title: '¡Sesión iniciada!',
-      text: 'Accediendo al panel...',
-      timer: 1000,
+      imageUrl: marcaGymBros,
+      imageAlt: 'Emblema de Gym Bros',
+      imageWidth: 72,
+      imageHeight: 72,
+      title: 'Acceso autorizado',
+      text: 'Preparando tu panel administrativo…',
+      timer: 1200,
+      timerProgressBar: true,
       showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
     })
     await router.replace(destinoSeguro(route.query.redirect))
   } catch (error) {
     const errorTexto = error.message || 'No se ha podido iniciar sesión.'
     mensajeError.value = errorTexto
-    swalGymBros.fire({
+    await swalGymBros.fire({
       icon: 'error',
-      title: 'Error de acceso',
+      title: 'Acceso denegado',
       text: errorTexto,
-      confirmButtonText: 'Reintentar',
+      confirmButtonText: 'Intentar de nuevo',
     })
   }
 }
@@ -237,6 +258,139 @@ async function enviar() {
   min-height: 2.875rem;
   margin-top: 1.25rem;
   border-radius: 0.875rem;
+}
+
+/*
+ * SweetAlert se teletransporta a <body>, fuera del atributo de este estilo
+ * scoped. Los selectores globales quedan deliberadamente limitados al prefijo
+ * `login-swal` para no alterar diálogos de otros módulos.
+ */
+:global(.login-swal) {
+  padding: var(--gb-espacio);
+  background: var(--gb-overlay-strong);
+  backdrop-filter: blur(0.5rem);
+}
+
+:global(.login-swal__popup) {
+  position: relative;
+  width: min(100%, 27rem);
+  overflow: hidden;
+  padding: 2rem 2rem 1.75rem;
+  border: 1px solid var(--gb-border-soft);
+  border-radius: var(--gb-radius-xl);
+  background: linear-gradient(145deg, var(--gb-surface-high), var(--gb-surface));
+  box-shadow:
+    var(--gb-relieve),
+    0 1.75rem 5rem var(--gb-overlay-strong);
+}
+
+:global(.login-swal__popup::before) {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.25rem;
+  background: linear-gradient(90deg, var(--gb-red-hover), var(--gb-red), var(--gb-red-text));
+  content: '';
+}
+
+:global(.login-swal__marca) {
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0.25rem auto 1.25rem;
+  padding: 0.625rem;
+  border: 1px solid var(--gb-border-soft);
+  border-radius: var(--gb-radius-xl);
+  background: var(--gb-surface-lowest);
+  box-shadow:
+    var(--gb-relieve-fuerte),
+    0 0 0 0.375rem var(--gb-surface-high-50);
+  object-fit: contain;
+}
+
+:global(.login-swal__icono) {
+  margin-block: 0.375rem 1.25rem;
+}
+
+:global(.login-swal__icono.swal2-warning) {
+  border-color: var(--gb-amber);
+  color: var(--gb-amber);
+}
+
+:global(.login-swal__icono.swal2-error) {
+  border-color: var(--gb-error);
+}
+
+:global(.login-swal__icono.swal2-error [class^='swal2-x-mark-line']) {
+  background-color: var(--gb-error);
+}
+
+:global(.login-swal__titulo) {
+  padding: 0;
+  color: var(--gb-text);
+  font-family: var(--gb-fuente-titulo);
+  font-size: clamp(var(--gb-tipo-lg), 4vw, var(--gb-tipo-xl));
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+:global(.login-swal__mensaje) {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  color: var(--gb-text-muted);
+  font-family: var(--gb-fuente-texto);
+  font-size: var(--gb-tipo-base);
+  line-height: 1.55;
+}
+
+:global(.login-swal__confirmar) {
+  min-width: 11rem;
+  min-height: 2.75rem;
+  margin-top: 1.5rem;
+  border-radius: var(--gb-radius-lg);
+  font-family: var(--gb-fuente-titulo);
+  font-size: var(--gb-tipo-sm);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+:global(.login-swal__progreso) {
+  height: 0.1875rem;
+  background: var(--gb-red);
+}
+
+:global(.login-swal--entrada) {
+  animation: login-swal-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:global(.login-swal--salida) {
+  animation: login-swal-salida 150ms ease-in both;
+}
+
+@keyframes login-swal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes login-swal-salida {
+  to {
+    opacity: 0;
+    transform: translateY(0.375rem) scale(0.99);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.login-swal--entrada),
+  :global(.login-swal--salida) {
+    animation-duration: 1ms;
+  }
 }
 
 @media (max-height: 48rem) and (min-width: 42.01rem) {
