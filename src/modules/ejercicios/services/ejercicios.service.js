@@ -7,6 +7,7 @@ import {
   seleccionarCamposEditables as seleccionarEditables,
 } from '@/core/api/normalizacion'
 import { USE_MOCKS } from '@/core/config/env'
+import { resolverUrlStorage } from '@/shared/utils/storage'
 
 const cargarMock = () => import('@/modules/ejercicios/mocks/ejercicios.mock')
 
@@ -41,10 +42,20 @@ function normalizarEjercicio(datos = {}) {
   return {
     id: datos.id,
     nombre: datos.nombre ?? datos.name ?? '',
+    tipo: datos.tipo ?? datos.type ?? '',
     categoria: datos.categoria ?? datos.category ?? '',
     nivel: datos.nivel ?? datos.level ?? datos.difficulty ?? '',
     equipo: datos.equipo ?? datos.equipment ?? datos.equipamiento ?? '',
+    equipamiento: datos.equipamiento ?? datos.equipment ?? datos.equipo ?? '',
     descripcion: datos.descripcion ?? datos.description ?? '',
+    instrucciones: datos.instrucciones ?? datos.instructions ?? '',
+    enlaceVideo: datos.enlace_video ?? datos.enlaceVideo ?? datos.video_url ?? '',
+    imagenUrl: resolverUrlStorage(
+      datos.imagen_ejercicio ?? datos.imagenUrl ?? datos.image_url ?? datos.imagen,
+    ),
+    grupoMuscularId: Number(
+      datos.id_grupos_musculares ?? datos.grupoMuscularId ?? datos.muscle_group_id ?? 0,
+    ),
     seriesSugeridas: Number(datos.series_sugeridas ?? datos.seriesSugeridas ?? 0),
     repeticionesSugeridas: Number(datos.repeticiones_sugeridas ?? datos.repeticionesSugeridas ?? 0),
     usos: Number(datos.usos_count ?? datos.usos ?? 0),

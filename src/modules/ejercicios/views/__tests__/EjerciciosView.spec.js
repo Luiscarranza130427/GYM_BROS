@@ -32,15 +32,14 @@ const RESPUESTA = {
     {
       id: 1,
       nombre: 'Press de banca',
-      categoria: 'pecho',
+      tipo: 'fuerza',
       nivel: 'intermedio',
-      equipo: 'barra',
-      descripcion: 'Empuje horizontal.',
-      seriesSugeridas: 4,
-      repeticionesSugeridas: 8,
-      usos: 154,
+      equipamiento: 'barra y banco',
+      descripcion: 'Ejercicio básico de empuje para pecho.',
+      instrucciones: 'Mantener escápulas retraídas.',
+      enlaceVideo: 'https://youtu.be/ejemplo',
+      imagenUrl: 'https://api.test/storage/ejercicios/press.webp',
       estado: 'active',
-      fechaRegistro: '2026-01-15',
     },
   ],
   paginacion: { pagina: 1, ultimaPagina: 1, porPagina: 8, total: 1, desde: 1, hasta: 1 },
@@ -65,15 +64,18 @@ describe('EjerciciosView', () => {
     desactivarEjercicio.mockReset()
   })
 
-  it('muestra el listado con sus etiquetas en español', async () => {
+  it('muestra el catálogo como una rejilla con los datos reales del API', async () => {
     obtenerEjercicios.mockResolvedValue(RESPUESTA)
     const wrapper = montar()
     await flushPromises()
 
     expect(wrapper.text()).toContain('Press de banca')
-    // El catálogo guarda 'pecho'/'barra'; la tabla muestra la etiqueta legible.
-    expect(wrapper.text()).toContain('Pecho')
-    expect(wrapper.text()).toContain('Barra')
+    expect(wrapper.findAll('.tarjeta')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Fuerza')
+    expect(wrapper.text()).toContain('barra y banco')
+    expect(wrapper.get('.tarjeta__media img').attributes('src')).toBe(
+      'https://api.test/storage/ejercicios/press.webp',
+    )
   })
 
   it('traduce los filtros al vocabulario del servicio', async () => {

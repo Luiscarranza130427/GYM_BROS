@@ -219,16 +219,16 @@ describe('ejercicios.service con API Laravel', () => {
         data: [
           {
             id: 7,
-            name: 'Press de banca',
-            category: 'pecho',
-            level: 'intermedio',
-            equipment: 'barra',
-            description: 'Empuje horizontal.',
-            series_sugeridas: 4,
-            repeticiones_sugeridas: 8,
-            usos_count: 154,
-            status: 'active',
-            created_at: '2026-01-15',
+            nombre: 'Press banca',
+            descripcion: 'Ejercicio básico de empuje para pecho.',
+            tipo: 'fuerza',
+            instrucciones: 'Mantener escápulas retraídas.',
+            nivel: 'intermedio',
+            equipamiento: 'barra y banco',
+            estado: 1,
+            enlace_video: 'https://youtu.be/press',
+            imagen_ejercicio: '\\storage\\app\\public\\ejercicios\\press.webp',
+            id_grupos_musculares: 1,
           },
         ],
         current_page: 2,
@@ -239,7 +239,10 @@ describe('ejercicios.service con API Laravel', () => {
         to: 6,
       },
     })
-    vi.doMock('@/core/config/env', () => ({ USE_MOCKS: false }))
+    vi.doMock('@/core/config/env', () => ({
+      USE_MOCKS: false,
+      API_BASE_URL: 'http://api.test/api',
+    }))
     vi.doMock('@/core/api/api', () => ({ default: { get } }))
     const { obtenerEjercicios } = await import('@/modules/ejercicios/services/ejercicios.service')
 
@@ -266,16 +269,22 @@ describe('ejercicios.service con API Laravel', () => {
     })
     expect(resultado.items[0]).toEqual({
       id: 7,
-      nombre: 'Press de banca',
-      categoria: 'pecho',
+      nombre: 'Press banca',
+      tipo: 'fuerza',
+      categoria: '',
       nivel: 'intermedio',
-      equipo: 'barra',
-      descripcion: 'Empuje horizontal.',
-      seriesSugeridas: 4,
-      repeticionesSugeridas: 8,
-      usos: 154,
+      equipo: 'barra y banco',
+      equipamiento: 'barra y banco',
+      descripcion: 'Ejercicio básico de empuje para pecho.',
+      instrucciones: 'Mantener escápulas retraídas.',
+      enlaceVideo: 'https://youtu.be/press',
+      imagenUrl: 'http://api.test/storage/ejercicios/press.webp',
+      grupoMuscularId: 1,
+      seriesSugeridas: 0,
+      repeticionesSugeridas: 0,
+      usos: 0,
       estado: 'active',
-      fechaRegistro: '2026-01-15',
+      fechaRegistro: '',
     })
     expect(resultado.paginacion).toEqual({
       pagina: 2,

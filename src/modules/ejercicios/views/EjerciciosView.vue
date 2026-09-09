@@ -7,7 +7,7 @@ import PageHeader from '@/shared/components/PageHeader.vue'
 import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
 import { CATEGORIAS, EQUIPOS, NIVELES, valoresDe } from '@/modules/ejercicios/catalogos'
 import EjercicioFilters from '@/modules/ejercicios/components/EjercicioFilters.vue'
-import EjercicioTable from '@/modules/ejercicios/components/EjercicioTable.vue'
+import EjercicioGrid from '@/modules/ejercicios/components/EjercicioGrid.vue'
 import {
   desactivarEjercicio,
   obtenerEjercicios,
@@ -67,7 +67,6 @@ async function confirmarDesactivacion() {
   } catch (error) {
     ejercicioSeleccionado.value = null
     mensajeError.value = error?.message || 'No pudimos desactivar el ejercicio.'
-    estadoVista.value = 'error'
   } finally {
     desactivando.value = false
   }
@@ -117,7 +116,11 @@ async function confirmarDesactivacion() {
       @limpiar="limpiarFiltros"
     />
 
-    <EjercicioTable
+    <p v-if="mensajeError && estadoVista === 'success'" class="ejercicios__error" role="alert">
+      {{ mensajeError }}
+    </p>
+
+    <EjercicioGrid
       v-if="
         estadoVista === 'idle' ||
         estadoVista === 'loading' ||
@@ -199,6 +202,16 @@ async function confirmarDesactivacion() {
   border: 1px solid rgba(var(--gb-green-rgb), 0.28);
   border-radius: var(--gb-radius-lg);
   color: var(--gb-green);
+  font-size: var(--gb-tipo-sm);
+}
+
+.ejercicios__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(var(--gb-red-rgb), 0.08);
+  border: 1px solid rgba(var(--gb-red-rgb), 0.35);
+  border-radius: var(--gb-radius-lg);
+  color: var(--gb-error);
   font-size: var(--gb-tipo-sm);
 }
 
