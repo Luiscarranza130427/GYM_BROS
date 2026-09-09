@@ -180,4 +180,48 @@ describe('UserMenu', () => {
     expect(disparador().getAttribute('aria-expanded')).toBe('false')
     expect(document.activeElement).toBe(disparador())
   })
+
+  describe('cerrar sesión con confirmación', () => {
+    it('muestra diálogo de confirmación y no cierra sesión si se cancela', async () => {
+      const auth = useAuthStore()
+      const spyCerrarSesion = vi.spyOn(auth, 'cerrarSesion')
+      montar()
+
+      await disparador().click()
+      await flushPromises()
+
+      const opcionSalir = document.querySelector('.menu__opcion--salir')
+      await opcionSalir.click()
+      await flushPromises()
+
+      const popup = document.querySelector('.logout-swal__popup')
+      expect(popup).not.toBeNull()
+      expect(popup.textContent).toContain('¿Cerrar sesión?')
+
+      const botonCancelar = document.querySelector('.logout-swal__cancelar')
+      botonCancelar.click()
+      await flushPromises()
+
+      expect(spyCerrarSesion).not.toHaveBeenCalled()
+    })
+
+    it('cierra sesión y redirige al confirmar el diálogo', async () => {
+      const auth = useAuthStore()
+      const spyCerrarSesion = vi.spyOn(auth, 'cerrarSesion').mockResolvedValue()
+      montar()
+
+      await disparador().click()
+      await flushPromises()
+
+      const opcionSalir = document.querySelector('.menu__opcion--salir')
+      await opcionSalir.click()
+      await flushPromises()
+
+      const botonConfirmar = document.querySelector('.logout-swal__confirmar')
+      botonConfirmar.click()
+      await flushPromises()
+
+      expect(spyCerrarSesion).toHaveBeenCalledTimes(1)
+    })
+  })
 })

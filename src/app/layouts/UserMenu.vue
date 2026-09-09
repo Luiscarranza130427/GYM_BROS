@@ -8,6 +8,9 @@ import { useAuthStore } from '@/core/auth/auth.store'
 import { obtenerUsuario } from '@/modules/usuarios/services/usuarios.service'
 import { inicialesDe } from '@/shared/utils/iniciales'
 import { resolverUrlStorage } from '@/shared/utils/storage'
+import marcaGymBros from '@/assets/images/brand/gym-bros-mark.webp'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -113,15 +116,88 @@ function cerrarConEscape() {
   disparador.value?.focus()
 }
 
+// Compatibilidad para entornos de prueba o navegadores sin matchMedia
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
+const swalCerrarSesion = Swal.mixin({
+  background: 'var(--gb-surface)',
+  color: 'var(--gb-text)',
+  buttonsStyling: false,
+  heightAuto: false,
+  customClass: {
+    container: 'logout-swal',
+    popup: 'logout-swal__popup',
+    image: 'logout-swal__marca',
+    icon: 'logout-swal__icono',
+    title: 'logout-swal__titulo',
+    htmlContainer: 'logout-swal__mensaje',
+    actions: 'logout-swal__acciones',
+    confirmButton: 'btn btn-primary logout-swal__confirmar',
+    cancelButton: 'btn logout-swal__cancelar',
+    timerProgressBar: 'logout-swal__progreso',
+  },
+  showClass: {
+    popup: 'logout-swal--entrada',
+  },
+  hideClass: {
+    popup: 'logout-swal--salida',
+  },
+})
+
 onBeforeUnmount(cerrar)
 
 async function cerrarSesion() {
   if (cerrando.value) return
 
+  cerrar()
+
+  const confirmacion = await swalCerrarSesion.fire({
+    icon: 'warning',
+    title: '¿Cerrar sesión?',
+    text: '¿Estás seguro de que deseas salir del panel administrativo?',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar',
+    reverseButtons: true,
+  })
+
+  if (!confirmacion.isConfirmed) return
+
   cerrando.value = true
   try {
     await auth.cerrarSesion()
+    await swalCerrarSesion.fire({
+      imageUrl: marcaGymBros,
+      imageAlt: 'Emblema de Gym Bros',
+      imageWidth: 72,
+      imageHeight: 72,
+      title: 'Sesión finalizada',
+      text: 'Cerrando tu sesión de forma segura…',
+      timer: 1200,
+      timerProgressBar: true,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    })
     await router.replace({ name: 'login' })
+  } catch (error) {
+    await swalCerrarSesion.fire({
+      icon: 'error',
+      title: 'Error al salir',
+      text: error.message || 'No se pudo cerrar la sesión.',
+      confirmButtonText: 'Entendido',
+    })
   } finally {
     cerrando.value = false
   }
@@ -334,6 +410,167 @@ async function cerrarSesion() {
   .menu__resumen,
   .menu__flecha {
     display: none;
+  }
+}
+
+/*
+ * SweetAlert se teletransporta a <body>, fuera del atributo de este estilo
+ * scoped. Los selectores globales quedan deliberadamente limitados al prefijo
+ * `logout-swal` para no alterar diálogos de otros módulos.
+ */
+:global(.logout-swal) {
+  padding: var(--gb-espacio);
+  background: var(--gb-overlay-strong);
+  backdrop-filter: blur(0.5rem);
+}
+
+:global(.logout-swal__popup) {
+  position: relative;
+  width: min(100%, 27rem);
+  overflow: hidden;
+  padding: 2rem 2rem 1.75rem;
+  border: 1px solid var(--gb-border-soft);
+  border-radius: var(--gb-radius-xl);
+  background: linear-gradient(145deg, var(--gb-surface-high), var(--gb-surface));
+  box-shadow:
+    var(--gb-relieve),
+    0 1.75rem 5rem var(--gb-overlay-strong);
+}
+
+:global(.logout-swal__popup::before) {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.25rem;
+  background: linear-gradient(90deg, var(--gb-red-hover), var(--gb-red), var(--gb-red-text));
+  content: '';
+}
+
+:global(.logout-swal__marca) {
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0.25rem auto 1.25rem;
+  padding: 0.625rem;
+  border: 1px solid var(--gb-border-soft);
+  border-radius: var(--gb-radius-xl);
+  background: var(--gb-surface-lowest);
+  box-shadow:
+    var(--gb-relieve-fuerte),
+    0 0 0 0.375rem var(--gb-surface-high-50);
+  object-fit: contain;
+}
+
+:global(.logout-swal__icono) {
+  margin-block: 0.375rem 1.25rem;
+}
+
+:global(.logout-swal__icono.swal2-warning) {
+  border-color: var(--gb-amber);
+  color: var(--gb-amber);
+}
+
+:global(.logout-swal__icono.swal2-error) {
+  border-color: var(--gb-error);
+}
+
+:global(.logout-swal__icono.swal2-error [class^='swal2-x-mark-line']) {
+  background-color: var(--gb-error);
+}
+
+:global(.logout-swal__titulo) {
+  padding: 0;
+  color: var(--gb-text);
+  font-family: var(--gb-fuente-titulo);
+  font-size: clamp(var(--gb-tipo-lg), 4vw, var(--gb-tipo-xl));
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+:global(.logout-swal__mensaje) {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  color: var(--gb-text-muted);
+  font-family: var(--gb-fuente-texto);
+  font-size: var(--gb-tipo-base);
+  line-height: 1.55;
+}
+
+:global(.logout-swal__acciones) {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+:global(.logout-swal__confirmar) {
+  min-width: 9.5rem;
+  min-height: 2.75rem;
+  border-radius: var(--gb-radius-lg);
+  font-family: var(--gb-fuente-titulo);
+  font-size: var(--gb-tipo-sm);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+:global(.logout-swal__cancelar) {
+  min-width: 7.5rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--gb-border);
+  border-radius: var(--gb-radius-lg);
+  background: var(--gb-surface-highest);
+  color: var(--gb-text-muted);
+  font-family: var(--gb-fuente-titulo);
+  font-size: var(--gb-tipo-sm);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  transition: all 0.15s ease-in-out;
+}
+
+:global(.logout-swal__cancelar:hover) {
+  background: var(--gb-surface-high);
+  color: var(--gb-text);
+  border-color: var(--gb-border-soft);
+}
+
+:global(.logout-swal__progreso) {
+  height: 0.1875rem;
+  background: var(--gb-red);
+}
+
+:global(.logout-swal--entrada) {
+  animation: logout-swal-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:global(.logout-swal--salida) {
+  animation: logout-swal-salida 150ms ease-in both;
+}
+
+@keyframes logout-swal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes logout-swal-salida {
+  to {
+    opacity: 0;
+    transform: translateY(0.375rem) scale(0.99);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.logout-swal--entrada),
+  :global(.logout-swal--salida) {
+    animation-duration: 1ms;
   }
 }
 </style>
