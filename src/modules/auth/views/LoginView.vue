@@ -3,6 +3,9 @@ import { ArrowRight, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-vue-next'
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
+
 import { useAuthStore } from '@/core/auth/auth.store'
 
 const auth = useAuthStore()
@@ -16,6 +19,29 @@ const mostrarContrasena = ref(false)
 const campoCorreo = useTemplateRef('campoCorreo')
 
 const hayError = computed(() => Boolean(mensajeError.value))
+
+// Compatibilidad para entornos de prueba o navegadores sin matchMedia
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
+const swalGymBros = Swal.mixin({
+  background: '#1c1b1b',
+  color: '#e5e2e1',
+  confirmButtonColor: '#e50914',
+  customClass: {
+    popup: 'login-swal-popup',
+  },
+})
 
 onMounted(() => {
   campoCorreo.value?.focus()
@@ -39,15 +65,36 @@ async function enviar() {
   mensajeError.value = ''
 
   if (!correo.value || !contrasena.value) {
-    mensajeError.value = 'Introduce tu correo y tu contraseña.'
+    const error = 'Introduce tu correo y tu contraseña.'
+    mensajeError.value = error
+    swalGymBros.fire({
+      icon: 'warning',
+      title: 'Campos obligatorios',
+      text: error,
+      confirmButtonText: 'Entendido',
+    })
     return
   }
 
   try {
     await auth.iniciarSesion({ correo: correo.value, contrasena: contrasena.value })
+    await swalGymBros.fire({
+      icon: 'success',
+      title: '¡Sesión iniciada!',
+      text: 'Accediendo al panel...',
+      timer: 1000,
+      showConfirmButton: false,
+    })
     await router.replace(destinoSeguro(route.query.redirect))
   } catch (error) {
-    mensajeError.value = error.message || 'No se ha podido iniciar sesión.'
+    const errorTexto = error.message || 'No se ha podido iniciar sesión.'
+    mensajeError.value = errorTexto
+    swalGymBros.fire({
+      icon: 'error',
+      title: 'Error de acceso',
+      text: errorTexto,
+      confirmButtonText: 'Reintentar',
+    })
   }
 }
 </script>
