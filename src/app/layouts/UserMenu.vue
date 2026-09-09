@@ -278,43 +278,46 @@ async function cerrarSesion() {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  min-height: 2.5rem;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--gb-radius-lg);
+  min-height: 2.625rem;
+  padding: 0.25rem 0.875rem 0.25rem 0.35rem;
+  background-color: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
   color: var(--gb-text);
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .menu__disparador:hover {
-  background-color: var(--gb-surface-high);
-  border-color: var(--gb-border);
+  background-color: #202020;
+  border-color: rgba(229, 9, 20, 0.45);
 }
 
 .menu__avatar {
   flex: none;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  background-color: var(--gb-surface-high);
-  border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius-lg);
+  width: 2.125rem;
+  height: 2.125rem;
+  background-color: var(--gb-surface-lowest);
+  border: 2px solid var(--gb-red);
+  border-radius: 50%;
   color: var(--gb-red-text);
   font-family: var(--gb-fuente-titulo);
   font-size: var(--gb-tipo-xxs);
   font-weight: 800;
   line-height: 1;
+  box-shadow: 0 0 6px rgba(229, 9, 20, 0.3);
 }
 
 .menu__avatar-img {
   flex: none;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--gb-radius-lg);
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--gb-red);
+  border: 2px solid var(--gb-red);
+  box-shadow: 0 0 6px rgba(229, 9, 20, 0.3);
 }
 
 .menu__resumen {
@@ -322,14 +325,15 @@ async function cerrarSesion() {
   flex-direction: column;
   min-width: 0;
   text-align: left;
+  line-height: 1.2;
 }
 
 .menu__resumen > span {
-  max-width: 10rem;
+  max-width: 8.5rem;
   overflow: hidden;
   font-size: var(--gb-tipo-sm);
   font-weight: 700;
-  line-height: 1.2;
+  color: var(--gb-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -337,6 +341,7 @@ async function cerrarSesion() {
 .menu__resumen small {
   color: var(--gb-text-muted);
   font-size: var(--gb-tipo-xxs);
+  font-weight: 500;
   line-height: 1.25;
   text-transform: capitalize;
 }
@@ -344,19 +349,27 @@ async function cerrarSesion() {
 .menu__flecha {
   color: var(--gb-text-muted);
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.menu__disparador[aria-expanded="true"] .menu__flecha {
+  transform: rotate(180deg);
+  color: var(--gb-text);
 }
 
 .menu__panel {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.625rem);
   right: 0;
   z-index: 1050;
-  min-width: 15rem;
+  min-width: 15.5rem;
   padding: 0.375rem;
-  background-color: var(--gb-surface-high);
+  background-color: #1a1a1a;
   border: 1px solid var(--gb-border);
-  border-radius: var(--gb-radius-lg);
-  box-shadow: var(--gb-relieve);
+  border-radius: var(--gb-radius-xl);
+  box-shadow:
+    0 1rem 3rem rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .menu__cabecera {

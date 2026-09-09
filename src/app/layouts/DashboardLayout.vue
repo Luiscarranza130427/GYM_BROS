@@ -46,7 +46,7 @@ watch(
 .panel {
   display: grid;
   grid-template-columns: var(--gb-sidebar-ancho) minmax(0, 1fr);
-  grid-template-rows: var(--gb-header-alto) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'sidebar header'
     'sidebar contenido';
@@ -69,6 +69,8 @@ watch(
   position: sticky;
   top: 0;
   z-index: 30;
+  padding: 0.875rem var(--gb-gutter) 0.375rem;
+  background-color: var(--gb-bg);
 }
 
 .panel__contenido {
@@ -83,12 +85,20 @@ watch(
     grid-template-columns: var(--gb-sidebar-ancho-compacto) minmax(0, 1fr);
   }
 
+  .panel__header {
+    padding: 0.75rem var(--gb-espacio) 0.25rem;
+  }
+
   .panel__contenido {
     padding: var(--gb-gutter) var(--gb-espacio);
   }
 }
 
 @media (max-width: 48rem) {
+  .panel__header {
+    padding: 0.5rem 0.75rem 0.25rem;
+  }
+
   .panel__contenido {
     padding: 1rem 0.75rem;
   }
