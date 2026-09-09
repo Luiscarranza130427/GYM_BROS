@@ -145,8 +145,10 @@ function enviarBusqueda() {
   justify-content: space-between;
   gap: 1.25rem;
   width: 100%;
-  min-height: 4.25rem;
-  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  height: var(--gb-header-alto);
+  min-height: var(--gb-header-alto);
+  box-sizing: border-box;
+  padding: 0 var(--gb-gutter);
   background:
     radial-gradient(
       circle at 20% 0,
@@ -154,28 +156,25 @@ function enviarBusqueda() {
       transparent 25rem
     ),
     linear-gradient(180deg, #181818 0%, #111111 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--gb-radius-xl);
-  box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.75),
-    0 4px 18px -2px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 30%, transparent);
+  border: 0;
+  border-bottom: 1px solid var(--gb-border);
+  border-radius: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Línea sutil de resplandor en el borde inferior con el color de acento de la empresa */
+/* Línea sutil de resplandor en el borde inferior a lo largo de todo el header */
 .header::after {
   content: '';
   position: absolute;
-  inset: auto 1.5rem -1px 1.5rem;
+  inset: auto 0 -1px 0;
   height: 2px;
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    var(--gb-header-accent, var(--gb-red)) 25%,
-    var(--gb-header-accent, var(--gb-red)) 75%,
+    var(--gb-header-accent, var(--gb-red)) 0%,
+    color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 70%, transparent) 75%,
     transparent 100%
   );
-  box-shadow: 0 0 12px 1px var(--gb-header-accent, var(--gb-red));
-  border-radius: 9999px;
+  box-shadow: 0 1px 8px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 50%, transparent);
   pointer-events: none;
 }
 
@@ -306,7 +305,7 @@ function enviarBusqueda() {
 @media (max-width: 48rem) {
   .header {
     gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
+    padding-inline: 1rem;
   }
 
   .header__centro {
@@ -319,6 +318,10 @@ function enviarBusqueda() {
 }
 
 @media (max-width: 38rem) {
+  .header {
+    padding-inline: 0.75rem;
+  }
+
   .header__titulo {
     font-size: 1rem;
   }
