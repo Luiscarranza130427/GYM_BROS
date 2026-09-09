@@ -1,6 +1,6 @@
 <script setup>
 import { Download, RotateCw } from 'lucide-vue-next'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import PageHeader from '@/shared/components/PageHeader.vue'
 import { useListadoFiltrable } from '@/shared/composables/useListadoFiltrable'
@@ -24,6 +24,8 @@ const cargandoMetricas = ref(false)
 
 const pagoSeleccionado = ref(null)
 const modalDetalleAbierto = ref(false)
+const empresasFiltro = ref([])
+const planesFiltro = ref([])
 
 const {
   estadoVista,
@@ -50,6 +52,27 @@ const {
     planId: f.planId,
   }),
   mensajeDeError: 'No pudimos cargar los reportes de pagos.',
+})
+
+function acumularOpciones(destino, nuevas) {
+  const porId = new Map(destino.value.map((opcion) => [String(opcion.id), opcion]))
+  for (const opcion of nuevas) {
+    if (opcion?.id != null && opcion.nombre) porId.set(String(opcion.id), opcion)
+  }
+  destino.value = [...porId.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+}
+
+// Los filtros se alimentan sólo con entidades confirmadas por el API. Se
+// acumulan entre páginas para que una opción no desaparezca al filtrar.
+watch(items, (pagos) => {
+  acumularOpciones(
+    empresasFiltro,
+    pagos.map((pago) => pago.empresa),
+  )
+  acumularOpciones(
+    planesFiltro,
+    pagos.map((pago) => pago.plan),
+  )
 })
 
 async function cargarMetricas() {
@@ -189,6 +212,8 @@ onMounted(() => {
 
     <!-- Barra de filtros -->
     <PagosFilters
+      :empresas="empresasFiltro"
+      :planes="planesFiltro"
       :busqueda="busqueda"
       :empresa-id="filtros.empresaId"
       :plan-id="filtros.planId"

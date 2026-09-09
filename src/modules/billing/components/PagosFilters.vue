@@ -1,8 +1,15 @@
 <script setup>
 import { Building2, Layers, RotateCcw, Search } from 'lucide-vue-next'
-import { EMPRESAS_PAGOS, PLANES_PAGOS } from '@/modules/billing/catalogos'
 
 defineProps({
+  empresas: {
+    type: Array,
+    default: () => [],
+  },
+  planes: {
+    type: Array,
+    default: () => [],
+  },
   busqueda: {
     type: String,
     default: '',
@@ -55,7 +62,7 @@ const emit = defineEmits(['update:busqueda', 'update:empresaId', 'update:planId'
           @change="emit('update:empresaId', $event.target.value)"
         >
           <option value="">Todas las empresas</option>
-          <option v-for="emp in EMPRESAS_PAGOS" :key="emp.id" :value="String(emp.id)">
+          <option v-for="emp in empresas" :key="emp.id" :value="String(emp.id)">
             {{ emp.nombre }}
           </option>
         </select>
@@ -72,7 +79,7 @@ const emit = defineEmits(['update:busqueda', 'update:empresaId', 'update:planId'
           @change="emit('update:planId', $event.target.value)"
         >
           <option value="">Todos los planes</option>
-          <option v-for="pl in PLANES_PAGOS" :key="pl.id" :value="String(pl.id)">
+          <option v-for="pl in planes" :key="pl.id" :value="String(pl.id)">
             {{ pl.nombre }}
           </option>
         </select>
