@@ -30,6 +30,12 @@ function etiqueta(valor) {
 
 <template>
   <article class="tarjeta">
+    <header class="tarjeta__badges">
+      <span v-if="ejercicio.tipo" class="tarjeta__tipo">{{ etiqueta(ejercicio.tipo) }}</span>
+      <span v-else class="tarjeta__tipo tarjeta__tipo--vacio">Tipo sin especificar</span>
+      <EjercicioStatusBadge :estado="ejercicio.estado" />
+    </header>
+
     <RouterLink
       class="tarjeta__media"
       :to="{ name: 'ejercicio-detalle', params: { id: ejercicio.id } }"
@@ -47,8 +53,6 @@ function etiqueta(valor) {
         <Dumbbell :size="42" aria-hidden="true" />
         <span>Imagen no disponible</span>
       </span>
-      <span v-if="ejercicio.tipo" class="tarjeta__tipo">{{ etiqueta(ejercicio.tipo) }}</span>
-      <EjercicioStatusBadge class="tarjeta__estado" :estado="ejercicio.estado" />
     </RouterLink>
 
     <div class="tarjeta__contenido">
@@ -129,6 +133,17 @@ function etiqueta(valor) {
   transform: translateY(-3px);
 }
 
+.tarjeta__badges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--gb-surface-lowest);
+  border-bottom: 1px solid var(--gb-border);
+}
+
 .tarjeta__media {
   position: relative;
   display: block;
@@ -169,18 +184,10 @@ function etiqueta(valor) {
   font-size: var(--gb-tipo-xs);
 }
 
-.tarjeta__tipo,
-.tarjeta__estado {
-  position: absolute;
-  z-index: 1;
-  top: 0.75rem;
-}
-
 .tarjeta__tipo {
-  left: 0.75rem;
   padding: 0.3rem 0.625rem;
-  background: var(--gb-overlay-strong);
-  border: 1px solid var(--gb-border-soft);
+  background: var(--gb-surface-high);
+  border: 1px solid var(--gb-border);
   border-radius: var(--gb-radius-pill);
   color: var(--gb-text);
   font-size: var(--gb-tipo-xxs);
@@ -189,9 +196,8 @@ function etiqueta(valor) {
   text-transform: uppercase;
 }
 
-.tarjeta__estado {
-  right: 0.75rem;
-  backdrop-filter: blur(8px);
+.tarjeta__tipo--vacio {
+  color: var(--gb-text-muted);
 }
 
 .tarjeta__contenido {

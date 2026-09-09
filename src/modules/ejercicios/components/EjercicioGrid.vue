@@ -94,7 +94,7 @@ const paginas = computed(() => {
 
 .catalogo__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19.5rem), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -197,6 +197,24 @@ const paginas = computed(() => {
   .catalogo__paginacion {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 90rem) {
+  .catalogo__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 68rem) {
+  .catalogo__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 42rem) {
+  .catalogo__grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
