@@ -5,11 +5,18 @@ import { useRoute, useRouter } from 'vue-router'
 
 import NotificationButton from '@/app/layouts/NotificationButton.vue'
 import UserMenu from '@/app/layouts/UserMenu.vue'
+import { useTenantStore } from '@/core/tenant/tenant.store'
 import { useUiStore } from '@/shared/stores/ui.store'
 
 const ui = useUiStore()
+const tenant = useTenantStore()
 const route = useRoute()
 const router = useRouter()
+
+const estilosEmpresa = computed(() => ({
+  '--gb-header-accent': tenant.colorSecundario || tenant.colorPrimario || 'var(--gb-red)',
+  '--gb-header-brand': tenant.colorPrimario || 'var(--gb-surface-lowest)',
+}))
 
 const DESCRIPCIONES_POR_TITULO = {
   Empresas: 'Gestión de empresas',
@@ -87,7 +94,7 @@ function enviarBusqueda() {
 </script>
 
 <template>
-  <header class="header">
+  <header class="header" :style="estilosEmpresa">
     <div class="header__izquierda">
       <button
         type="button"
@@ -140,22 +147,34 @@ function enviarBusqueda() {
   width: 100%;
   min-height: 4.25rem;
   padding: 0.5rem 1rem 0.5rem 0.75rem;
-  background: linear-gradient(180deg, #181818 0%, #111111 100%);
+  background:
+    radial-gradient(
+      circle at 20% 0,
+      color-mix(in srgb, var(--gb-header-brand, var(--gb-red)) 14%, transparent),
+      transparent 25rem
+    ),
+    linear-gradient(180deg, #181818 0%, #111111 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--gb-radius-xl);
   box-shadow:
     0 12px 35px rgba(0, 0, 0, 0.75),
-    0 4px 18px -2px rgba(229, 9, 20, 0.3);
+    0 4px 18px -2px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 30%, transparent);
 }
 
-/* Línea sutil de resplandor rojo en el borde inferior como en la captura */
+/* Línea sutil de resplandor en el borde inferior con el color de acento de la empresa */
 .header::after {
   content: '';
   position: absolute;
   inset: auto 1.5rem -1px 1.5rem;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--gb-red) 25%, var(--gb-red) 75%, transparent 100%);
-  box-shadow: 0 0 12px 1px var(--gb-red);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gb-header-accent, var(--gb-red)) 25%,
+    var(--gb-header-accent, var(--gb-red)) 75%,
+    transparent 100%
+  );
+  box-shadow: 0 0 12px 1px var(--gb-header-accent, var(--gb-red));
   border-radius: 9999px;
   pointer-events: none;
 }
@@ -174,18 +193,18 @@ function enviarBusqueda() {
   height: 2.625rem;
   padding: 0;
   background-color: #1a1a1a;
-  border: 1px solid rgba(229, 9, 20, 0.45);
+  border: 1px solid color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 45%, transparent);
   border-radius: 0.75rem;
   color: var(--gb-text);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(229, 9, 20, 0.15);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 15%, transparent);
   transition: all 0.2s ease;
 }
 
 .header__toggle:hover {
   background-color: #222222;
-  border-color: var(--gb-red);
-  box-shadow: 0 0 14px rgba(229, 9, 20, 0.35);
+  border-color: var(--gb-header-accent, var(--gb-red));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 35%, transparent);
   color: #ffffff;
 }
 
@@ -198,7 +217,7 @@ function enviarBusqueda() {
 
 .header__titulo {
   margin: 0;
-  color: var(--gb-red);
+  color: var(--gb-header-accent, var(--gb-red));
   font-family: var(--gb-fuente-titulo);
   font-size: var(--gb-tipo-lg);
   font-weight: 900;
@@ -260,8 +279,8 @@ function enviarBusqueda() {
 
 .header__buscador-input:focus {
   background-color: #222222;
-  border-color: rgba(229, 9, 20, 0.55);
-  box-shadow: 0 0 12px rgba(229, 9, 20, 0.25);
+  border-color: color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 55%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 25%, transparent);
 }
 
 .header__derecha {

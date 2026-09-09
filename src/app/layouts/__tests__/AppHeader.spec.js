@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import AppHeader from '@/app/layouts/AppHeader.vue'
+import { useTenantStore } from '@/core/tenant/tenant.store'
 import { useUiStore } from '@/shared/stores/ui.store'
 
 const vacia = { template: '<div />' }
@@ -78,5 +79,20 @@ describe('AppHeader', () => {
 
     expect(buscador.attributes('placeholder')).toBe('Buscar usuarios...')
     expect(wrapper.get('.header__subtitulo').text()).toBe('Gestión de usuarios')
+  })
+
+  it('aplica los colores personalizados de la empresa al header', async () => {
+    const tenant = useTenantStore()
+    tenant.fijarTenant({
+      id: 7,
+      nombre: 'Titan Gym',
+      color1: '#101820',
+      color2: '#ff6b00',
+      activo: true,
+    })
+
+    const wrapper = await montar('/empresas')
+    expect(wrapper.attributes('style')).toContain('--gb-header-accent: #ff6b00')
+    expect(wrapper.attributes('style')).toContain('--gb-header-brand: #101820')
   })
 })

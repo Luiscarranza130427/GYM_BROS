@@ -48,9 +48,9 @@ onMounted(async () => {
 
 .campana:hover {
   background-color: #222222;
-  border-color: rgba(229, 9, 20, 0.45);
+  border-color: color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 45%, transparent);
   color: var(--gb-text);
-  box-shadow: 0 0 10px rgba(229, 9, 20, 0.25);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 25%, transparent);
 }
 
 .campana__badge {
@@ -63,7 +63,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--gb-red);
+  background-color: var(--gb-header-accent, var(--gb-red));
   color: #ffffff;
   border: 2px solid #141414;
   border-radius: 9999px;
@@ -71,6 +71,6 @@ onMounted(async () => {
   font-size: 0.625rem;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 0 8px rgba(229, 9, 20, 0.7);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 70%, transparent);
 }
 </style>

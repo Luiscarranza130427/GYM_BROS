@@ -290,7 +290,7 @@ async function cerrarSesion() {
 
 .menu__disparador:hover {
   background-color: #202020;
-  border-color: rgba(229, 9, 20, 0.45);
+  border-color: color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 45%, transparent);
 }
 
 .menu__avatar {
@@ -300,14 +300,14 @@ async function cerrarSesion() {
   width: 2.125rem;
   height: 2.125rem;
   background-color: var(--gb-surface-lowest);
-  border: 2px solid var(--gb-red);
+  border: 2px solid var(--gb-header-accent, var(--gb-red));
   border-radius: 50%;
-  color: var(--gb-red-text);
+  color: color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 70%, white);
   font-family: var(--gb-fuente-titulo);
   font-size: var(--gb-tipo-xxs);
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 0 6px rgba(229, 9, 20, 0.3);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 30%, transparent);
 }
 
 .menu__avatar-img {
@@ -316,8 +316,8 @@ async function cerrarSesion() {
   height: 2.125rem;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--gb-red);
-  box-shadow: 0 0 6px rgba(229, 9, 20, 0.3);
+  border: 2px solid var(--gb-header-accent, var(--gb-red));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--gb-header-accent, var(--gb-red)) 30%, transparent);
 }
 
 .menu__resumen {
