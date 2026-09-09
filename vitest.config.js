@@ -25,6 +25,7 @@ export default mergeConfig(
         include: ['src/**/*.{js,vue}'],
         exclude: [
           'src/mocks/**',
+          'src/**/mocks/**',
           'src/constants/**',
           'src/main.js',
           'src/App.vue',
