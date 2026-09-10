@@ -352,7 +352,7 @@ async function cerrarSesion() {
   transition: transform 0.2s ease;
 }
 
-.menu__disparador[aria-expanded="true"] .menu__flecha {
+.menu__disparador[aria-expanded='true'] .menu__flecha {
   transform: rotate(180deg);
   color: var(--gb-text);
 }
