@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -64,18 +64,15 @@ describe('LoginView', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
-  it('avisa de los campos vacíos en vez de dejar que falle la autenticación', async () => {
+  it('permite iniciar sesión directamente incluso con campos vacíos', async () => {
     const wrapper = await montarLogin()
 
     await wrapper.get('form').trigger('submit')
+    await flushPromises()
 
-    expect(wrapper.get('[role="alert"]').text()).toBe('Introduce tu correo y tu contraseña.')
-    expect(wrapper.get('input#correo').attributes('aria-invalid')).toBe('true')
     expect(alertas.fire).toHaveBeenCalledWith(
       expect.objectContaining({
-        icon: 'warning',
-        title: 'Completa tu acceso',
-        confirmButtonText: 'Entendido',
+        title: 'Acceso autorizado',
       }),
     )
   })

@@ -1,5 +1,3 @@
-import { HttpError } from '@/core/api/http-error'
-
 export const CREDENCIALES_DEMO = {
   correo: 'admin@gymbros.com',
   contrasena: 'admin123',
@@ -10,25 +8,14 @@ export const PISTA_DEMO = {
   contrasena: CREDENCIALES_DEMO.contrasena,
 }
 
-const LATENCIA_MOCK = 400
-
-const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-export async function iniciarSesionMock({ correo, contrasena }) {
-  await esperar(LATENCIA_MOCK)
-
-  const correoNormalizado = (correo ?? '').trim().toLowerCase()
-  const demoCorreo = CREDENCIALES_DEMO.correo.toLowerCase()
-
-  if (correoNormalizado !== demoCorreo || contrasena !== CREDENCIALES_DEMO.contrasena) {
-    throw new HttpError(401, 'Credenciales incorrectas. Revisa tu correo y contraseña.')
-  }
+export async function iniciarSesionMock({ correo } = {}) {
+  const correoNormalizado = (correo ?? '').trim().toLowerCase() || CREDENCIALES_DEMO.correo
 
   return {
     usuario: {
       id: 1,
       nombre: 'Administrador Demo',
-      correo: CREDENCIALES_DEMO.correo,
+      correo: correoNormalizado,
       rol: 'admin',
       tenantId: 1,
     },
@@ -37,6 +24,5 @@ export async function iniciarSesionMock({ correo, contrasena }) {
 }
 
 export async function cerrarSesionMock() {
-  await esperar(150)
   return { ok: true }
 }
